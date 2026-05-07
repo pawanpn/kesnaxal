@@ -3,6 +3,8 @@
 import { useState, useCallback } from "react";
 import OptimizedImage from "@/components/ui/OptimizedImage";
 import SectionHeading from "@/components/ui/SectionHeading";
+import { useLocale } from "@/hooks/useLocale";
+import { resolveContent } from "@/lib/translate";
 import type { Testimonial } from "@/types";
 
 interface TestimonialsProps {
@@ -10,15 +12,16 @@ interface TestimonialsProps {
 }
 
 export default function Testimonials({ testimonials }: TestimonialsProps) {
+  const { locale, t } = useLocale();
   const [current, setCurrent] = useState(0);
   const next = useCallback(() => setCurrent((p) => (p + 1) % testimonials.length), [testimonials.length]);
   const prev = useCallback(() => setCurrent((p) => (p - 1 + testimonials.length) % testimonials.length), [testimonials.length]);
-  const t = testimonials[current];
+  const item = testimonials[current];
 
   return (
     <section className="py-12 lg:py-16 bg-white">
       <div className="container-custom">
-        <SectionHeading title="What People Say" subtitle="Hear from parents, students, and alumni about their KES experience." align="center" />
+        <SectionHeading title={t.sections.WhatPeopleSay} subtitle="" align="center" />
 
         <div className="relative max-w-2xl mx-auto">
           <div className="bg-surface rounded-2xl p-8 lg:p-10 text-center shadow-sm border border-border">
@@ -27,12 +30,12 @@ export default function Testimonials({ testimonials }: TestimonialsProps) {
                 <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
               </svg>
             </div>
-            <p className="text-foreground text-sm lg:text-base leading-relaxed mb-6 italic">&ldquo;{t.text}&rdquo;</p>
+            <p className="text-foreground text-sm lg:text-base leading-relaxed mb-6 italic">&ldquo;{resolveContent(item.text, locale)}&rdquo;</p>
             <div className="flex items-center justify-center gap-3">
-              <OptimizedImage src={t.image} alt={t.name} width={48} height={48} className="w-12 h-12 rounded-full object-cover border-2 border-primary" />
+              <OptimizedImage src={item.image} alt={item.name} width={48} height={48} className="w-12 h-12 rounded-full object-cover border-2 border-primary" />
               <div className="text-left">
-                <p className="font-semibold text-foreground text-sm">{t.name}</p>
-                <p className="text-xs text-muted">{t.role}</p>
+                <p className="font-semibold text-foreground text-sm">{item.name}</p>
+                <p className="text-xs text-muted">{item.role}</p>
               </div>
             </div>
           </div>

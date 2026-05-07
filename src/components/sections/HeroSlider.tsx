@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import OptimizedImage from "@/components/ui/OptimizedImage";
+import { useLocale } from "@/hooks/useLocale";
+import { resolveContent } from "@/lib/translate";
 import type { HeroSlide } from "@/types";
 
 interface HeroSliderProps {
@@ -11,6 +13,7 @@ interface HeroSliderProps {
 }
 
 export default function HeroSlider({ slides, motto }: HeroSliderProps) {
+  const { locale, t } = useLocale();
   const [current, setCurrent] = useState(0);
 
   const next = useCallback(() => setCurrent((p) => (p + 1) % slides.length), [slides.length]);
@@ -29,7 +32,7 @@ export default function HeroSlider({ slides, motto }: HeroSliderProps) {
           className={`absolute inset-0 transition-opacity duration-700 ${index === current ? "opacity-100" : "opacity-0"}`}
         >
           {slide.image ? (
-            <OptimizedImage src={slide.image} alt={slide.title} fill priority={index === 0} className="object-cover" sizes="100vw" />
+            <OptimizedImage src={slide.image} alt={resolveContent(slide.title, locale)} fill priority={index === 0} className="object-cover" sizes="100vw" />
           ) : (
             <div className="absolute inset-0 bg-[#1e3a8a]" />
           )}
@@ -43,15 +46,15 @@ export default function HeroSlider({ slides, motto }: HeroSliderProps) {
             {motto}
           </p>
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-heading font-bold text-white leading-tight mb-4">
-            {slides[current].title}
+              {resolveContent(slides[current].title, locale)}
           </h1>
-          <p className="text-gray-200 text-base sm:text-xl max-w-xl mx-auto">{slides[current].subtitle}</p>
+          <p className="text-gray-200 text-base sm:text-xl max-w-xl mx-auto">{resolveContent(slides[current].subtitle, locale)}</p>
           <div className="mt-8 flex gap-4 justify-center">
             <Link
               href="/admissions"
               className="inline-flex items-center gap-2 bg-secondary text-primary px-6 py-3 rounded-lg font-semibold text-sm hover:bg-secondary-dark transition-colors shadow-lg"
             >
-              Enroll Now
+              {t.hero.enroll}
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
@@ -60,7 +63,7 @@ export default function HeroSlider({ slides, motto }: HeroSliderProps) {
               href="/about"
               className="inline-flex items-center gap-2 bg-white/20 text-white px-6 py-3 rounded-lg font-semibold text-sm hover:bg-white/30 transition-colors border border-white/30"
             >
-              Learn More
+              {t.hero.learnMore}
             </Link>
           </div>
         </div>

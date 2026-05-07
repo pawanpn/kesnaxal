@@ -3,9 +3,12 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import SectionHeading from "@/components/ui/SectionHeading";
+import { useLocale } from "@/hooks/useLocale";
+import { resolveContent } from "@/lib/translate";
 import type { Notice } from "@/types";
 
 export default function NoticeBoard() {
+  const { locale, t } = useLocale();
   const [notices, setNotices] = useState<Notice[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -39,9 +42,9 @@ export default function NoticeBoard() {
     <section className="py-12 lg:py-16 bg-surface">
       <div className="container-custom">
         <div className="flex items-center justify-between mb-8">
-          <SectionHeading title="Notice Board" />
+          <SectionHeading title={t.sections.NoticeBoard} />
           <Link href="/notices" className="text-sm text-primary font-medium hover:text-primary-light transition-colors flex items-center gap-1">
-            View All
+            {t.common.viewAll}
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
           </Link>
         </div>
@@ -55,11 +58,11 @@ export default function NoticeBoard() {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-foreground text-sm lg:text-base">{notice.title}</h3>
-                      {isNew(notice.date) && <span className="shrink-0 bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">New</span>}
-                      {notice.priority === "high" && <span className="shrink-0 bg-accent/10 text-accent text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Important</span>}
+                      <h3 className="font-semibold text-foreground text-sm lg:text-base">{resolveContent(notice.title, locale)}</h3>
+                      {isNew(notice.date) && <span className="shrink-0 bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">{t.badges.new}</span>}
+                      {notice.priority === "high" && <span className="shrink-0 bg-accent/10 text-accent text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">{t.badges.important}</span>}
                     </div>
-                    <p className="text-sm text-muted line-clamp-2">{notice.content}</p>
+                    <p className="text-sm text-muted line-clamp-2">{resolveContent(notice.content, locale)}</p>
                   </div>
                   <span className="shrink-0 text-xs text-muted whitespace-nowrap">
                     {new Date(notice.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}

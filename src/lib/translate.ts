@@ -63,3 +63,64 @@ export function resolveArticle(
     content: resolveContent(article.content, locale),
   };
 }
+
+export function resolveEvent(
+  event: {
+    title: LocaleContent;
+    description: LocaleContent;
+    location?: LocaleContent;
+  },
+  locale: Locale
+): { title: string; description: string; location: string } {
+  return {
+    title: resolveContent(event.title, locale),
+    description: resolveContent(event.description, locale),
+    location: event.location ? resolveContent(event.location, locale) : "",
+  };
+}
+
+export function resolveJob(
+  job: {
+    title: LocaleContent;
+    category: LocaleContent;
+    level: LocaleContent;
+    experience: LocaleContent;
+    salary: LocaleContent;
+    workstation: LocaleContent;
+    responsibilities: LocaleContent[];
+  },
+  locale: Locale
+): {
+  title: string;
+  category: string;
+  level: string;
+  experience: string;
+  salary: string;
+  workstation: string;
+  responsibilities: string[];
+} {
+  return {
+    title: resolveContent(job.title, locale),
+    category: resolveContent(job.category, locale),
+    level: resolveContent(job.level, locale),
+    experience: resolveContent(job.experience, locale),
+    salary: resolveContent(job.salary, locale),
+    workstation: resolveContent(job.workstation, locale),
+    responsibilities: job.responsibilities.map((r) => resolveContent(r, locale)),
+  };
+}
+
+export function resolveCalendarEvent(
+  event: {
+    title: LocaleContent;
+    description?: LocaleContent;
+  },
+  locale: Locale
+): { title: string; description: string } {
+  return {
+    title: resolveContent(event.title, locale),
+    description: event.description
+      ? resolveContent(event.description, locale)
+      : "",
+  };
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { siteConfig } from "@/constants/siteConfig";
@@ -33,21 +34,28 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 bg-white shadow-md">
       <div className="container-custom">
         <div className="flex items-center justify-between h-16 lg:h-20">
-          <Link href="/" className="flex items-center gap-3 shrink-0">
-            <div className="flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-primary text-secondary font-bold text-sm lg:text-lg">
-              {siteConfig.school.shortName}
+          <Link href="/" className="flex items-center gap-2 shrink-0 min-w-0">
+            <div className="relative shrink-0">
+              <Image
+                src="/data/logo.jpg"
+                alt={`${siteConfig.school.name} Logo`}
+                width={48}
+                height={48}
+                className="h-9 lg:h-12 w-auto object-contain"
+                priority
+              />
             </div>
-            <div className="hidden sm:block">
-              <p className="text-sm lg:text-lg font-heading font-bold text-primary leading-tight">
+            <div className="hidden sm:block min-w-0">
+              <p className="text-xs lg:text-base font-heading font-bold text-primary leading-tight whitespace-nowrap">
                 {siteConfig.school.name}
               </p>
-              <p className="text-[10px] lg:text-xs text-muted italic">
+              <p className="text-[10px] lg:text-[11px] text-muted italic whitespace-nowrap">
                 {t.hero.motto}
               </p>
             </div>
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-0.5 ml-auto">
             {navLinks.map((link) =>
               link.dropdown ? (
                 <div
@@ -58,7 +66,7 @@ export default function Navbar() {
                 >
                   <Link
                     href={link.href}
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1 ${
+                    className={`px-2 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-0.5 ${
                       isActive(link.href)
                         ? "bg-primary text-white"
                         : "text-foreground hover:bg-primary/10 hover:text-primary"
@@ -88,7 +96,7 @@ export default function Navbar() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`px-2 py-1.5 rounded-md text-xs font-medium transition-colors ${
                     isActive(link.href)
                       ? "bg-primary text-white"
                       : "text-foreground hover:bg-primary/10 hover:text-primary"

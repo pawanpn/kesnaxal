@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useT } from "@/hooks/useLocale";
 
 interface BreakingNewsProps {
   messages?: string[];
@@ -13,6 +14,7 @@ const defaultMessages = [
 ];
 
 export default function BreakingNews({ messages = defaultMessages }: BreakingNewsProps) {
+  const t = useT();
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -25,7 +27,7 @@ export default function BreakingNews({ messages = defaultMessages }: BreakingNew
     <div className="bg-accent text-white overflow-hidden">
       <div className="container-custom flex items-center gap-3 py-2">
         <span className="shrink-0 bg-white text-accent text-xs font-bold px-3 py-0.5 rounded-full animate-pulse uppercase tracking-wider">
-          Breaking
+          {t.badges.breaking}
         </span>
         <div className="overflow-hidden flex-1">
           <p key={currentIndex} className="text-sm whitespace-nowrap animate-slidein">{messages[currentIndex]}</p>

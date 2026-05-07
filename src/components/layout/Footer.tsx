@@ -1,5 +1,10 @@
+"use client";
+
+import Image from "next/image";
 import Link from "next/link";
 import { siteConfig } from "@/constants/siteConfig";
+import { useLocale } from "@/hooks/useLocale";
+import { resolveContent } from "@/lib/translate";
 
 const socialIcons: Record<string, React.ReactNode> = {
   facebook: (
@@ -25,6 +30,7 @@ const socialIcons: Record<string, React.ReactNode> = {
 };
 
 export default function Footer() {
+  const { locale, t } = useLocale();
   const { school, contact, social, footer } = siteConfig;
 
   return (
@@ -33,20 +39,26 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-secondary text-primary font-bold text-lg">
-                {school.shortName}
+              <div className="relative shrink-0">
+                <Image
+                  src="/data/logo.jpg"
+                  alt={`${school.name} Logo`}
+                  width={48}
+                  height={48}
+                  className="h-10 w-auto object-contain"
+                />
               </div>
               <div>
                 <h3 className="font-heading font-bold text-white text-sm">{school.name}</h3>
                 <p className="text-secondary-light text-xs italic">{school.motto}</p>
               </div>
             </div>
-            <p className="text-gray-300 text-sm leading-relaxed">{footer.about}</p>
+            <p className="text-gray-300 text-sm leading-relaxed">{resolveContent(footer.about, locale)}</p>
           </div>
 
           <div>
             <h4 className="font-heading font-bold text-secondary text-sm uppercase tracking-wider mb-4">
-              Quick Links
+              {t.footer.quickLinks}
             </h4>
             <ul className="space-y-2">
               {footer.quickLinks.map((link) => (
@@ -61,7 +73,7 @@ export default function Footer() {
 
           <div>
             <h4 className="font-heading font-bold text-secondary text-sm uppercase tracking-wider mb-4">
-              Contact Info
+              {t.footer.contactInfo}
             </h4>
             <ul className="space-y-3 text-gray-300 text-sm">
               <li className="flex items-start gap-2">
@@ -91,7 +103,7 @@ export default function Footer() {
 
           <div>
             <h4 className="font-heading font-bold text-secondary text-sm uppercase tracking-wider mb-4">
-              Follow Us
+              {t.footer.followUs}
             </h4>
             <div className="flex gap-3 mb-6">
               {Object.entries(social).map(([platform, url]) => (
@@ -109,7 +121,7 @@ export default function Footer() {
             </div>
             <div className="bg-white/10 rounded-lg p-4">
               <p className="text-xs text-gray-300 leading-relaxed">
-                <span className="text-secondary font-semibold">Principal:</span> {school.principal.name}
+                <span className="text-secondary font-semibold">{t.footer.principal}:</span> {school.principal.name}
               </p>
             </div>
             <Link
@@ -122,7 +134,7 @@ export default function Footer() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              View on Google Maps
+              {t.footer.viewOnGoogleMaps}
             </Link>
           </div>
         </div>
@@ -131,10 +143,10 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="container-custom py-4 flex flex-col sm:flex-row justify-between items-center gap-2">
           <p className="text-gray-400 text-xs">
-            &copy; {new Date().getFullYear()} {school.name}. All rights reserved.
+            &copy; {new Date().getFullYear()} {school.name}. {t.footer.allRightsReserved}
           </p>
           <p className="text-gray-400 text-xs">
-            Established {school.established} | Affiliated to NEB
+            {t.footer.establishedAffiliated.replace('{established}', String(school.established))}
           </p>
         </div>
       </div>

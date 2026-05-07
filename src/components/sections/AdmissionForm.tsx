@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Spinner from "@/components/ui/Spinner";
+import { useT } from "@/hooks/useLocale";
 
 const admissionSchema = z.object({
   studentName: z.string().min(2, "Full name is required"),
@@ -21,19 +22,8 @@ const admissionSchema = z.object({
 
 type AdmissionFormData = z.infer<typeof admissionSchema>;
 
-const steps = [
-  { id: 1, label: "Student Information", icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" },
-  { id: 2, label: "Parent / Guardian", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" },
-  { id: 3, label: "Contact Details", icon: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" },
-];
-
-const classOptions = [
-  "Nursery", "LKG", "UKG", "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5",
-  "Grade 6", "Grade 7", "Grade 8", "Grade 9", "Grade 10",
-  "Grade 11 Science", "Grade 11 Management", "Grade 12 Science", "Grade 12 Management",
-];
-
 export default function AdmissionForm() {
+  const t = useT();
   const [step, setStep] = useState(1);
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,6 +31,32 @@ export default function AdmissionForm() {
   const { register, handleSubmit, trigger, reset, formState: { errors } } = useForm<AdmissionFormData>({
     resolver: zodResolver(admissionSchema),
   });
+
+  const steps = [
+    { id: 1, label: t.admission.studentInformation, icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" },
+    { id: 2, label: t.admission.parentGuardian, icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" },
+    { id: 3, label: t.admission.contactDetails, icon: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" },
+  ];
+
+  const classOptions = [
+    { value: "Nursery", label: t.admission.nursery },
+    { value: "LKG", label: t.admission.lkg },
+    { value: "UKG", label: t.admission.ukg },
+    { value: "Grade 1", label: t.admission.grade1 },
+    { value: "Grade 2", label: t.admission.grade2 },
+    { value: "Grade 3", label: t.admission.grade3 },
+    { value: "Grade 4", label: t.admission.grade4 },
+    { value: "Grade 5", label: t.admission.grade5 },
+    { value: "Grade 6", label: t.admission.grade6 },
+    { value: "Grade 7", label: t.admission.grade7 },
+    { value: "Grade 8", label: t.admission.grade8 },
+    { value: "Grade 9", label: t.admission.grade9 },
+    { value: "Grade 10", label: t.admission.grade10 },
+    { value: "Grade 11 Science", label: t.admission.grade11 },
+    { value: "Grade 11 Management", label: t.admission.grade12 },
+    { value: "Grade 12 Science", label: t.admission.grade11b },
+    { value: "Grade 12 Management", label: t.admission.grade12b },
+  ];
 
   const validateStep = async (): Promise<boolean> => {
     if (step === 1) return trigger(["studentName", "dob", "studentClass"]);
@@ -88,23 +104,23 @@ export default function AdmissionForm() {
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           {step === 1 && (
             <div className="animate-fadein space-y-5">
-              <div className="flex items-center gap-3 mb-2"><span className="w-1 h-6 bg-primary rounded-full" /><h3 className="text-lg font-heading font-bold text-primary">Student Information</h3></div>
+              <div className="flex items-center gap-3 mb-2"><span className="w-1 h-6 bg-primary rounded-full" /><h3 className="text-lg font-heading font-bold text-primary">{t.admission.studentInformation}</h3></div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-semibold text-foreground mb-1.5">Full Name <span className="text-accent">*</span></label>
-                  <input {...register("studentName")} className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm" placeholder="Enter student's full name" />
+                  <label className="block text-sm font-semibold text-foreground mb-1.5">{t.admission.fullName}</label>
+                  <input {...register("studentName")} className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm" placeholder={t.admission.fullNamePlaceholder} />
                   {errors.studentName && <p className="text-accent text-xs mt-1">{errors.studentName.message}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1.5">Date of Birth <span className="text-accent">*</span></label>
+                  <label className="block text-sm font-semibold text-foreground mb-1.5">{t.admission.dateOfBirth}</label>
                   <input type="date" {...register("dob")} className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm" />
                   {errors.dob && <p className="text-accent text-xs mt-1">{errors.dob.message}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1.5">Applying For Class <span className="text-accent">*</span></label>
+                  <label className="block text-sm font-semibold text-foreground mb-1.5">{t.admission.applyingForClass}</label>
                   <select {...register("studentClass")} className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm bg-white">
-                    <option value="">Select class</option>
-                    {classOptions.map((c) => <option key={c} value={c}>{c}</option>)}
+                    <option value="">{t.admission.selectClass}</option>
+                    {classOptions.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
                   </select>
                   {errors.studentClass && <p className="text-accent text-xs mt-1">{errors.studentClass.message}</p>}
                 </div>
@@ -114,21 +130,21 @@ export default function AdmissionForm() {
 
           {step === 2 && (
             <div className="animate-fadein space-y-5">
-              <div className="flex items-center gap-3 mb-2"><span className="w-1 h-6 bg-primary rounded-full" /><h3 className="text-lg font-heading font-bold text-primary">Parent / Guardian Details</h3></div>
+              <div className="flex items-center gap-3 mb-2"><span className="w-1 h-6 bg-primary rounded-full" /><h3 className="text-lg font-heading font-bold text-primary">{t.admission.parentGuardianDetails}</h3></div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1.5">Father&apos;s Name <span className="text-accent">*</span></label>
-                  <input {...register("fatherName")} className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm" placeholder="Enter father's full name" />
+                  <label className="block text-sm font-semibold text-foreground mb-1.5">{t.admission.fathersName}</label>
+                  <input {...register("fatherName")} className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm" placeholder={t.admission.fathersNamePlaceholder} />
                   {errors.fatherName && <p className="text-accent text-xs mt-1">{errors.fatherName.message}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1.5">Mother&apos;s Name <span className="text-accent">*</span></label>
-                  <input {...register("motherName")} className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm" placeholder="Enter mother's full name" />
+                  <label className="block text-sm font-semibold text-foreground mb-1.5">{t.admission.mothersName}</label>
+                  <input {...register("motherName")} className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm" placeholder={t.admission.mothersNamePlaceholder} />
                   {errors.motherName && <p className="text-accent text-xs mt-1">{errors.motherName.message}</p>}
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-semibold text-foreground mb-1.5">Parent / Guardian Occupation</label>
-                  <input {...register("parentOccupation")} className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm" placeholder="e.g. Teacher, Business, Engineer" />
+                  <label className="block text-sm font-semibold text-foreground mb-1.5">{t.admission.occupation}</label>
+                  <input {...register("parentOccupation")} className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm" placeholder={t.admission.occupationPlaceholder} />
                 </div>
               </div>
             </div>
@@ -136,26 +152,26 @@ export default function AdmissionForm() {
 
           {step === 3 && (
             <div className="animate-fadein space-y-5">
-              <div className="flex items-center gap-3 mb-2"><span className="w-1 h-6 bg-primary rounded-full" /><h3 className="text-lg font-heading font-bold text-primary">Contact Information</h3></div>
+              <div className="flex items-center gap-3 mb-2"><span className="w-1 h-6 bg-primary rounded-full" /><h3 className="text-lg font-heading font-bold text-primary">{t.admission.contactInformation}</h3></div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1.5">Phone Number <span className="text-accent">*</span></label>
-                  <input {...register("parentPhone")} className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm" placeholder="e.g. 9841123456" />
+                  <label className="block text-sm font-semibold text-foreground mb-1.5">{t.admission.phoneNumber}</label>
+                  <input {...register("parentPhone")} className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm" placeholder={t.admission.phonePlaceholder} />
                   {errors.parentPhone && <p className="text-accent text-xs mt-1">{errors.parentPhone.message}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1.5">Email Address</label>
-                  <input {...register("parentEmail")} type="email" className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm" placeholder="parent@email.com" />
+                  <label className="block text-sm font-semibold text-foreground mb-1.5">{t.admission.emailAddress}</label>
+                  <input {...register("parentEmail")} type="email" className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm" placeholder={t.admission.emailPlaceholder} />
                   {errors.parentEmail && <p className="text-accent text-xs mt-1">{errors.parentEmail.message}</p>}
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-semibold text-foreground mb-1.5">Address <span className="text-accent">*</span></label>
-                  <input {...register("address")} className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm" placeholder="Enter full street address" />
+                  <label className="block text-sm font-semibold text-foreground mb-1.5">{t.admission.address}</label>
+                  <input {...register("address")} className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm" placeholder={t.admission.addressPlaceholder} />
                   {errors.address && <p className="text-accent text-xs mt-1">{errors.address.message}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1.5">City <span className="text-accent">*</span></label>
-                  <input {...register("city")} className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm" placeholder="e.g. Kathmandu" />
+                  <label className="block text-sm font-semibold text-foreground mb-1.5">{t.admission.city}</label>
+                  <input {...register("city")} className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm" placeholder={t.admission.cityPlaceholder} />
                   {errors.city && <p className="text-accent text-xs mt-1">{errors.city.message}</p>}
                 </div>
               </div>
@@ -165,16 +181,16 @@ export default function AdmissionForm() {
           <div className="flex justify-between mt-10 pt-6 border-t border-border">
             {step > 1 ? (
               <button type="button" onClick={handleBack} className="inline-flex items-center gap-2 px-5 py-2.5 border border-border rounded-lg text-sm font-medium hover:bg-surface transition-colors text-foreground">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>Back
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>{t.admission.back}
               </button>
             ) : <div />}
             {step < 3 ? (
               <button type="button" onClick={handleNext} className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-dark transition-colors shadow-sm hover:shadow-md">
-                Continue <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                {t.admission.continue} <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
               </button>
             ) : (
               <button type="submit" disabled={isSubmitting} className="inline-flex items-center gap-2 px-8 py-2.5 bg-accent text-white rounded-lg text-sm font-bold hover:bg-accent-dark transition-colors shadow-sm hover:shadow-md disabled:opacity-70 disabled:cursor-not-allowed">
-                {isSubmitting ? <><Spinner /> Submitting...</> : "Submit Application"}
+                {isSubmitting ? <><Spinner /> {t.admission.submitting}</> : t.admission.submitApplication}
               </button>
             )}
           </div>
@@ -187,9 +203,9 @@ export default function AdmissionForm() {
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
               <svg className="w-10 h-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
-            <h2 className="text-2xl font-heading font-bold text-primary mb-2">Application Submitted!</h2>
-            <p className="text-muted text-sm mb-6">Thank you for applying to Kathmandu English School. Our admissions team will contact you within 3 business days.</p>
-            <button onClick={closeSuccess} className="w-full px-6 py-3 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-dark transition-colors">Done</button>
+            <h2 className="text-2xl font-heading font-bold text-primary mb-2">{t.admission.applicationSubmitted}</h2>
+            <p className="text-muted text-sm mb-6">{t.admission.thankYouMessage}</p>
+            <button onClick={closeSuccess} className="w-full px-6 py-3 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-dark transition-colors">{t.admission.done}</button>
           </div>
         </div>
       )}

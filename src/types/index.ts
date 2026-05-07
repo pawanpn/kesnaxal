@@ -45,20 +45,20 @@ export interface NavSubLink {
 
 export interface HeroSlide {
   image: string;
-  title: string;
-  subtitle: string;
+  title: LocaleContent;
+  subtitle: LocaleContent;
 }
 
 // ── Events ──
 
 export interface UpcomingEvent {
   id: number;
-  title: string;
+  title: LocaleContent;
   date: string;
   time: string;
-  location: string;
+  location: LocaleContent;
   image: string;
-  description: string;
+  description: LocaleContent;
 }
 
 // ── News ──
@@ -85,7 +85,7 @@ export interface Testimonial {
   name: string;
   role: string;
   image: string;
-  text: string;
+  text: LocaleContent;
 }
 
 // ── Gallery ──
@@ -106,9 +106,9 @@ export interface GalleryCategory {
 
 export interface Notice {
   id: number;
-  title: string;
+  title: LocaleContent;
   date: string;
-  content: string;
+  content: LocaleContent;
   priority: "high" | "normal" | "low";
 }
 
@@ -167,7 +167,7 @@ export interface FooterLink {
 }
 
 export interface FooterInfo {
-  about: string;
+  about: LocaleContent;
   quickLinks: FooterLink[];
 }
 
@@ -201,14 +201,14 @@ export interface StaffMember {
 
 export interface JobVacancy {
   id: number;
-  title: string;
-  category: string;
-  level: string;
-  experience: string;
-  salary: string;
+  title: LocaleContent;
+  category: LocaleContent;
+  level: LocaleContent;
+  experience: LocaleContent;
+  salary: LocaleContent;
   vacancies: number;
-  workstation: string;
-  responsibilities: string[];
+  workstation: LocaleContent;
+  responsibilities: LocaleContent[];
   addedOn: string;
   expiresOn: string;
   isActive: boolean;
@@ -218,10 +218,10 @@ export interface JobVacancy {
 
 export interface CalendarEvent {
   id: number;
-  title: string;
+  title: LocaleContent;
   type: "holiday" | "exam" | "event" | "vacation";
   date: string;
-  description?: string;
+  description?: LocaleContent;
 }
 
 // ── Language ──
@@ -234,6 +234,13 @@ export interface Translations {
   pages: Record<string, { title: string; subtitle?: string }>;
   sections: Record<string, string>;
   common: Record<string, string>;
+  footer: Record<string, string>;
+  results: Record<string, string>;
+  admission: Record<string, string>;
+  careers: Record<string, string>;
+  calendar: Record<string, string>;
+  forms: Record<string, string>;
+  badges: Record<string, string>;
 }
 
 // ── Site Config (root) ──
@@ -254,4 +261,5 @@ export interface SiteConfig {
   staff: StaffMember[];
   jobVacancies: JobVacancy[];
   calendarEvents: CalendarEvent[];
+  notices?: Notice[];
 }

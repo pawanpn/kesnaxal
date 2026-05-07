@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import OptimizedImage from "@/components/ui/OptimizedImage";
 import SectionHeading from "@/components/ui/SectionHeading";
+import { useT } from "@/hooks/useLocale";
 import type { GalleryImage } from "@/types";
 
 interface GalleryGridProps {
@@ -10,11 +11,12 @@ interface GalleryGridProps {
 }
 
 export default function GalleryGrid({ images }: GalleryGridProps) {
-  const [activeCategory, setActiveCategory] = useState("All");
+  const t = useT();
+  const [activeCategory, setActiveCategory] = useState(t.sections.All);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  const categories = ["All", ...Array.from(new Set(images.map((img) => img.category)))];
-  const filtered = activeCategory === "All" ? images : images.filter((img) => img.category === activeCategory);
+  const categories = [t.sections.All, ...Array.from(new Set(images.map((img) => img.category)))];
+  const filtered = activeCategory === t.sections.All ? images : images.filter((img) => img.category === activeCategory);
 
   const openLightbox = useCallback((index: number) => {
     setLightboxIndex(index);
@@ -49,7 +51,7 @@ export default function GalleryGrid({ images }: GalleryGridProps) {
     <section className="py-12 lg:py-16">
       <div className="container-custom">
         <div className="text-center mb-10">
-          <SectionHeading title="School Gallery" subtitle="Explore our campus life, events, and achievements through the lens." align="center" />
+          <SectionHeading title={t.sections.SchoolGallery} subtitle={t.pages.gallery.subtitle} align="center" />
         </div>
 
         <div className="flex justify-center gap-2 flex-wrap mb-10">
@@ -95,7 +97,7 @@ export default function GalleryGrid({ images }: GalleryGridProps) {
 
         {filtered.length === 0 && (
           <div className="text-center py-16">
-            <p className="text-muted text-sm">No images found in this category.</p>
+            <p className="text-muted text-sm">{t.sections.NoImagesFound}</p>
           </div>
         )}
       </div>
