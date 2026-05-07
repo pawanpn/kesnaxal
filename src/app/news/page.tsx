@@ -22,7 +22,7 @@ export default function NewsPage() {
 
   return (
     <div className="min-h-screen">
-      <PageHero title="News & Events" subtitle="Stay informed about the latest happenings, achievements, and announcements at Kathmandu English School." />
+      <PageHero pageKey="news" />
       <FeaturedNews article={featured} />
       <NewsGrid articles={rest} />
       <SubscribeCTA />

@@ -39,7 +39,7 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen">
-      <PageHero title="About Us" subtitle={school.motto} />
+      <PageHero pageKey="about" />
 
       <section className="py-12 lg:py-16">
         <div className="container-custom grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">

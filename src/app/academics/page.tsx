@@ -15,7 +15,7 @@ export default function AcademicsPage() {
 
   return (
     <div className="min-h-screen">
-      <PageHero title="Academics" subtitle="Nurturing Excellence from Foundation to Future" />
+      <PageHero pageKey="academics" />
 
       <section className="py-12 lg:py-16">
         <div className="container-custom space-y-16">

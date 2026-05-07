@@ -6,7 +6,7 @@ import AdmissionForm from "@/components/sections/AdmissionForm";
 export default function AdmissionPage() {
   return (
     <div className="min-h-screen">
-      <PageHero title="Online Admission" subtitle="Begin your child's journey of excellence at Kathmandu English School." />
+      <PageHero pageKey="admission" />
 
       <section className="py-12 lg:py-16 bg-surface">
         <div className="container-custom">

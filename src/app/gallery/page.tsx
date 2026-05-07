@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 export default function GalleryPage() {
   return (
     <div className="min-h-screen">
-      <PageHero title="School Gallery" subtitle="A glimpse into our vibrant campus life" />
+      <PageHero pageKey="gallery" />
       <GalleryGrid images={siteConfig.gallery.images} />
       <Testimonials testimonials={siteConfig.testimonials} />
     </div>

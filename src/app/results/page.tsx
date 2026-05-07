@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function ResultsPage() {
   return (
     <div className="min-h-screen">
-      <PageHero title="Student Results" subtitle="Enter your Symbol Number and Date of Birth to view and download your marksheet" />
+      <PageHero pageKey="results" />
       <section className="py-12 lg:py-16">
         <div className="container-custom">
           <ResultPortal schoolName={siteConfig.school.name} schoolAddress={siteConfig.contact.address} />

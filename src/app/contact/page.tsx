@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   return (
     <div className="min-h-screen">
-      <PageHero title="Contact Us" subtitle="We'd love to hear from you" />
+      <PageHero pageKey="contact" />
       <section className="py-12 lg:py-16">
         <div className="container-custom">
           <InquiryForm contact={siteConfig.contact} />

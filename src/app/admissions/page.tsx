@@ -33,7 +33,7 @@ const admissionsInfo = [
 export default function AdmissionsPage() {
   return (
     <div className="min-h-screen">
-      <PageHero title="Admissions" subtitle="Begin your child's journey of excellence at KES" />
+      <PageHero pageKey="admissions" />
 
       <section className="py-12 lg:py-16">
         <div className="container-custom">

@@ -15,7 +15,7 @@ export interface SchoolInfo {
 export interface ContactInfo {
   address: string;
   phone: string;
-  mobile: string;
+  phone2: string;
   email: string;
   admissionsEmail: string;
   mapEmbedUrl: string;
@@ -63,12 +63,14 @@ export interface UpcomingEvent {
 
 // ── News ──
 
+export type LocaleContent = { en: string; ne: string; ja: string };
+
 export interface NewsArticle {
   id: number;
   slug: string;
-  title: string;
-  excerpt: string;
-  content: string;
+  title: LocaleContent;
+  excerpt: LocaleContent;
+  content: LocaleContent;
   author: string;
   date: string;
   image: string;
@@ -185,6 +187,28 @@ export interface AdmissionsInfo {
   icon: React.ReactNode;
 }
 
+// ── Staff ──
+
+export interface StaffMember {
+  id: number;
+  name: string;
+  designation: string;
+  photo: string;
+  department?: string;
+}
+
+// ── Language ──
+
+export type Locale = "en" | "ne" | "ja";
+
+export interface Translations {
+  nav: Record<string, string>;
+  hero: { motto: string; enroll: string; learnMore: string };
+  pages: Record<string, { title: string; subtitle?: string }>;
+  sections: Record<string, string>;
+  common: Record<string, string>;
+}
+
 // ── Site Config (root) ──
 
 export interface SiteConfig {
@@ -200,4 +224,5 @@ export interface SiteConfig {
   footer: FooterInfo;
   academicLevels: AcademicLevel[];
   faculty: FacultyMember[];
+  staff: StaffMember[];
 }

@@ -9,20 +9,20 @@ export const siteConfig: SiteConfig = {
     history:
       "Founded in 1995, Kathmandu English School has been a beacon of quality education in Nepal. We are committed to nurturing young minds with a blend of academic excellence, cultural values, and modern pedagogy.",
     principal: {
-      name: "Mr. Bishnu Prasad Sharma",
+      name: "Mr. Dinesh Khatiwada",
       message:
         "At KES, we believe every child has limitless potential. Our goal is to provide a nurturing environment where students discover their unique talents and grow into responsible global citizens.",
     },
   },
 
   contact: {
-    address: "Baneshwor, Kathmandu, Nepal",
-    phone: "+977-1-4485123",
-    mobile: "+977-9841123456",
+    address: "Naxal, Sanogaucharan, Mandev Marga, Kathmandu, Nepal",
+    phone: "+977-1-4514369",
+    phone2: "+977-1-4514370",
     email: "info@kes.edu.np",
     admissionsEmail: "admissions@kes.edu.np",
     mapEmbedUrl:
-      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d226400.44224412755!2d85.2723184742156!3d27.685313933937125!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb19b1f25ecea5%3A0x9e20105ac6e2dbbf!2sBaneshwor%2C%20Kathmandu!5e0!3m2!1sen!2snp!4v1700000000000",
+      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3532.125123456!2d85.331123!3d27.712345!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2sNaxal%2C%20Kathmandu!5e0!3m2!1sen!2snp!4v1700000000000",
   },
 
   social: {
@@ -50,6 +50,7 @@ export const siteConfig: SiteConfig = {
       { label: "Results", href: "/results" },
       { label: "Gallery", href: "/gallery" },
       { label: "News", href: "/news" },
+      { label: "Staff", href: "/staff" },
       { label: "Contact", href: "/contact" },
     ],
   },
@@ -382,10 +383,70 @@ KES is one of the first schools in Nepal to implement a structured mental health
       { label: "About Us", href: "/about" },
       { label: "Admissions", href: "/admissions" },
       { label: "Academics", href: "/academics" },
+      { label: "Our Team", href: "/staff" },
       { label: "Results", href: "/results" },
       { label: "Gallery", href: "/gallery" },
       { label: "News", href: "/news" },
       { label: "Contact Us", href: "/contact" },
     ],
   },
+
+  staff: [
+    {
+      id: 1,
+      name: "Mr. Dinesh Khatiwada",
+      designation: "Principal",
+      photo: "https://picsum.photos/seed/principal/300/300",
+      department: "Administration",
+    },
+    {
+      id: 2,
+      name: "Mrs. Anju Thapa",
+      designation: "Vice Principal",
+      photo: "https://picsum.photos/seed/vp/300/300",
+      department: "Academics",
+    },
+    {
+      id: 3,
+      name: "Mr. Rajan Koirala",
+      designation: "Head of Department",
+      photo: "https://picsum.photos/seed/science/300/300",
+      department: "Science",
+    },
+    {
+      id: 4,
+      name: "Mrs. Sunita Rai",
+      designation: "Head of Department",
+      photo: "https://picsum.photos/seed/english/300/300",
+      department: "English",
+    },
+    {
+      id: 5,
+      name: "Mr. Dhiraj Poudel",
+      designation: "Head of Department",
+      photo: "https://picsum.photos/seed/math/300/300",
+      department: "Mathematics",
+    },
+    {
+      id: 6,
+      name: "Mrs. Menuka Acharya",
+      designation: "Head of Department",
+      photo: "https://picsum.photos/seed/nepali/300/300",
+      department: "Nepali",
+    },
+    {
+      id: 7,
+      name: "Mr. Sagar Bista",
+      designation: "Head of Department",
+      photo: "https://picsum.photos/seed/computer/300/300",
+      department: "Computer Science",
+    },
+    {
+      id: 8,
+      name: "Mrs. Rajani Shrestha",
+      designation: "Head of Department",
+      photo: "https://picsum.photos/seed/social/300/300",
+      department: "Social Studies",
+    },
+  ],
 };
