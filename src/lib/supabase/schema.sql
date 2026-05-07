@@ -1,20 +1,22 @@
 -- ============================================================
 -- SUPABASE SCHEMA: SuperAdmin Visual CMS
+-- IDEMPOTENT — safe to re-run multiple times
 -- Run this in Supabase SQL Editor
 -- ============================================================
 --
 -- SETUP STEPS:
 -- 1. Go to https://supabase.com/dashboard -> Your Project -> SQL Editor
--- 2. Paste and run this entire script
--- 3. Go to Storage -> Create new bucket named "media" (public)
+-- 2. Paste and run this entire script (safe to re-run anytime)
+-- 3. Go to Storage -> Create new bucket named "media" (public) — or script does it
 -- 4. Go to Authentication -> Users -> Add User to create your admin account
 -- 5. After first login, set role to 'superadmin' in admin_profiles table:
 --    UPDATE admin_profiles SET role = 'superadmin' WHERE id = '<your-user-id>';
 -- 6. Login at /admin/login , then click "Seed from siteConfig" to populate content
 -- ============================================================
 
--- 1. Admin users table (auth handled by Supabase Auth)
--- Just a profile table to flag admin role
+-- ============================================================
+-- 1. Admin profiles table
+-- ============================================================
 CREATE TABLE IF NOT EXISTS admin_profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   display_name TEXT,
@@ -22,70 +24,81 @@ CREATE TABLE IF NOT EXISTS admin_profiles (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Enable RLS
 ALTER TABLE admin_profiles ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Admins can read own profile" ON admin_profiles;
 CREATE POLICY "Admins can read own profile" ON admin_profiles
   FOR SELECT USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Superadmins can manage all profiles" ON admin_profiles;
 CREATE POLICY "Superadmins can manage all profiles" ON admin_profiles
   FOR ALL USING (EXISTS (
     SELECT 1 FROM admin_profiles WHERE id = auth.uid() AND role = 'superadmin'
   ));
 
+-- ============================================================
 -- 2. Core content table (dual-state: draft / published)
+-- ============================================================
 CREATE TABLE IF NOT EXISTS site_content (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  section TEXT NOT NULL,          -- e.g. 'hero', 'about', 'contact', 'footer', 'nav'
-  content_key TEXT NOT NULL,      -- e.g. 'title', 'subtitle', 'description', 'slide_0'
-  locale TEXT NOT NULL DEFAULT 'en',  -- 'en', 'ne', 'ja'
-  content_text TEXT,              -- the actual text/content for this locale
-  content_json JSONB DEFAULT '{}', -- full JSON for complex content (slides, events, jobs)
+  section TEXT NOT NULL,
+  content_key TEXT NOT NULL,
+  locale TEXT NOT NULL DEFAULT 'en',
+  content_text TEXT,
+  content_json JSONB DEFAULT '{}',
   status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
   updated_by UUID REFERENCES auth.users(id),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   created_at TIMESTAMPTZ DEFAULT NOW(),
-
   UNIQUE(section, content_key, locale)
 );
 
+DROP INDEX IF EXISTS idx_site_content_status;
 CREATE INDEX idx_site_content_status ON site_content(status);
+
+DROP INDEX IF EXISTS idx_site_content_section;
 CREATE INDEX idx_site_content_section ON site_content(section, locale);
 
 ALTER TABLE site_content ENABLE ROW LEVEL SECURITY;
 
--- Public can only read published
+DROP POLICY IF EXISTS "Anyone can read published content" ON site_content;
 CREATE POLICY "Anyone can read published content" ON site_content
   FOR SELECT USING (status = 'published');
 
--- Admins can read all (including drafts)
+DROP POLICY IF EXISTS "Admins can read all content" ON site_content;
 CREATE POLICY "Admins can read all content" ON site_content
   FOR SELECT USING (EXISTS (
     SELECT 1 FROM admin_profiles WHERE id = auth.uid()
   ));
 
--- Admins can insert/update/delete
+DROP POLICY IF EXISTS "Admins can insert content" ON site_content;
 CREATE POLICY "Admins can insert content" ON site_content
   FOR INSERT WITH CHECK (EXISTS (
     SELECT 1 FROM admin_profiles WHERE id = auth.uid()
   ));
 
+DROP POLICY IF EXISTS "Admins can update content" ON site_content;
 CREATE POLICY "Admins can update content" ON site_content
   FOR UPDATE USING (EXISTS (
     SELECT 1 FROM admin_profiles WHERE id = auth.uid()
   ));
 
+DROP POLICY IF EXISTS "Admins can delete content" ON site_content;
 CREATE POLICY "Admins can delete content" ON site_content
   FOR DELETE USING (EXISTS (
     SELECT 1 FROM admin_profiles WHERE id = auth.uid()
   ));
 
--- 3. Media table (for uploaded images/files)
+-- ============================================================
+-- 3. Media table
+-- ============================================================
 CREATE TABLE IF NOT EXISTS media (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   file_name TEXT NOT NULL,
   storage_path TEXT NOT NULL,
   public_url TEXT,
-  section TEXT,          -- which section this media belongs to
-  content_key TEXT,      -- which content field
+  section TEXT,
+  content_key TEXT,
   mime_type TEXT,
   size_bytes BIGINT,
   uploaded_by UUID REFERENCES auth.users(id),
@@ -93,15 +106,23 @@ CREATE TABLE IF NOT EXISTS media (
 );
 
 ALTER TABLE media ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can read media" ON media;
 CREATE POLICY "Anyone can read media" ON media FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Admins can insert media" ON media;
 CREATE POLICY "Admins can insert media" ON media FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM admin_profiles WHERE id = auth.uid())
 );
+
+DROP POLICY IF EXISTS "Admins can delete media" ON media;
 CREATE POLICY "Admins can delete media" ON media FOR DELETE USING (
   EXISTS (SELECT 1 FROM admin_profiles WHERE id = auth.uid())
 );
 
--- 4. Recent edits log (for audit trail / publish list)
+-- ============================================================
+-- 4. Edit log table
+-- ============================================================
 CREATE TABLE IF NOT EXISTS edit_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   section TEXT NOT NULL,
@@ -114,72 +135,85 @@ CREATE TABLE IF NOT EXISTS edit_log (
 );
 
 ALTER TABLE edit_log ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Admins can read edit log" ON edit_log;
 CREATE POLICY "Admins can read edit log" ON edit_log FOR SELECT USING (
   EXISTS (SELECT 1 FROM admin_profiles WHERE id = auth.uid())
 );
+
+DROP POLICY IF EXISTS "Admins can insert edit log" ON edit_log;
 CREATE POLICY "Admins can insert edit log" ON edit_log FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM admin_profiles WHERE id = auth.uid())
 );
 
--- 5. Storage bucket for media uploads
--- Run separately in Supabase Storage UI or via API:
--- INSERT INTO storage.buckets (id, name, public) VALUES ('media', 'media', true);
-
--- Storage RLS
+-- ============================================================
+-- 5. Storage bucket policies
+-- ============================================================
+DROP POLICY IF EXISTS "Anyone can view media" ON storage.objects;
 CREATE POLICY "Anyone can view media" ON storage.objects
   FOR SELECT USING (bucket_id = 'media');
 
+DROP POLICY IF EXISTS "Admins can upload media" ON storage.objects;
 CREATE POLICY "Admins can upload media" ON storage.objects
   FOR INSERT WITH CHECK (
     bucket_id = 'media'
     AND EXISTS (SELECT 1 FROM admin_profiles WHERE id = auth.uid())
   );
 
-CREATE POLICY "Admins can delete media" ON storage.objects
+DROP POLICY IF EXISTS "Admins can delete storage media" ON storage.objects;
+CREATE POLICY "Admins can delete storage media" ON storage.objects
   FOR DELETE USING (
     bucket_id = 'media'
     AND EXISTS (SELECT 1 FROM admin_profiles WHERE id = auth.uid())
   );
 
--- 6. Helper function: publish all drafts
-CREATE OR REPLACE FUNCTION publish_all_drafts()
-RETURNS void AS $$
+-- ============================================================
+-- 6. Publish all drafts function
+-- ============================================================
+DROP FUNCTION IF EXISTS publish_all_drafts CASCADE;
+CREATE FUNCTION publish_all_drafts()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
 BEGIN
   UPDATE site_content SET status = 'published' WHERE status = 'draft';
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
--- 7. Trigger: auto-create admin profile on first signup
-CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS trigger AS $$
+-- ============================================================
+-- 7. Auto-create admin profile on signup
+-- ============================================================
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP FUNCTION IF EXISTS handle_new_user CASCADE;
+
+CREATE FUNCTION handle_new_user()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
 BEGIN
   INSERT INTO admin_profiles (id, display_name, role)
   VALUES (NEW.id, NEW.email, 'editor');
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
--- Drop existing trigger if re-running
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 
 -- ============================================================
--- 8. Create media storage bucket (if not exists)
--- Must be run with sufficient privileges
+-- 8. Create media storage bucket
 -- ============================================================
-DO $$
-BEGIN
-  INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-  VALUES (
-    'media',
-    'media',
-    true,
-    52428800,  -- 50 MB limit
-    ARRAY['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf']
-  );
-EXCEPTION WHEN unique_violation THEN
-  RAISE NOTICE 'Bucket "media" already exists';
-END;
-$$;
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'media',
+  'media',
+  true,
+  52428800,
+  ARRAY['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf']
+)
+ON CONFLICT (id) DO NOTHING;

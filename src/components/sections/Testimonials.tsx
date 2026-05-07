@@ -48,6 +48,8 @@ export default function Testimonials({ testimonials }: TestimonialsProps) {
                 contentKey={`testimonial_${item.id}_image`}
                 src={item.image}
                 alt={item.name}
+                width={48}
+                height={48}
                 className="w-12 h-12 rounded-full object-cover border-2 border-primary"
               />
               <div className="text-left">

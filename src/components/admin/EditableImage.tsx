@@ -11,6 +11,8 @@ interface EditableImageProps {
   alt: string;
   className?: string;
   fill?: boolean;
+  width?: number;
+  height?: number;
   priority?: boolean;
   sizes?: string;
 }
@@ -22,6 +24,8 @@ export default function EditableImage({
   alt,
   className = "",
   fill,
+  width,
+  height,
   priority,
   sizes,
 }: EditableImageProps) {
@@ -57,7 +61,10 @@ export default function EditableImage({
   };
 
   return (
-    <div className={`relative group ${isAdmin && isEditing ? "cursor-pointer" : ""}`} onClick={handleClick}>
+    <div
+      className={`relative group ${fill ? "h-full w-full" : "inline-block"} ${isAdmin && isEditing ? "cursor-pointer" : ""}`}
+      onClick={handleClick}
+    >
       {uploading && (
         <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10 rounded-inherit">
           <div className="animate-spin w-6 h-6 border-2 border-white border-t-transparent rounded-full" />
@@ -67,6 +74,8 @@ export default function EditableImage({
         src={currentSrc}
         alt={alt}
         fill={fill}
+        width={width}
+        height={height}
         priority={priority}
         sizes={sizes}
         className={`${className} ${isAdmin && isEditing ? "group-hover:ring-2 group-hover:ring-primary/50 group-hover:brightness-90 transition-all duration-200" : ""}`}
