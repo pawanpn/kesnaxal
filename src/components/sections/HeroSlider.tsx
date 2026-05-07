@@ -28,7 +28,11 @@ export default function HeroSlider({ slides, motto }: HeroSliderProps) {
           key={index}
           className={`absolute inset-0 transition-opacity duration-700 ${index === current ? "opacity-100" : "opacity-0"}`}
         >
-          <OptimizedImage src={slide.image} alt={slide.title} fill priority={index === 0} className="object-cover" sizes="100vw" />
+          {slide.image ? (
+            <OptimizedImage src={slide.image} alt={slide.title} fill priority={index === 0} className="object-cover" sizes="100vw" />
+          ) : (
+            <div className="absolute inset-0 bg-[#1e3a8a]" />
+          )}
           <div className="absolute inset-0 bg-black/50" />
         </div>
       ))}
