@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import PageHero from "@/components/ui/PageHero";
-import Badge from "@/components/ui/Badge";
+import JobCard from "@/components/sections/JobCard";
+import ApplicationForm from "@/components/sections/ApplicationForm";
 import { siteConfig } from "@/constants/siteConfig";
 import type { JobVacancy } from "@/types";
 import { useLocale } from "@/hooks/useLocale";
@@ -23,9 +24,18 @@ function formatDateLocale(
 
 export default function CareersPage() {
   const [selectedJob, setSelectedJob] = useState<JobVacancy | null>(null);
+  const [applyingJob, setApplyingJob] = useState<JobVacancy | null>(null);
   const { locale, t } = useLocale();
   const jobs = siteConfig.jobVacancies;
   const activeJobs = jobs.filter((j) => j.isActive);
+
+  const toggleDetails = (job: JobVacancy) => {
+    setSelectedJob((prev) => (prev?.id === job.id ? null : job));
+  };
+
+  const handleApply = (job: JobVacancy) => {
+    setApplyingJob(job);
+  };
 
   return (
     <div className="min-h-screen">
@@ -73,68 +83,17 @@ export default function CareersPage() {
                   <p className="text-muted text-sm">{t.careers.noOpenPositions}</p>
                 </div>
               ) : (
-                activeJobs.map((job) => {
-                  const resolved = resolveJob(job, locale);
-                  const catEn = job.category.en;
-                  return (
-                    <div
-                      key={job.id}
-                      className={`bg-white rounded-2xl border-2 transition-all duration-300 p-6 ${
-                        selectedJob?.id === job.id
-                          ? "border-primary shadow-lg"
-                          : "border-border hover:border-primary/30 shadow-sm hover:shadow-md"
-                      }`}
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 mb-2 flex-wrap">
-                            <h3 className="font-heading font-bold text-base lg:text-lg text-foreground">
-                              {resolved.title}
-                            </h3>
-                            <Badge variant={catEn === "Teaching" ? "primary" : catEn === "Administration" ? "accent" : "secondary"}>
-                              {resolved.category}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-muted mb-3">{resolved.level}</p>
-                          <div className="flex flex-wrap items-center gap-4 text-xs text-muted">
-                            <span className="flex items-center gap-1.5">
-                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              {t.careers.addedOn} {formatDateLocale(new Date(job.addedOn), locale, { day: "numeric", month: "short", year: "numeric" })}
-                            </span>
-                            <span className={`flex items-center gap-1.5 font-semibold ${
-                              new Date(job.expiresOn) < new Date() ? "text-accent" : "text-orange-600"
-                            }`}>
-                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              {t.careers.expiresOn} {formatDateLocale(new Date(job.expiresOn), locale, { day: "numeric", month: "short", year: "numeric" })}
-                            </span>
-                            <span className="flex items-center gap-1.5">
-                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                              </svg>
-                              {job.vacancies} {job.vacancies === 1 ? t.careers.vacancy : t.careers.vacancies}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 shrink-0">
-                          <button
-                            onClick={() => setSelectedJob(selectedJob?.id === job.id ? null : job)}
-                            className="px-4 py-2 rounded-lg text-xs font-semibold border border-primary text-primary hover:bg-primary hover:text-white transition-all"
-                          >
-                            {selectedJob?.id === job.id ? t.careers.hideDetails : t.careers.viewDetails}
-                          </button>
-                          <button className="px-4 py-2 rounded-lg text-xs font-semibold bg-primary text-white hover:bg-primary-dark transition-all shadow-sm">
-                            {t.careers.apply}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
+                activeJobs.map((job) => (
+                  <JobCard
+                    key={job.id}
+                    job={job}
+                    isSelected={selectedJob?.id === job.id}
+                    locale={locale}
+                    t={t}
+                    onToggleDetails={toggleDetails}
+                    onApply={handleApply}
+                  />
+                ))
               )}
             </div>
 
@@ -159,7 +118,6 @@ export default function CareersPage() {
                       </button>
                     </div>
 
-                    {/* Detail Table */}
                     <div className="space-y-3 mb-6">
                       {[
                         { label: t.careers.jobTitle, value: resolvedSelected.title },
@@ -179,7 +137,6 @@ export default function CareersPage() {
                       ))}
                     </div>
 
-                    {/* Responsibilities */}
                     <div>
                       <h4 className="font-heading font-bold text-sm text-primary mb-3 flex items-center gap-2">
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -201,7 +158,10 @@ export default function CareersPage() {
                       </ul>
                     </div>
 
-                    <button className="w-full mt-6 px-6 py-3 bg-accent text-white rounded-lg text-sm font-bold hover:bg-accent-dark transition-colors shadow-sm">
+                    <button
+                      onClick={() => handleApply(selectedJob)}
+                      className="w-full mt-6 px-6 py-3 bg-accent text-white rounded-lg text-sm font-bold hover:bg-accent-dark transition-colors shadow-sm"
+                    >
                       {t.careers.applyForPosition}
                     </button>
                   </div>
@@ -218,6 +178,17 @@ export default function CareersPage() {
           </div>
         </div>
       </section>
+
+      {/* Application Form Modal */}
+      {applyingJob && (
+        <ApplicationForm
+          job={applyingJob}
+          locale={locale}
+          t={t}
+          onClose={() => setApplyingJob(null)}
+          schoolName={siteConfig.school.name}
+        />
+      )}
     </div>
   );
 }

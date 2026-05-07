@@ -241,6 +241,7 @@ export interface Translations {
   calendar: Record<string, string>;
   forms: Record<string, string>;
   badges: Record<string, string>;
+  applicationForm: Record<string, string>;
 }
 
 // ── Site Config (root) ──

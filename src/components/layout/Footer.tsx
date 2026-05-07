@@ -37,6 +37,7 @@ export default function Footer() {
     <footer className="bg-primary-dark text-white mt-auto">
       <div className="container-custom py-12 lg:py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {/* About */}
           <div>
             <div className="flex items-center gap-3 mb-4">
               <div className="relative shrink-0">
@@ -50,12 +51,13 @@ export default function Footer() {
               </div>
               <div>
                 <h3 className="font-heading font-bold text-white text-sm">{school.name}</h3>
-                <p className="text-secondary-light text-xs italic">{school.motto}</p>
+                <p className="text-secondary-light text-xs italic tracking-wide">{school.motto}</p>
               </div>
             </div>
             <p className="text-gray-300 text-sm leading-relaxed">{resolveContent(footer.about, locale)}</p>
           </div>
 
+          {/* Quick Links */}
           <div>
             <h4 className="font-heading font-bold text-secondary text-sm uppercase tracking-wider mb-4">
               {t.footer.quickLinks}
@@ -71,36 +73,53 @@ export default function Footer() {
             </ul>
           </div>
 
+          {/* Contact Info */}
           <div>
             <h4 className="font-heading font-bold text-secondary text-sm uppercase tracking-wider mb-4">
               {t.footer.contactInfo}
             </h4>
-            <ul className="space-y-3 text-gray-300 text-sm">
-              <li className="flex items-start gap-2">
-                <svg className="w-4 h-4 mt-0.5 shrink-0 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span>{contact.address}</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <svg className="w-4 h-4 shrink-0 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-                <div className="flex flex-col">
-                  <span>{contact.phone}</span>
-                  <span className="text-gray-400">{contact.phone2}</span>
+            <ul className="space-y-4 text-gray-300 text-sm">
+              <li className="flex items-start gap-3">
+                <div className="w-8 h-8 flex items-center justify-center shrink-0 rounded-lg bg-white/5 mt-0.5">
+                  <svg className="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <span className="block font-semibold text-white text-xs uppercase tracking-wide mb-1">{t.footer.address}</span>
+                  <span className="leading-relaxed text-gray-400">{contact.address}</span>
                 </div>
               </li>
-              <li className="flex items-center gap-2">
-                <svg className="w-4 h-4 shrink-0 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                <span>{contact.email}</span>
+              <li className="flex items-start gap-3">
+                <div className="w-8 h-8 flex items-center justify-center shrink-0 rounded-lg bg-white/5 mt-0.5">
+                  <svg className="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                </div>
+                <div>
+                  <span className="block font-semibold text-white text-xs uppercase tracking-wide mb-1">{t.footer.phone}</span>
+                  <div className="flex flex-col gap-0.5">
+                    <a href={`tel:${contact.phone}`} className="text-gray-400 hover:text-secondary transition-colors">{contact.phone}</a>
+                    <a href={`tel:${contact.phone2}`} className="text-gray-400 hover:text-secondary transition-colors">{contact.phone2}</a>
+                  </div>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="w-8 h-8 flex items-center justify-center shrink-0 rounded-lg bg-white/5 mt-0.5">
+                  <svg className="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <span className="block font-semibold text-white text-xs uppercase tracking-wide mb-1">{t.footer.email}</span>
+                  <a href={`mailto:${contact.email}`} className="text-gray-400 hover:text-secondary transition-colors break-all">{contact.email}</a>
+                </div>
               </li>
             </ul>
           </div>
 
+          {/* Follow Us + Principal */}
           <div>
             <h4 className="font-heading font-bold text-secondary text-sm uppercase tracking-wider mb-4">
               {t.footer.followUs}
@@ -119,16 +138,18 @@ export default function Footer() {
                 </a>
               ))}
             </div>
-            <div className="bg-white/10 rounded-lg p-4">
-              <p className="text-xs text-gray-300 leading-relaxed">
-                <span className="text-secondary font-semibold">{t.footer.principal}:</span> {school.principal.name}
+            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+              <p className="text-xs text-gray-400 leading-relaxed mb-2">
+                <span className="block font-heading font-bold text-secondary uppercase tracking-wider mb-1">{t.footer.principal}</span>
+                <span className="text-white font-semibold">{school.principal.name}</span>
               </p>
+              <p className="text-[11px] text-gray-500 italic leading-relaxed">{school.principal.message}</p>
             </div>
             <Link
               href={contact.mapEmbedUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 mt-3 text-xs text-gray-400 hover:text-secondary transition-colors"
+              className="inline-flex items-center gap-1.5 mt-4 text-xs text-gray-400 hover:text-secondary transition-colors"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -141,13 +162,18 @@ export default function Footer() {
       </div>
 
       <div className="border-t border-white/10">
-        <div className="container-custom py-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+        <div className="container-custom py-5 flex flex-col sm:flex-row justify-between items-center gap-3">
           <p className="text-gray-400 text-xs">
             &copy; {new Date().getFullYear()} {school.name}. {t.footer.allRightsReserved}
           </p>
-          <p className="text-gray-400 text-xs">
-            {t.footer.establishedAffiliated.replace('{established}', String(school.established))}
-          </p>
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+            </svg>
+            <p className="text-gray-400 text-xs">
+              {t.footer.establishedAffiliated.replace('{established}', String(school.established))}
+            </p>
+          </div>
         </div>
       </div>
     </footer>
