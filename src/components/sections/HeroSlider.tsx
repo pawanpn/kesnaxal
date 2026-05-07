@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import OptimizedImage from "@/components/ui/OptimizedImage";
 import { useLocale } from "@/hooks/useLocale";
 import { resolveContent } from "@/lib/translate";
+import EditableElement from "@/components/admin/EditableElement";
+import EditableImage from "@/components/admin/EditableImage";
 import type { HeroSlide } from "@/types";
 
 interface HeroSliderProps {
@@ -32,7 +33,16 @@ export default function HeroSlider({ slides, motto }: HeroSliderProps) {
           className={`absolute inset-0 transition-opacity duration-700 ${index === current ? "opacity-100" : "opacity-0"}`}
         >
           {slide.image ? (
-            <OptimizedImage src={slide.image} alt={resolveContent(slide.title, locale)} fill priority={index === 0} className="object-cover" sizes="100vw" />
+            <EditableImage
+              section="hero"
+              contentKey={`slide_${index}_image`}
+              src={slide.image}
+              alt={resolveContent(slide.title, locale)}
+              fill
+              priority={index === 0}
+              className="object-cover"
+              sizes="100vw"
+            />
           ) : (
             <div className="absolute inset-0 bg-[#1e3a8a]" />
           )}
@@ -43,12 +53,29 @@ export default function HeroSlider({ slides, motto }: HeroSliderProps) {
       <div className="absolute inset-0 flex items-center justify-center text-center px-4">
         <div className="max-w-3xl">
           <p className="text-secondary font-heading text-sm sm:text-lg font-light tracking-widest mb-2 animate-fadein uppercase">
-            {motto}
+            <EditableElement
+              section="school"
+              contentKey="motto"
+              value={{ en: motto, ne: motto, ja: motto }}
+              as="span"
+            />
           </p>
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-heading font-bold text-white leading-tight mb-4">
-              {resolveContent(slides[current].title, locale)}
+            <EditableElement
+              section="hero"
+              contentKey={`slide_${current}_title`}
+              value={slides[current].title}
+              as="span"
+            />
           </h1>
-          <p className="text-gray-200 text-base sm:text-xl max-w-xl mx-auto">{resolveContent(slides[current].subtitle, locale)}</p>
+          <p className="text-gray-200 text-base sm:text-xl max-w-xl mx-auto">
+            <EditableElement
+              section="hero"
+              contentKey={`slide_${current}_subtitle`}
+              value={slides[current].subtitle}
+              as="span"
+            />
+          </p>
           <div className="mt-8 flex gap-4 justify-center">
             <Link
               href="/admissions"

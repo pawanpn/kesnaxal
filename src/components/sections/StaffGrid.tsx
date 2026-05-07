@@ -1,4 +1,7 @@
-import OptimizedImage from "@/components/ui/OptimizedImage";
+"use client";
+
+import EditableImage from "@/components/admin/EditableImage";
+import EditableElement from "@/components/admin/EditableElement";
 import SectionHeading from "@/components/ui/SectionHeading";
 import type { StaffMember } from "@/types";
 
@@ -20,7 +23,9 @@ export default function StaffGrid({ staff, title }: StaffGridProps) {
               className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-border hover:border-primary/30"
             >
               <div className="relative h-56 overflow-hidden bg-surface">
-                <OptimizedImage
+                <EditableImage
+                  section="staff"
+                  contentKey={`staff_${member.id}_photo`}
                   src={member.photo}
                   alt={member.name}
                   fill
@@ -30,11 +35,30 @@ export default function StaffGrid({ staff, title }: StaffGridProps) {
               </div>
               <div className="p-4 text-center">
                 <h3 className="font-heading font-bold text-sm text-foreground mb-1">
-                  {member.name}
+                  <EditableElement
+                    section="staff"
+                    contentKey={`staff_${member.id}_name`}
+                    value={{ en: member.name, ne: member.name, ja: member.name }}
+                    as="span"
+                  />
                 </h3>
-                <p className="text-xs text-primary font-semibold mb-1">{member.designation}</p>
+                <p className="text-xs text-primary font-semibold mb-1">
+                  <EditableElement
+                    section="staff"
+                    contentKey={`staff_${member.id}_designation`}
+                    value={{ en: member.designation, ne: member.designation, ja: member.designation }}
+                    as="span"
+                  />
+                </p>
                 {member.department && (
-                  <p className="text-xs text-muted">{member.department}</p>
+                  <p className="text-xs text-muted">
+                    <EditableElement
+                      section="staff"
+                      contentKey={`staff_${member.id}_department`}
+                      value={{ en: member.department, ne: member.department, ja: member.department }}
+                      as="span"
+                    />
+                  </p>
                 )}
               </div>
             </div>

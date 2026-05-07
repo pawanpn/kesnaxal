@@ -2,6 +2,8 @@
 
 import { useState, useCallback } from "react";
 import OptimizedImage from "@/components/ui/OptimizedImage";
+import EditableImage from "@/components/admin/EditableImage";
+import EditableElement from "@/components/admin/EditableElement";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { useLocale } from "@/hooks/useLocale";
 import { resolveContent } from "@/lib/translate";
@@ -30,12 +32,41 @@ export default function Testimonials({ testimonials }: TestimonialsProps) {
                 <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
               </svg>
             </div>
-            <p className="text-foreground text-sm lg:text-base leading-relaxed mb-6 italic">&ldquo;{resolveContent(item.text, locale)}&rdquo;</p>
+            <p className="text-foreground text-sm lg:text-base leading-relaxed mb-6 italic">
+              &ldquo;
+              <EditableElement
+                section="testimonials"
+                contentKey={`testimonial_${item.id}_text`}
+                value={item.text}
+                as="span"
+              />
+              &rdquo;
+            </p>
             <div className="flex items-center justify-center gap-3">
-              <OptimizedImage src={item.image} alt={item.name} width={48} height={48} className="w-12 h-12 rounded-full object-cover border-2 border-primary" />
+              <EditableImage
+                section="testimonials"
+                contentKey={`testimonial_${item.id}_image`}
+                src={item.image}
+                alt={item.name}
+                className="w-12 h-12 rounded-full object-cover border-2 border-primary"
+              />
               <div className="text-left">
-                <p className="font-semibold text-foreground text-sm">{item.name}</p>
-                <p className="text-xs text-muted">{item.role}</p>
+                <p className="font-semibold text-foreground text-sm">
+                  <EditableElement
+                    section="testimonials"
+                    contentKey={`testimonial_${item.id}_name`}
+                    value={{ en: item.name, ne: item.name, ja: item.name }}
+                    as="span"
+                  />
+                </p>
+                <p className="text-xs text-muted">
+                  <EditableElement
+                    section="testimonials"
+                    contentKey={`testimonial_${item.id}_role`}
+                    value={{ en: item.role, ne: item.role, ja: item.role }}
+                    as="span"
+                  />
+                </p>
               </div>
             </div>
           </div>

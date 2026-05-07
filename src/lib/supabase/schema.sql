@@ -2,6 +2,16 @@
 -- SUPABASE SCHEMA: SuperAdmin Visual CMS
 -- Run this in Supabase SQL Editor
 -- ============================================================
+--
+-- SETUP STEPS:
+-- 1. Go to https://supabase.com/dashboard -> Your Project -> SQL Editor
+-- 2. Paste and run this entire script
+-- 3. Go to Storage -> Create new bucket named "media" (public)
+-- 4. Go to Authentication -> Users -> Add User to create your admin account
+-- 5. After first login, set role to 'superadmin' in admin_profiles table:
+--    UPDATE admin_profiles SET role = 'superadmin' WHERE id = '<your-user-id>';
+-- 6. Login at /admin/login , then click "Seed from siteConfig" to populate content
+-- ============================================================
 
 -- 1. Admin users table (auth handled by Supabase Auth)
 -- Just a profile table to flag admin role
@@ -154,3 +164,22 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+
+-- ============================================================
+-- 8. Create media storage bucket (if not exists)
+-- Must be run with sufficient privileges
+-- ============================================================
+DO $$
+BEGIN
+  INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+  VALUES (
+    'media',
+    'media',
+    true,
+    52428800,  -- 50 MB limit
+    ARRAY['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf']
+  );
+EXCEPTION WHEN unique_violation THEN
+  RAISE NOTICE 'Bucket "media" already exists';
+END;
+$$;

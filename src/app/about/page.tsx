@@ -1,15 +1,15 @@
-import type { Metadata } from "next";
+"use client";
+
 import PageHero from "@/components/ui/PageHero";
 import SectionHeading from "@/components/ui/SectionHeading";
 import ValueCards from "@/components/sections/ValueCards";
 import OptimizedImage from "@/components/ui/OptimizedImage";
+import EditableElement from "@/components/admin/EditableElement";
+import EditableImage from "@/components/admin/EditableImage";
 import { siteConfig } from "@/constants/siteConfig";
 import type { ValueCard } from "@/types";
 
-export const metadata: Metadata = {
-  title: "About Us",
-  description: `Learn about ${siteConfig.school.name} — our history, mission, and leadership.`,
-};
+const { school } = siteConfig;
 
 const values: ValueCard[] = [
   {
@@ -35,8 +35,6 @@ const values: ValueCard[] = [
 ];
 
 export default function AboutPage() {
-  const { school } = siteConfig;
-
   return (
     <div className="min-h-screen">
       <PageHero pageKey="about" />
@@ -44,16 +42,69 @@ export default function AboutPage() {
       <section className="py-12 lg:py-16">
         <div className="container-custom grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           <div>
-            <SectionHeading title={school.name} />
-            <p className="text-muted leading-relaxed mb-4">{school.history}</p>
-            <p className="text-muted leading-relaxed mb-4">{school.principal.message}</p>
+            <SectionHeading
+              title={
+                <EditableElement
+                  section="school"
+                  contentKey="name"
+                  value={{ en: school.name, ne: school.name, ja: school.name }}
+                  as="span"
+                />
+              }
+            />
+            <p className="text-muted leading-relaxed mb-4">
+              <EditableElement
+                section="school"
+                contentKey="history"
+                value={{ en: school.history, ne: school.history, ja: school.history }}
+                as="span"
+                rich
+              />
+            </p>
+            <p className="text-muted leading-relaxed mb-4">
+              <EditableElement
+                section="school"
+                contentKey="principal_message"
+                value={{ en: school.principal.message, ne: school.principal.message, ja: school.principal.message }}
+                as="span"
+                rich
+              />
+            </p>
             <div className="flex flex-wrap gap-6 text-sm">
-              <div><span className="text-muted">Established:</span> <strong>{school.established}</strong></div>
-              <div><span className="text-muted">Principal:</span> <strong>{school.principal.name}</strong></div>
+              <div>
+                <span className="text-muted">Established:</span>{" "}
+                <strong>
+                  <EditableElement
+                    section="school"
+                    contentKey="established"
+                    value={{ en: String(school.established), ne: String(school.established), ja: String(school.established) }}
+                    as="span"
+                  />
+                </strong>
+              </div>
+              <div>
+                <span className="text-muted">Principal:</span>{" "}
+                <strong>
+                  <EditableElement
+                    section="school"
+                    contentKey="principal_name"
+                    value={{ en: school.principal.name, ne: school.principal.name, ja: school.principal.name }}
+                    as="span"
+                  />
+                </strong>
+              </div>
             </div>
           </div>
           <div className="relative h-72 lg:h-96 rounded-2xl overflow-hidden bg-surface">
-            <OptimizedImage src="/images/school_building.jpg" alt="School Building" fill className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" />
+            <EditableImage
+              section="about"
+              contentKey="school_image"
+              src="/images/school_building.jpg"
+              alt="School Building"
+              fill
+              className="object-cover"
+              sizes="(max-width: 1024px) 100vw, 50vw"
+            />
           </div>
         </div>
       </section>

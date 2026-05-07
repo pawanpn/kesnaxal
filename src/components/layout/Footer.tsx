@@ -5,6 +5,7 @@ import Link from "next/link";
 import { siteConfig } from "@/constants/siteConfig";
 import { useLocale } from "@/hooks/useLocale";
 import { resolveContent } from "@/lib/translate";
+import EditableElement from "@/components/admin/EditableElement";
 
 const socialIcons: Record<string, React.ReactNode> = {
   facebook: (
@@ -50,11 +51,32 @@ export default function Footer() {
                 />
               </div>
               <div>
-                <h3 className="font-heading font-bold text-white text-sm">{school.name}</h3>
-                <p className="text-secondary-light text-xs italic tracking-wide">{school.motto}</p>
+                <h3 className="font-heading font-bold text-white text-sm">
+                  <EditableElement
+                    section="school"
+                    contentKey="name"
+                    value={{ en: school.name, ne: school.name, ja: school.name }}
+                    as="span"
+                  />
+                </h3>
+                <p className="text-secondary-light text-xs italic tracking-wide">
+                  <EditableElement
+                    section="school"
+                    contentKey="motto"
+                    value={{ en: school.motto, ne: school.motto, ja: school.motto }}
+                    as="span"
+                  />
+                </p>
               </div>
             </div>
-            <p className="text-gray-300 text-sm leading-relaxed">{resolveContent(footer.about, locale)}</p>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <EditableElement
+                section="footer"
+                contentKey="about"
+                value={footer.about}
+                as="span"
+              />
+            </p>
           </div>
 
           {/* Quick Links */}
@@ -141,9 +163,23 @@ export default function Footer() {
             <div className="bg-white/5 rounded-xl p-4 border border-white/10">
               <p className="text-xs text-gray-400 leading-relaxed mb-2">
                 <span className="block font-heading font-bold text-secondary uppercase tracking-wider mb-1">{t.footer.principal}</span>
-                <span className="text-white font-semibold">{school.principal.name}</span>
+                <span className="text-white font-semibold">
+                  <EditableElement
+                    section="school"
+                    contentKey="principal_name"
+                    value={{ en: school.principal.name, ne: school.principal.name, ja: school.principal.name }}
+                    as="span"
+                  />
+                </span>
               </p>
-              <p className="text-[11px] text-gray-500 italic leading-relaxed">{school.principal.message}</p>
+              <p className="text-[11px] text-gray-500 italic leading-relaxed">
+                <EditableElement
+                  section="school"
+                  contentKey="principal_message"
+                  value={{ en: school.principal.message, ne: school.principal.message, ja: school.principal.message }}
+                  as="span"
+                />
+              </p>
             </div>
             <Link
               href={contact.mapEmbedUrl}

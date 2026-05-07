@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import OptimizedImage from "@/components/ui/OptimizedImage";
+import EditableImage from "@/components/admin/EditableImage";
+import EditableElement from "@/components/admin/EditableElement";
 import Badge from "@/components/ui/Badge";
 import SocialShare from "@/components/ui/SocialShare";
 import { useLocale } from "@/hooks/useLocale";
@@ -21,7 +22,16 @@ export default function NewsDetail({ article, recentPosts }: NewsDetailProps) {
   return (
     <article>
       <div className="relative h-64 sm:h-80 lg:h-[450px] bg-primary-dark">
-        <OptimizedImage src={article.image} alt={resolved.title} fill priority className="object-cover" sizes="100vw" />
+        <EditableImage
+          section="news"
+          contentKey={`article_${article.id}_image`}
+          src={article.image}
+          alt={resolved.title}
+          fill
+          priority
+          className="object-cover"
+          sizes="100vw"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
         <div className="absolute bottom-0 left-0 right-0 p-6 lg:p-12">
           <div className="container-custom">
@@ -33,7 +43,14 @@ export default function NewsDetail({ article, recentPosts }: NewsDetailProps) {
               <span className="text-secondary truncate">{resolved.title}</span>
             </nav>
             <Badge>{article.category}</Badge>
-            <h1 className="text-2xl lg:text-4xl font-heading font-bold text-white max-w-3xl leading-tight mt-3">{resolved.title}</h1>
+            <h1 className="text-2xl lg:text-4xl font-heading font-bold text-white max-w-3xl leading-tight mt-3">
+              <EditableElement
+                section="news"
+                contentKey={`article_${article.id}_title`}
+                value={article.title}
+                as="span"
+              />
+            </h1>
           </div>
         </div>
       </div>
@@ -88,7 +105,7 @@ export default function NewsDetail({ article, recentPosts }: NewsDetailProps) {
                     return (
                       <Link key={post.id} href={`/news/${post.slug}`} className="flex gap-3 group">
                         <div className="relative w-16 h-12 shrink-0 rounded-lg overflow-hidden">
-                          <OptimizedImage src={post.image} alt={r.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="64px" />
+                          <EditableImage section="news" contentKey={`article_${post.id}_image`} src={post.image} alt={r.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="64px" />
                         </div>
                         <div className="min-w-0">
                           <p className="text-xs text-muted mb-0.5">{new Date(post.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>

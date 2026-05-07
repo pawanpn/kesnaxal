@@ -41,7 +41,9 @@ interface AdminContextValue {
   publishAll: () => Promise<void>;
   discardEdit: (section: string, key: string, locale: string) => void;
   getContent: (section: string, key: string, locale: string) => string;
+  getMedia: (section: string, key: string) => string;
   uploadMedia: (file: File, section: string, key: string) => Promise<string | null>;
+  seedContent: () => Promise<{ count: number; error?: string }>;
 }
 
 export const AdminContext = createContext<AdminContextValue | null>(null);
@@ -234,6 +236,30 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  /* ── Get media URL from Supabase content (checks drafts first) ── */
+  const getMedia = useCallback(
+    (section: string, key: string): string => {
+      const locales = ["en", "ne", "ja"];
+      for (const l of locales) {
+        const rk = rowKey(section, key, l);
+        const d = draftContent.get(rk);
+        if (d?.content_text) return d.content_text;
+        const p = publishedContent.get(rk);
+        if (p?.content_text) return p.content_text;
+      }
+      return "";
+    },
+    [draftContent, publishedContent]
+  );
+
+  /* ── Seed content from siteConfig to Supabase ── */
+  const seedContent = useCallback(async (): Promise<{ count: number; error?: string }> => {
+    const { seedSupabaseContent } = await import("@/lib/seedContent");
+    const result = await seedSupabaseContent();
+    if (!result.error) await loadAllContent();
+    return result;
+  }, []);
+
   /* ── Auth ── */
   const login = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -275,7 +301,9 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
         publishAll,
         discardEdit,
         getContent,
+        getMedia,
         uploadMedia,
+        seedContent,
       }}
     >
       {children}
