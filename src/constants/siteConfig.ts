@@ -1,4 +1,6 @@
-export const siteData = {
+import type { SiteConfig } from "@/types";
+
+export const siteConfig: SiteConfig = {
   school: {
     name: "Kathmandu English School",
     shortName: "KES",
@@ -133,7 +135,7 @@ Sneha and Roshan both earned silver medals with their innovative approaches to B
 
 The Olympiad, organized by the Nepal Science Foundation, saw participation from over 200 schools across the country. Our students underwent weeks of rigorous preparation under the guidance of our dedicated Science faculty.
 
-"We are immensely proud of our students," said Principal ${"Mr. Bishnu Prasad Sharma"}. "This achievement reflects the hard work of our students and the quality of education we strive to provide at KES."
+"We are immensely proud of our students," said Principal Mr. Bishnu Prasad Sharma. "This achievement reflects the hard work of our students and the quality of education we strive to provide at KES."
 
 The winners will now represent Nepal at the International Science Olympiad in Tokyo, Japan, later this year. The school has announced a special scholarship fund for the winners to support their advanced studies.
       `,
@@ -317,20 +319,61 @@ KES is one of the first schools in Nepal to implement a structured mental health
   gallery: {
     categories: ["Events", "Infrastructure", "Sports"],
     images: [
-      { src: "/images/gallery/gallery_1.jpg", alt: "Annual Day", category: "Events" },
-      { src: "/images/gallery/gallery_2.jpg", alt: "Library", category: "Infrastructure" },
-      { src: "/images/gallery/gallery_3.jpg", alt: "Football Match", category: "Sports" },
-      { src: "/images/gallery/gallery_4.jpg", alt: "Science Fair", category: "Events" },
-      { src: "/images/gallery/gallery_5.jpg", alt: "Computer Lab", category: "Infrastructure" },
-      { src: "/images/gallery/gallery_6.jpg", alt: "Basketball Court", category: "Sports" },
-      { src: "/images/gallery/gallery_7.jpg", alt: "Cultural Program", category: "Events" },
-      { src: "/images/gallery/gallery_8.jpg", alt: "Auditorium", category: "Infrastructure" },
-      { src: "/images/gallery/gallery_9.jpg", alt: "Swimming Pool", category: "Sports" },
-      { src: "/images/gallery/gallery_10.jpg", alt: "Art Exhibition", category: "Events" },
-      { src: "/images/gallery/gallery_11.jpg", alt: "Playground", category: "Infrastructure" },
-      { src: "/images/gallery/gallery_12.jpg", alt: "Cricket Ground", category: "Sports" },
+      { src: "https://picsum.photos/seed/school1/800/600", alt: "Annual Day Celebration", category: "Events", width: 800, height: 600 },
+      { src: "https://picsum.photos/seed/library/600/800", alt: "School Library", category: "Infrastructure", width: 600, height: 800 },
+      { src: "https://picsum.photos/seed/sports1/800/600", alt: "Football Match", category: "Sports", width: 800, height: 600 },
+      { src: "https://picsum.photos/seed/science/800/600", alt: "Science Exhibition", category: "Events", width: 800, height: 600 },
+      { src: "https://picsum.photos/seed/computer/600/800", alt: "Computer Lab", category: "Infrastructure", width: 600, height: 800 },
+      { src: "https://picsum.photos/seed/basketball/800/600", alt: "Basketball Tournament", category: "Sports", width: 800, height: 600 },
+      { src: "https://picsum.photos/seed/cultural/800/600", alt: "Cultural Program", category: "Events", width: 800, height: 600 },
+      { src: "https://picsum.photos/seed/auditorium/800/600", alt: "School Auditorium", category: "Infrastructure", width: 800, height: 600 },
+      { src: "https://picsum.photos/seed/swimming/600/800", alt: "Swimming Pool", category: "Sports", width: 600, height: 800 },
+      { src: "https://picsum.photos/seed/art/800/600", alt: "Art Exhibition", category: "Events", width: 800, height: 600 },
+      { src: "https://picsum.photos/seed/playground/800/600", alt: "School Playground", category: "Infrastructure", width: 800, height: 600 },
+      { src: "https://picsum.photos/seed/cricket/800/600", alt: "Cricket Tournament", category: "Sports", width: 800, height: 600 },
     ],
   },
+
+  academicLevels: [
+    {
+      id: "primary",
+      title: "Primary Level",
+      grades: "Nursery - Grade 5",
+      desc: "Our primary program focuses on building strong foundations in literacy, numeracy, and social skills through play-based and experiential learning methods. We follow a child-centric approach where every child learns at their own pace.",
+      image: "/images/primary.jpg",
+      subjects: ["English", "Nepali", "Mathematics", "Science", "Social Studies", "Computer", "Arts & Crafts", "Physical Education"],
+    },
+    {
+      id: "secondary",
+      title: "Secondary Level",
+      grades: "Grade 6 - 10",
+      desc: "The secondary curriculum deepens conceptual understanding and analytical skills. Students are prepared for the Secondary Education Examination (SEE) with rigorous academics and co-curricular enrichment.",
+      image: "/images/secondary.jpg",
+      subjects: ["English", "Nepali", "Mathematics", "Science", "Social Studies", "Computer Science", "Health & Physical Education", "Optional Subjects"],
+    },
+    {
+      id: "higher",
+      title: "Higher Secondary",
+      grades: "Grade 11 - 12",
+      desc: "Our 10+2 program offers Science and Management streams under NEB affiliation. Students receive advanced preparation for university entrance exams and career counseling.",
+      image: "/images/higher.jpg",
+      streams: [
+        { name: "Science", subjects: ["Physics", "Chemistry", "Biology", "Mathematics", "English", "Computer Science"] },
+        { name: "Management", subjects: ["Accountancy", "Economics", "Business Studies", "Mathematics", "English", "Computer Science"] },
+      ],
+    },
+  ],
+
+  faculty: [
+    { name: "Mr. Bishnu Prasad Sharma", role: "Principal", dept: "Administration" },
+    { name: "Mrs. Anju Thapa", role: "Vice Principal", dept: "Academics" },
+    { name: "Mr. Rajan Koirala", role: "HOD", dept: "Science" },
+    { name: "Mrs. Sunita Rai", role: "HOD", dept: "English" },
+    { name: "Mr. Dhiraj Poudel", role: "HOD", dept: "Mathematics" },
+    { name: "Mrs. Menuka Acharya", role: "HOD", dept: "Nepali" },
+    { name: "Mr. Sagar Bista", role: "HOD", dept: "Computer Science" },
+    { name: "Mrs. Rajani Shrestha", role: "HOD", dept: "Social Studies" },
+  ],
 
   footer: {
     about:
@@ -345,4 +388,4 @@ KES is one of the first schools in Nepal to implement a structured mental health
       { label: "Contact Us", href: "/contact" },
     ],
   },
-} as const;
+};

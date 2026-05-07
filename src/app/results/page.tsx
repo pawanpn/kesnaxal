@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import ResultPortal from "@/components/ResultPortal";
+import PageHero from "@/components/ui/PageHero";
+import ResultPortal from "@/components/sections/ResultPortal";
+import { siteConfig } from "@/constants/siteConfig";
 
 export const metadata: Metadata = {
   title: "Student Results",
@@ -9,18 +11,10 @@ export const metadata: Metadata = {
 export default function ResultsPage() {
   return (
     <div className="min-h-screen">
-      <section className="bg-primary py-12 lg:py-16">
-        <div className="container-custom text-center">
-          <h1 className="text-3xl lg:text-4xl font-heading font-bold text-white mb-3">Student Results</h1>
-          <p className="text-gray-200 max-w-xl mx-auto text-sm">
-            Enter your Symbol Number and Date of Birth to view and download your marksheet
-          </p>
-        </div>
-      </section>
-
+      <PageHero title="Student Results" subtitle="Enter your Symbol Number and Date of Birth to view and download your marksheet" />
       <section className="py-12 lg:py-16">
         <div className="container-custom">
-          <ResultPortal />
+          <ResultPortal schoolName={siteConfig.school.name} schoolAddress={siteConfig.contact.address} />
         </div>
       </section>
     </div>

@@ -1,19 +1,20 @@
-import Hero from "@/components/Hero";
-import BreakingNews from "@/components/BreakingNews";
-import NoticeBoard from "@/components/NoticeBoard";
-import UpcomingEvents from "@/components/UpcomingEvents";
-import Gallery from "@/components/Gallery";
-import Testimonials from "@/components/Testimonials";
+import HeroSlider from "@/components/sections/HeroSlider";
+import BreakingNews from "@/components/sections/BreakingNews";
+import NoticeBoard from "@/components/sections/NoticeBoard";
+import EventsGrid from "@/components/sections/EventsGrid";
+import GalleryGrid from "@/components/sections/GalleryGrid";
+import Testimonials from "@/components/sections/Testimonials";
+import { siteConfig } from "@/constants/siteConfig";
 
 export default function Home() {
   return (
     <>
-      <Hero />
+      <HeroSlider slides={siteConfig.hero.slides} motto={siteConfig.school.motto} />
       <BreakingNews />
       <NoticeBoard />
-      <UpcomingEvents />
-      <Gallery />
-      <Testimonials />
+      <EventsGrid events={siteConfig.upcomingEvents} />
+      <GalleryGrid images={siteConfig.gallery.images} />
+      <Testimonials testimonials={siteConfig.testimonials} />
     </>
   );
 }

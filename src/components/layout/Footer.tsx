@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { siteData } from "@/config/siteData";
+import { siteConfig } from "@/constants/siteConfig";
 
-const socialIcons = {
+const socialIcons: Record<string, React.ReactNode> = {
   facebook: (
     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
       <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
@@ -25,7 +25,7 @@ const socialIcons = {
 };
 
 export default function Footer() {
-  const { school, contact, social, footer, nav } = siteData;
+  const { school, contact, social, footer } = siteConfig;
 
   return (
     <footer className="bg-primary-dark text-white mt-auto">
@@ -34,16 +34,14 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-3 mb-4">
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-secondary text-primary font-bold text-lg">
-                KES
+                {school.shortName}
               </div>
               <div>
                 <h3 className="font-heading font-bold text-white text-sm">{school.name}</h3>
                 <p className="text-secondary-light text-xs italic">{school.motto}</p>
               </div>
             </div>
-            <p className="text-gray-300 text-sm leading-relaxed">
-              {footer.about}
-            </p>
+            <p className="text-gray-300 text-sm leading-relaxed">{footer.about}</p>
           </div>
 
           <div>
@@ -53,10 +51,7 @@ export default function Footer() {
             <ul className="space-y-2">
               {footer.quickLinks.map((link) => (
                 <li key={link.label}>
-                  <Link
-                    href={link.href}
-                    className="text-gray-300 text-sm hover:text-secondary transition-colors"
-                  >
+                  <Link href={link.href} className="text-gray-300 text-sm hover:text-secondary transition-colors">
                     {link.label}
                   </Link>
                 </li>
@@ -102,10 +97,10 @@ export default function Footer() {
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-secondary hover:text-primary transition-colors text-gray-300 hover:text-primary"
+                  className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-secondary hover:text-primary transition-colors text-gray-300"
                   aria-label={platform}
                 >
-                  {socialIcons[platform as keyof typeof socialIcons]}
+                  {socialIcons[platform]}
                 </a>
               ))}
             </div>

@@ -1,23 +1,25 @@
 import type { Metadata } from "next";
-import Gallery from "@/components/Gallery";
-import Testimonials from "@/components/Testimonials";
+import PageHero from "@/components/ui/PageHero";
+import GalleryGrid from "@/components/sections/GalleryGrid";
+import Testimonials from "@/components/sections/Testimonials";
+import { siteConfig } from "@/constants/siteConfig";
 
 export const metadata: Metadata = {
   title: "Gallery",
   description: "Explore the vibrant campus life at Kathmandu English School through our photo gallery.",
+  openGraph: {
+    title: "Gallery | Kathmandu English School",
+    description: "Explore campus life, events, sports, and infrastructure at KES through our photo gallery.",
+    type: "website",
+  },
 };
 
 export default function GalleryPage() {
   return (
     <div className="min-h-screen">
-      <section className="bg-primary py-12 lg:py-16">
-        <div className="container-custom text-center">
-          <h1 className="text-3xl lg:text-4xl font-heading font-bold text-white mb-3">School Gallery</h1>
-          <p className="text-gray-200 max-w-xl mx-auto text-sm">A glimpse into our vibrant campus life</p>
-        </div>
-      </section>
-      <Gallery />
-      <Testimonials />
+      <PageHero title="School Gallery" subtitle="A glimpse into our vibrant campus life" />
+      <GalleryGrid images={siteConfig.gallery.images} />
+      <Testimonials testimonials={siteConfig.testimonials} />
     </div>
   );
 }

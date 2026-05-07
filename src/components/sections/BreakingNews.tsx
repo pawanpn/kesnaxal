@@ -17,9 +17,7 @@ export default function BreakingNews({ messages = defaultMessages }: BreakingNew
 
   useEffect(() => {
     if (messages.length <= 1) return;
-    const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % messages.length);
-    }, 5000);
+    const timer = setInterval(() => setCurrentIndex((p) => (p + 1) % messages.length), 5000);
     return () => clearInterval(timer);
   }, [messages.length]);
 
@@ -30,12 +28,7 @@ export default function BreakingNews({ messages = defaultMessages }: BreakingNew
           Breaking
         </span>
         <div className="overflow-hidden flex-1">
-          <p
-            key={currentIndex}
-            className="text-sm whitespace-nowrap animate-slidein"
-          >
-            {messages[currentIndex]}
-          </p>
+          <p key={currentIndex} className="text-sm whitespace-nowrap animate-slidein">{messages[currentIndex]}</p>
         </div>
       </div>
     </div>

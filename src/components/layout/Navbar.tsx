@@ -3,15 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { siteData } from "@/config/siteData";
+import { siteConfig } from "@/constants/siteConfig";
+import type { NavLink } from "@/types";
 
-type NavLinkItem = {
-  label: string;
-  href: string;
-  dropdown?: { label: string; href: string }[];
-};
-
-const navLinks = siteData.nav.links as unknown as NavLinkItem[];
+const navLinks: NavLink[] = siteConfig.nav.links;
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -26,14 +21,14 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16 lg:h-20">
           <Link href="/" className="flex items-center gap-3 shrink-0">
             <div className="flex items-center justify-center w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-primary text-secondary font-bold text-sm lg:text-lg">
-              KES
+              {siteConfig.school.shortName}
             </div>
             <div className="hidden sm:block">
               <p className="text-sm lg:text-lg font-heading font-bold text-primary leading-tight">
-                {siteData.school.name}
+                {siteConfig.school.name}
               </p>
               <p className="text-[10px] lg:text-xs text-muted italic">
-                {siteData.school.motto}
+                {siteConfig.school.motto}
               </p>
             </div>
           </Link>

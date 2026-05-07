@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import InquiryForm from "@/components/InquiryForm";
+import PageHero from "@/components/ui/PageHero";
+import InquiryForm from "@/components/sections/InquiryForm";
+import { siteConfig } from "@/constants/siteConfig";
 
 export const metadata: Metadata = {
   title: "Contact Us",
@@ -9,16 +11,10 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   return (
     <div className="min-h-screen">
-      <section className="bg-primary py-12 lg:py-16">
-        <div className="container-custom text-center">
-          <h1 className="text-3xl lg:text-4xl font-heading font-bold text-white mb-3">Contact Us</h1>
-          <p className="text-gray-200 max-w-xl mx-auto text-sm">We&apos;d love to hear from you</p>
-        </div>
-      </section>
-
+      <PageHero title="Contact Us" subtitle="We'd love to hear from you" />
       <section className="py-12 lg:py-16">
         <div className="container-custom">
-          <InquiryForm />
+          <InquiryForm contact={siteConfig.contact} />
         </div>
       </section>
     </div>
