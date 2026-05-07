@@ -1,0 +1,51 @@
+[
+  {
+    "id": 1,
+    "title": "First Term Examination Schedule Released",
+    "date": "2026-05-06",
+    "content": "First term examinations for Grade 1 to 12 will commence from May 25, 2026. Detailed routine is available at the school reception.",
+    "priority": "high"
+  },
+  {
+    "id": 2,
+    "title": "Admission Open for Academic Year 2083",
+    "date": "2026-05-03",
+    "content": "Online and in-person admissions are now open for Nursery to Grade 11. Early bird discounts available until Asar 15.",
+    "priority": "high"
+  },
+  {
+    "id": 3,
+    "title": "Summer Vacation Notice",
+    "date": "2026-04-28",
+    "content": "Summer vacation will be observed from Asar 1 to Asar 20, 2083. School reopens on Asar 21.",
+    "priority": "normal"
+  },
+  {
+    "id": 4,
+    "title": "Annual Sports Meet Registration Open",
+    "date": "2026-04-20",
+    "content": "Students interested in participating in the Annual Sports Meet must register with their class teachers by Baisakh 25.",
+    "priority": "normal"
+  },
+  {
+    "id": 5,
+    "title": "Parent-Teacher Meeting Scheduled",
+    "date": "2026-04-15",
+    "content": "The second Parent-Teacher Meeting for this academic year is scheduled for Jestha 10, 2083. All parents are requested to attend.",
+    "priority": "normal"
+  },
+  {
+    "id": 6,
+    "title": "New Computer Lab Inauguration",
+    "date": "2026-03-30",
+    "content": "The newly upgraded computer lab with 40 workstations will be inaugurated by the Chairman on Chaitra 20.",
+    "priority": "low"
+  },
+  {
+    "id": 7,
+    "title": "Holi Celebration and Early Dismissal",
+    "date": "2026-03-10",
+    "content": "Holi celebration will be organized at school on Chaitra 5. School will close at 12:00 PM. Students are advised to wear old clothes.",
+    "priority": "low"
+  }
+]

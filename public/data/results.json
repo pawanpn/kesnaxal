@@ -1,0 +1,102 @@
+[
+  {
+    "symbolNumber": "083001",
+    "studentName": "Aadarsh Thapa",
+    "class": "10",
+    "dob": "2009-03-15",
+    "exam": "First Term Exam 2083",
+    "subjects": [
+      { "name": "English", "fullMarks": 100, "passMarks": 40, "obtained": 88 },
+      { "name": "Nepali", "fullMarks": 100, "passMarks": 40, "obtained": 82 },
+      { "name": "Mathematics", "fullMarks": 100, "passMarks": 40, "obtained": 95 },
+      { "name": "Science", "fullMarks": 100, "passMarks": 40, "obtained": 90 },
+      { "name": "Social Studies", "fullMarks": 100, "passMarks": 40, "obtained": 85 },
+      { "name": "Computer Science", "fullMarks": 50, "passMarks": 20, "obtained": 44 },
+      { "name": "Health Education", "fullMarks": 50, "passMarks": 20, "obtained": 42 }
+    ],
+    "result": "Pass",
+    "division": "Distinction",
+    "percentage": 87.67,
+    "rank": 1
+  },
+  {
+    "symbolNumber": "083002",
+    "studentName": "Bipana K.C.",
+    "class": "10",
+    "dob": "2009-07-22",
+    "exam": "First Term Exam 2083",
+    "subjects": [
+      { "name": "English", "fullMarks": 100, "passMarks": 40, "obtained": 75 },
+      { "name": "Nepali", "fullMarks": 100, "passMarks": 40, "obtained": 80 },
+      { "name": "Mathematics", "fullMarks": 100, "passMarks": 40, "obtained": 68 },
+      { "name": "Science", "fullMarks": 100, "passMarks": 40, "obtained": 72 },
+      { "name": "Social Studies", "fullMarks": 100, "passMarks": 40, "obtained": 88 },
+      { "name": "Computer Science", "fullMarks": 50, "passMarks": 20, "obtained": 38 },
+      { "name": "Health Education", "fullMarks": 50, "passMarks": 20, "obtained": 36 }
+    ],
+    "result": "Pass",
+    "division": "First Division",
+    "percentage": 76.17,
+    "rank": 2
+  },
+  {
+    "symbolNumber": "083003",
+    "studentName": "Dipesh Maharjan",
+    "class": "10",
+    "dob": "2009-11-08",
+    "exam": "First Term Exam 2083",
+    "subjects": [
+      { "name": "English", "fullMarks": 100, "passMarks": 40, "obtained": 55 },
+      { "name": "Nepali", "fullMarks": 100, "passMarks": 40, "obtained": 62 },
+      { "name": "Mathematics", "fullMarks": 100, "passMarks": 40, "obtained": 38 },
+      { "name": "Science", "fullMarks": 100, "passMarks": 40, "obtained": 45 },
+      { "name": "Social Studies", "fullMarks": 100, "passMarks": 40, "obtained": 58 },
+      { "name": "Computer Science", "fullMarks": 50, "passMarks": 20, "obtained": 22 },
+      { "name": "Health Education", "fullMarks": 50, "passMarks": 20, "obtained": 25 }
+    ],
+    "result": "Fail",
+    "division": "N/A",
+    "percentage": 50.83,
+    "rank": 3
+  },
+  {
+    "symbolNumber": "084001",
+    "studentName": "Neha Rai",
+    "class": "9",
+    "dob": "2010-05-18",
+    "exam": "First Term Exam 2083",
+    "subjects": [
+      { "name": "English", "fullMarks": 100, "passMarks": 40, "obtained": 92 },
+      { "name": "Nepali", "fullMarks": 100, "passMarks": 40, "obtained": 88 },
+      { "name": "Mathematics", "fullMarks": 100, "passMarks": 40, "obtained": 96 },
+      { "name": "Science", "fullMarks": 100, "passMarks": 40, "obtained": 91 },
+      { "name": "Social Studies", "fullMarks": 100, "passMarks": 40, "obtained": 86 },
+      { "name": "Computer Science", "fullMarks": 50, "passMarks": 20, "obtained": 46 },
+      { "name": "Health Education", "fullMarks": 50, "passMarks": 20, "obtained": 43 }
+    ],
+    "result": "Pass",
+    "division": "Distinction",
+    "percentage": 90.33,
+    "rank": 1
+  },
+  {
+    "symbolNumber": "084002",
+    "studentName": "Saugat Basnet",
+    "class": "9",
+    "dob": "2010-09-12",
+    "exam": "First Term Exam 2083",
+    "subjects": [
+      { "name": "English", "fullMarks": 100, "passMarks": 40, "obtained": 65 },
+      { "name": "Nepali", "fullMarks": 100, "passMarks": 40, "obtained": 70 },
+      { "name": "Mathematics", "fullMarks": 100, "passMarks": 40, "obtained": 58 },
+      { "name": "Science", "fullMarks": 100, "passMarks": 40, "obtained": 62 },
+      { "name": "Social Studies", "fullMarks": 100, "passMarks": 40, "obtained": 74 },
+      { "name": "Computer Science", "fullMarks": 50, "passMarks": 20, "obtained": 30 },
+      { "name": "Health Education", "fullMarks": 50, "passMarks": 20, "obtained": 32 }
+    ],
+    "result": "Pass",
+    "division": "First Division",
+    "percentage": 65.17,
+    "rank": 2
+  }
+]
