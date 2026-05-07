@@ -7,12 +7,36 @@
 -- SETUP STEPS:
 -- 1. Go to https://supabase.com/dashboard -> Your Project -> SQL Editor
 -- 2. Paste and run this entire script (safe to re-run anytime)
--- 3. Go to Storage -> Create new bucket named "media" (public) — or script does it
--- 4. Go to Authentication -> Users -> Add User to create your admin account
--- 5. After first login, set role to 'superadmin' in admin_profiles table:
+-- 3. Auth -> Users -> Add User to create your admin account
+-- 4. After first login, set role to 'superadmin':
 --    UPDATE admin_profiles SET role = 'superadmin' WHERE id = '<your-user-id>';
--- 6. Login at /admin/login , then click "Seed from siteConfig" to populate content
+-- 5. Login at /admin/login, then click "Seed from siteConfig"
 -- ============================================================
+
+-- ============================================================
+-- 0. Helper functions (SECURITY DEFINER to bypass RLS recursion)
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  RETURN EXISTS (SELECT 1 FROM admin_profiles WHERE id = auth.uid());
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_superadmin()
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  RETURN EXISTS (SELECT 1 FROM admin_profiles WHERE id = auth.uid() AND role = 'superadmin');
+END;
+$$;
 
 -- ============================================================
 -- 1. Admin profiles table
@@ -32,9 +56,7 @@ CREATE POLICY "Admins can read own profile" ON admin_profiles
 
 DROP POLICY IF EXISTS "Superadmins can manage all profiles" ON admin_profiles;
 CREATE POLICY "Superadmins can manage all profiles" ON admin_profiles
-  FOR ALL USING (EXISTS (
-    SELECT 1 FROM admin_profiles WHERE id = auth.uid() AND role = 'superadmin'
-  ));
+  FOR ALL USING (is_superadmin());
 
 -- ============================================================
 -- 2. Core content table (dual-state: draft / published)
@@ -67,27 +89,19 @@ CREATE POLICY "Anyone can read published content" ON site_content
 
 DROP POLICY IF EXISTS "Admins can read all content" ON site_content;
 CREATE POLICY "Admins can read all content" ON site_content
-  FOR SELECT USING (EXISTS (
-    SELECT 1 FROM admin_profiles WHERE id = auth.uid()
-  ));
+  FOR SELECT USING (is_admin());
 
 DROP POLICY IF EXISTS "Admins can insert content" ON site_content;
 CREATE POLICY "Admins can insert content" ON site_content
-  FOR INSERT WITH CHECK (EXISTS (
-    SELECT 1 FROM admin_profiles WHERE id = auth.uid()
-  ));
+  FOR INSERT WITH CHECK (is_admin());
 
 DROP POLICY IF EXISTS "Admins can update content" ON site_content;
 CREATE POLICY "Admins can update content" ON site_content
-  FOR UPDATE USING (EXISTS (
-    SELECT 1 FROM admin_profiles WHERE id = auth.uid()
-  ));
+  FOR UPDATE USING (is_admin());
 
 DROP POLICY IF EXISTS "Admins can delete content" ON site_content;
 CREATE POLICY "Admins can delete content" ON site_content
-  FOR DELETE USING (EXISTS (
-    SELECT 1 FROM admin_profiles WHERE id = auth.uid()
-  ));
+  FOR DELETE USING (is_admin());
 
 -- ============================================================
 -- 3. Media table
@@ -111,14 +125,10 @@ DROP POLICY IF EXISTS "Anyone can read media" ON media;
 CREATE POLICY "Anyone can read media" ON media FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Admins can insert media" ON media;
-CREATE POLICY "Admins can insert media" ON media FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM admin_profiles WHERE id = auth.uid())
-);
+CREATE POLICY "Admins can insert media" ON media FOR INSERT WITH CHECK (is_admin());
 
 DROP POLICY IF EXISTS "Admins can delete media" ON media;
-CREATE POLICY "Admins can delete media" ON media FOR DELETE USING (
-  EXISTS (SELECT 1 FROM admin_profiles WHERE id = auth.uid())
-);
+CREATE POLICY "Admins can delete media" ON media FOR DELETE USING (is_admin());
 
 -- ============================================================
 -- 4. Edit log table
@@ -137,14 +147,10 @@ CREATE TABLE IF NOT EXISTS edit_log (
 ALTER TABLE edit_log ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Admins can read edit log" ON edit_log;
-CREATE POLICY "Admins can read edit log" ON edit_log FOR SELECT USING (
-  EXISTS (SELECT 1 FROM admin_profiles WHERE id = auth.uid())
-);
+CREATE POLICY "Admins can read edit log" ON edit_log FOR SELECT USING (is_admin());
 
 DROP POLICY IF EXISTS "Admins can insert edit log" ON edit_log;
-CREATE POLICY "Admins can insert edit log" ON edit_log FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM admin_profiles WHERE id = auth.uid())
-);
+CREATE POLICY "Admins can insert edit log" ON edit_log FOR INSERT WITH CHECK (is_admin());
 
 -- ============================================================
 -- 5. Storage bucket policies
@@ -156,15 +162,13 @@ CREATE POLICY "Anyone can view media" ON storage.objects
 DROP POLICY IF EXISTS "Admins can upload media" ON storage.objects;
 CREATE POLICY "Admins can upload media" ON storage.objects
   FOR INSERT WITH CHECK (
-    bucket_id = 'media'
-    AND EXISTS (SELECT 1 FROM admin_profiles WHERE id = auth.uid())
+    bucket_id = 'media' AND is_admin()
   );
 
 DROP POLICY IF EXISTS "Admins can delete storage media" ON storage.objects;
 CREATE POLICY "Admins can delete storage media" ON storage.objects
   FOR DELETE USING (
-    bucket_id = 'media'
-    AND EXISTS (SELECT 1 FROM admin_profiles WHERE id = auth.uid())
+    bucket_id = 'media' AND is_admin()
   );
 
 -- ============================================================
