@@ -105,29 +105,38 @@ export default function Navbar() {
             <div className="relative" ref={langRef}>
               <button
                 onClick={() => setLangOpen(!langOpen)}
-                className="flex items-center gap-1 px-2 py-1.5 rounded-md text-sm font-medium text-foreground hover:bg-surface transition-colors border border-border"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-foreground hover:bg-surface border border-border transition-all duration-200 focus:ring-2 focus:ring-primary/20 outline-none"
                 aria-label="Change language"
+                aria-expanded={langOpen}
               >
-                <span className="text-base">{locales.find((l) => l.code === locale)?.flag}</span>
-                <span className="hidden sm:inline text-xs uppercase">{locale}</span>
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="font-bold uppercase tracking-wider">{locale}</span>
+                <svg className={`w-3 h-3 text-muted transition-transform duration-200 ${langOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
+
               {langOpen && (
-                <div className="absolute right-0 top-full mt-1 w-36 bg-white rounded-lg shadow-lg border border-border py-1 animate-fadein z-50">
+                <div className="absolute right-0 top-full mt-2 w-44 bg-white rounded-xl shadow-xl border border-border py-1.5 animate-fadein z-50">
                   {locales.map((l) => (
                     <button
                       key={l.code}
                       onClick={() => { setLocale(l.code); setLangOpen(false); }}
-                      className={`w-full flex items-center gap-2 px-4 py-2 text-sm transition-colors ${
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
                         locale === l.code
-                          ? "bg-primary/10 text-primary font-semibold"
+                          ? "bg-primary/5 text-primary font-semibold"
                           : "text-foreground hover:bg-surface"
                       }`}
                     >
-                      <span className="text-base">{l.flag}</span>
-                      <span>{l.label}</span>
+                      <span className="text-lg leading-none">{l.flag}</span>
+                      <span className="flex-1 text-left">{l.label}</span>
+                      {locale === l.code && (
+                        <svg className="w-4 h-4 text-primary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
                     </button>
                   ))}
                 </div>

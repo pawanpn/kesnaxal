@@ -51,6 +51,8 @@ export const siteConfig: SiteConfig = {
       { label: "Gallery", href: "/gallery" },
       { label: "News", href: "/news" },
       { label: "Staff", href: "/staff" },
+      { label: "Careers", href: "/careers" },
+      { label: "Calendar", href: "/calendar" },
       { label: "Contact", href: "/contact" },
     ],
   },
@@ -122,24 +124,21 @@ export const siteConfig: SiteConfig = {
     {
       id: 1,
       slug: "kes-tops-national-science-olympiad-2026",
-      title: "KES Students Top National Science Olympiad 2026",
-      excerpt:
-        "Three KES students secured top positions at the National Science Olympiad, bringing home gold and silver medals in a nationwide competition.",
-      content: `
-Kathmandu English School is proud to announce that three of our students have secured top positions at the National Science Olympiad 2026 held in Kathmandu.
-
-**Gold Medal: Aryan Karki (Grade 10)**  
-Aryan demonstrated exceptional knowledge in Physics and Chemistry, scoring 98 out of 100 in the final round. His project on "Renewable Energy Solutions for Rural Nepal" was highly praised by the jury.
-
-**Silver Medals: Sneha Pandey (Grade 9) and Roshan Tamang (Grade 10)**  
-Sneha and Roshan both earned silver medals with their innovative approaches to Biology and Environmental Science respectively.
-
-The Olympiad, organized by the Nepal Science Foundation, saw participation from over 200 schools across the country. Our students underwent weeks of rigorous preparation under the guidance of our dedicated Science faculty.
-
-"We are immensely proud of our students," said Principal Mr. Bishnu Prasad Sharma. "This achievement reflects the hard work of our students and the quality of education we strive to provide at KES."
-
-The winners will now represent Nepal at the International Science Olympiad in Tokyo, Japan, later this year. The school has announced a special scholarship fund for the winners to support their advanced studies.
-      `,
+      title: {
+        en: "KES Students Top National Science Olympiad 2026",
+        ne: "केईएसका विद्यार्थीहरू राष्ट्रिय विज्ञान ओलम्पियाड २०२६ मा शीर्ष स्थानमा",
+        ja: "KESの生徒が全国科学オリンピック2026でトップに",
+      },
+      excerpt: {
+        en: "Three KES students secured top positions at the National Science Olympiad, bringing home gold and silver medals in a nationwide competition.",
+        ne: "केईएसका तीन विद्यार्थीहरूले राष्ट्रिय विज्ञान ओलम्पियाडमा शीर्ष स्थान हासिल गर्दै राष्ट्रव्यापी प्रतियोगितामा स्वर्ण र रजत पदक घर ल्याए।",
+        ja: "KESの3人の生徒が全国科学オリンピックで上位を獲得し、全国大会で金メダルと銀メダルを獲得しました。",
+      },
+      content: {
+        en: `Kathmandu English School is proud to announce that three of our students have secured top positions at the National Science Olympiad 2026 held in Kathmandu.\n\n**Gold Medal: Aryan Karki (Grade 10)**  \nAryan demonstrated exceptional knowledge in Physics and Chemistry, scoring 98 out of 100 in the final round. His project on "Renewable Energy Solutions for Rural Nepal" was highly praised by the jury.\n\n**Silver Medals: Sneha Pandey (Grade 9) and Roshan Tamang (Grade 10)**  \nSneha and Roshan both earned silver medals with their innovative approaches to Biology and Environmental Science respectively.\n\nThe Olympiad, organized by the Nepal Science Foundation, saw participation from over 200 schools across the country. Our students underwent weeks of rigorous preparation under the guidance of our dedicated Science faculty.\n\n"We are immensely proud of our students," said Principal Mr. Dinesh Khatiwada. "This achievement reflects the hard work of our students and the quality of education we strive to provide at KES."\n\nThe winners will now represent Nepal at the International Science Olympiad in Tokyo, Japan, later this year. The school has announced a special scholarship fund for the winners to support their advanced studies.`,
+        ne: `[NE — translated content pending]\n\nKathmandu English School is proud to announce that three of our students have secured top positions at the National Science Olympiad 2026 held in Kathmandu.\n\n**Gold Medal: Aryan Karki (Grade 10)**  \n**Silver Medals: Sneha Pandey (Grade 9) and Roshan Tamang (Grade 10)**\n\nThe Olympiad, organized by the Nepal Science Foundation, saw participation from over 200 schools.\n\n"We are immensely proud of our students," said Principal Mr. Dinesh Khatiwada.\n\nThe winners will now represent Nepal at the International Science Olympiad in Tokyo, Japan.`,
+        ja: `[JA — translated content pending]\n\nKathmandu English School is proud to announce that three of our students have secured top positions at the National Science Olympiad 2026 held in Kathmandu.\n\n**Gold Medal: Aryan Karki (Grade 10)**  \n**Silver Medals: Sneha Pandey (Grade 9) and Roshan Tamang (Grade 10)**\n\nThe Olympiad, organized by the Nepal Science Foundation, saw participation from over 200 schools.\n\n"We are immensely proud of our students," said Principal Mr. Dinesh Khatiwada.\n\nThe winners will now represent Nepal at the International Science Olympiad in Tokyo, Japan.`,
+      },
       author: "KES Media Team",
       date: "2026-05-05",
       image: "/images/news/news1.jpg",
@@ -149,25 +148,21 @@ The winners will now represent Nepal at the International Science Olympiad in To
     {
       id: 2,
       slug: "new-computer-lab-inauguration-ceremony",
-      title: "State-of-the-Art Computer Lab Inaugurated by Education Minister",
-      excerpt:
-        "The Education Minister inaugurated our newly upgraded computer lab featuring 40 high-tech workstations and interactive learning tools.",
-      content: `
-A new chapter in digital learning began at Kathmandu English School as the Honorable Education Minister inaugurated our state-of-the-art computer laboratory on Chaitra 20, 2083.
-
-The lab features:
-- **40 Apple M3 iMac workstations** with 24-inch displays
-- **High-speed fiber internet** (1 Gbps dedicated line)
-- **Interactive smart boards** for collaborative learning
-- **3D printer and robotics kits** for STEM education
-- **Licensed software** for coding, design, and office applications
-
-Speaking at the ceremony, the Education Minister praised KES for its commitment to technology-integrated education. "Schools like KES are setting the benchmark for 21st-century learning in Nepal," he said.
-
-The Chairman of KES, in his welcome speech, emphasized that the lab will be open to students from all grades, with dedicated coding and robotics clubs starting from the next academic session.
-
-Teachers have already completed a 2-week training program on leveraging the new technology for enhanced classroom delivery. Students will have supervised access during school hours and after-school club sessions.
-      `,
+      title: {
+        en: "State-of-the-Art Computer Lab Inaugurated by Education Minister",
+        ne: "शिक्षा मन्त्रीद्वारा अत्याधुनिक कम्प्युटर प्रयोगशालाको उद्घाटन",
+        ja: "教育大臣により最先端コンピューターラボが開設",
+      },
+      excerpt: {
+        en: "The Education Minister inaugurated our newly upgraded computer lab featuring 40 high-tech workstations and interactive learning tools.",
+        ne: "शिक्षा मन्त्रीले ४० वटा उच्च-प्रविधियुक्त कम्प्युटर र अन्तरक्रियात्मक सिकाइ उपकरणहरू सहितको नयाँ कम्प्युटर प्रयोगशालाको उद्घाटन गर्नुभयो।",
+        ja: "教育大臣が40台のハイテクワークステーションとインタラクティブな学習ツールを備えた新コンピューターラボを開設しました。",
+      },
+      content: {
+        en: `A new chapter in digital learning began at Kathmandu English School as the Honorable Education Minister inaugurated our state-of-the-art computer laboratory on Chaitra 20, 2083.\n\nThe lab features:\n- **40 Apple M3 iMac workstations** with 24-inch displays\n- **High-speed fiber internet** (1 Gbps dedicated line)\n- **Interactive smart boards** for collaborative learning\n- **3D printer and robotics kits** for STEM education\n- **Licensed software** for coding, design, and office applications\n\nSpeaking at the ceremony, the Education Minister praised KES for its commitment to technology-integrated education. "Schools like KES are setting the benchmark for 21st-century learning in Nepal," he said.\n\nThe Chairman of KES emphasized that the lab will be open to students from all grades, with dedicated coding and robotics clubs starting from the next academic session.\n\nTeachers have already completed a 2-week training program on leveraging the new technology for enhanced classroom delivery.`,
+        ne: `[NE] A new chapter in digital learning began at KES as the Education Minister inaugurated our state-of-the-art computer laboratory.\n\nThe lab features:\n- **40 Apple M3 iMac workstations**\n- **High-speed fiber internet**\n- **Interactive smart boards**\n- **3D printer and robotics kits**\n- **Licensed software**\n\n"Schools like KES are setting the benchmark for 21st-century learning in Nepal," said the Minister.\n\nTeachers have completed a 2-week training program on the new technology.`,
+        ja: `[JA] A new chapter in digital learning began at KES as the Education Minister inaugurated our state-of-the-art computer laboratory.\n\nThe lab features:\n- **40 Apple M3 iMac workstations**\n- **High-speed fiber internet**\n- **Interactive smart boards**\n- **3D printer and robotics kits**\n- **Licensed software**\n\n"Schools like KES are setting the benchmark for 21st-century learning in Nepal," said the Minister.\n\nTeachers have completed a 2-week training program on the new technology.`,
+      },
       author: "KES Media Team",
       date: "2026-04-20",
       image: "/images/news/news2.jpg",
@@ -177,25 +172,21 @@ Teachers have already completed a 2-week training program on leveraging the new 
     {
       id: 3,
       slug: "kes-launches-scholarship-program-for-underprivileged",
-      title: "KES Launches 'Udaan' Scholarship Program for Underprivileged Students",
-      excerpt:
-        "Twenty full scholarships announced for meritorious students from economically disadvantaged backgrounds across all seven provinces.",
-      content: `
-Kathmandu English School has launched the "Udaan Scholarship Program" — a comprehensive initiative to provide quality education to meritorious students from economically disadvantaged backgrounds.
-
-**Key Highlights:**
-- **20 Full Scholarships** awarded annually — 2 from each province plus 6 for Kathmandu Valley
-- Coverage includes tuition fees, books, uniform, meals, and transportation
-- **Special focus on girl child education** — 50% seats reserved for female students
-
-The scholarship is merit-based and targets students entering Grade 6 and Grade 11. Selection will be through a transparent entrance examination followed by a family income verification process.
-
-"Our mission has always been to make quality education accessible," said the Chairman. "The Udaan program is our commitment to giving back to the community and nurturing talent that would otherwise go undiscovered."
-
-Applications for the 2083 academic session are now open. Interested candidates can apply online through the school website or collect forms from the school reception. The last date for submission is Asar 30, 2083.
-
-The school has also partnered with local municipalities in all seven provinces to identify and encourage talented students to apply.
-      `,
+      title: {
+        en: "KES Launches 'Udaan' Scholarship Program for Underprivileged Students",
+        ne: "केईएसले विपन्न विद्यार्थीहरूका लागि 'उडान' छात्रवृत्ति कार्यक्रम सुरु गर्यो",
+        ja: "KESが経済的困難を抱える生徒向け「Udaan」奨学金プログラムを開始",
+      },
+      excerpt: {
+        en: "Twenty full scholarships announced for meritorious students from economically disadvantaged backgrounds across all seven provinces.",
+        ne: "सातै प्रदेशका आर्थिक रूपमा विपन्न पृष्ठभूमिका मेधावी विद्यार्थीहरूका लागि बीस पूर्ण छात्रवृत्तिहरू घोषणा।",
+        ja: "全7州の経済的困難を抱える優秀な学生向けに20の全額奨学金が発表されました。",
+      },
+      content: {
+        en: `Kathmandu English School has launched the "Udaan Scholarship Program" — a comprehensive initiative to provide quality education to meritorious students from economically disadvantaged backgrounds.\n\n**Key Highlights:**\n- **20 Full Scholarships** awarded annually — 2 from each province plus 6 for Kathmandu Valley\n- Coverage includes tuition fees, books, uniform, meals, and transportation\n- **Special focus on girl child education** — 50% seats reserved for female students\n\nThe scholarship is merit-based and targets students entering Grade 6 and Grade 11. Selection will be through a transparent entrance examination followed by a family income verification process.\n\n"Our mission has always been to make quality education accessible," said the Chairman. "The Udaan program is our commitment to giving back to the community and nurturing talent."\n\nApplications for the 2083 academic session are now open. The last date for submission is Asar 30, 2083.`,
+        ne: `[NE] Kathmandu English School has launched the "Udaan Scholarship Program" for meritorious students from economically disadvantaged backgrounds.\n\n**Key Highlights:**\n- **20 Full Scholarships** awarded annually\n- Coverage includes tuition, books, uniform, meals, transportation\n- **50% seats reserved for female students**\n\nApplications for 2083 are now open. Last date: Asar 30, 2083.`,
+        ja: `[JA] Kathmandu English School has launched the "Udaan Scholarship Program" for meritorious students from economically disadvantaged backgrounds.\n\n**Key Highlights:**\n- **20 Full Scholarships** awarded annually\n- Coverage includes tuition, books, uniform, meals, transportation\n- **50% seats reserved for female students**\n\nApplications for 2083 are now open. Last date: Asar 30, 2083.`,
+      },
       author: "KES Admin",
       date: "2026-04-10",
       image: "/images/news/news3.jpg",
@@ -205,22 +196,21 @@ The school has also partnered with local municipalities in all seven provinces t
     {
       id: 4,
       slug: "kes-wins-inter-school-debate-championship",
-      title: "KES Debate Team Clinches Inter-School Championship Trophy",
-      excerpt:
-        "Our debate team won the prestigious Kathmandu Valley Inter-School Debate Championship, defeating 32 schools in eloquent argumentation.",
-      content: `
-The Kathmandu English School Debate Team has emerged victorious at the Kathmandu Valley Inter-School Debate Championship 2083, competing against 32 schools from across the valley.
-
-The championship, organized by the Nepal Debating Society, spanned three rounds over two days. Our team, comprising **Srijana Adhikari (Grade 11)** — Best Speaker, **Kushal Basnet (Grade 10)**, and **Anisha Rai (Grade 10)**, demonstrated exceptional research, articulation, and rebuttal skills.
-
-**Final Round Topic:** "Artificial Intelligence Will Do More Harm Than Good in Education"
-
-KES argued *against* the motion, presenting compelling arguments about AI's potential to personalize learning, assist teachers, and bridge educational gaps in developing nations like Nepal.
-
-The judging panel, which included university professors and legal professionals, commended the team for their "well-researched arguments, calm demeanor under pressure, and impressive teamwork."
-
-The victory qualifies KES to represent Kathmandu Valley at the National Inter-School Debate Championship in Pokhara later this year. The school has announced an intensive coaching camp for the team to prepare for the national level.
-      `,
+      title: {
+        en: "KES Debate Team Clinches Inter-School Championship Trophy",
+        ne: "केईएस वादविवाद टोलीले अन्तर-विद्यालय च्याम्पियनसिप ट्रफी जित्यो",
+        ja: "KESディベートチームが学校対抗選手権トロフィーを獲得",
+      },
+      excerpt: {
+        en: "Our debate team won the prestigious Kathmandu Valley Inter-School Debate Championship, defeating 32 schools in eloquent argumentation.",
+        ne: "हाम्रो वादविवाद टोलीले ३२ विद्यालयहरूलाई पराजित गर्दै प्रतिष्ठित काठमाडौं उपत्यका अन्तर-विद्यालय वादविवाद च्याम्पियनसिप जित्यो।",
+        ja: "私たちのディベートチームは、32校を破り、名門カトマンズバレー学校対抗ディベート選手権で優勝しました。",
+      },
+      content: {
+        en: `The Kathmandu English School Debate Team has emerged victorious at the Kathmandu Valley Inter-School Debate Championship 2083, competing against 32 schools.\n\nThe championship spanned three rounds over two days. Our team, comprising **Srijana Adhikari (Grade 11)** — Best Speaker, **Kushal Basnet (Grade 10)**, and **Anisha Rai (Grade 10)**, demonstrated exceptional research and rebuttal skills.\n\n**Final Round Topic:** "Artificial Intelligence Will Do More Harm Than Good in Education"\n\nKES argued against the motion, presenting compelling arguments about AI's potential to personalize learning and bridge educational gaps in developing nations like Nepal.\n\nThe judging panel commended the team for their "well-researched arguments, calm demeanor, and impressive teamwork."\n\nKES will now represent Kathmandu Valley at the National Inter-School Debate Championship in Pokhara.`,
+        ne: `[NE] The KES Debate Team has emerged victorious at the Kathmandu Valley Inter-School Debate Championship 2083, competing against 32 schools.\n\nOur team: **Srijana Adhikari (Grade 11)** — Best Speaker, **Kushal Basnet (Grade 10)**, **Anisha Rai (Grade 10)**.\n\n**Final Round Topic:** "Artificial Intelligence Will Do More Harm Than Good in Education"\n\nThe team was praised for their "well-researched arguments and impressive teamwork."\n\nKES will represent Kathmandu Valley at the National Championship in Pokhara.`,
+        ja: `[JA] The KES Debate Team has emerged victorious at the Kathmandu Valley Inter-School Debate Championship 2083, competing against 32 schools.\n\nOur team: **Srijana Adhikari (Grade 11)** — Best Speaker, **Kushal Basnet (Grade 10)**, **Anisha Rai (Grade 10)**.\n\n**Final Round Topic:** "Artificial Intelligence Will Do More Harm Than Good in Education"\n\nThe team was praised for their "well-researched arguments and impressive teamwork."\n\nKES will represent Kathmandu Valley at the National Championship in Pokhara.`,
+      },
       author: "KES Media Team",
       date: "2026-03-28",
       image: "/images/news/news4.jpg",
@@ -230,25 +220,21 @@ The victory qualifies KES to represent Kathmandu Valley at the National Inter-Sc
     {
       id: 5,
       slug: "kes-hosts-international-exchange-students",
-      title: "KES Hosts International Exchange Students from Japan",
-      excerpt:
-        "Fifteen students from Tokyo's Sakura High School spent two weeks at KES as part of our cultural exchange program.",
-      content: `
-Kathmandu English School welcomed 15 students and 2 teachers from Tokyo's Sakura High School for a two-week cultural exchange program from Baisakh 1-15, 2083.
-
-The exchange program, now in its third year, included:
-
-- **Joint classroom sessions** where Japanese and Nepali students collaborated on projects about sustainable development
-- **Cultural workshops** — origami, calligraphy, and ikebana by Japanese students; Nepali folk dance, art, and momo-making by KES students
-- **Field trips** to Bhaktapur Durbar Square, Swayambhunath, and Nagarkot
-- **Homestay program** where Japanese students lived with KES host families, experiencing authentic Nepali hospitality
-
-"It was an incredible experience," said Ayumi Tanaka, a Grade 10 student from Sakura High School. "I learned so much about Nepali culture, and the KES students were so warm and welcoming."
-
-The program concluded with a joint cultural performance where students from both schools performed together. Plans are already underway for KES students to visit Tokyo next year.
-
-"Our exchange programs help students develop a global perspective," said the Principal. "In today's interconnected world, cultural intelligence is as important as academic knowledge."
-      `,
+      title: {
+        en: "KES Hosts International Exchange Students from Japan",
+        ne: "केईएसले जापानबाट अन्तर्राष्ट्रिय आदानप्रदान विद्यार्थीहरूलाई आतिथ्यता प्रदान गर्यो",
+        ja: "KESが日本からの国際交流学生を受け入れ",
+      },
+      excerpt: {
+        en: "Fifteen students from Tokyo's Sakura High School spent two weeks at KES as part of our cultural exchange program.",
+        ne: "टोकियोको साकुरा हाई स्कूलका पन्ध्र विद्यार्थीहरूले हाम्रो सांस्कृतिक आदानप्रदान कार्यक्रम अन्तर्गत केईएसमा दुई हप्ता बिताए।",
+        ja: "東京の桜高校から15人の学生が文化交流プログラムの一環としてKESで2週間過ごしました。",
+      },
+      content: {
+        en: `Kathmandu English School welcomed 15 students and 2 teachers from Tokyo's Sakura High School for a two-week cultural exchange program.\n\nThe exchange program, now in its third year, included:\n- **Joint classroom sessions** on sustainable development\n- **Cultural workshops** — origami, calligraphy, Nepali folk dance, momo-making\n- **Field trips** to Bhaktapur, Swayambhunath, and Nagarkot\n- **Homestay program** with KES host families\n\n"It was an incredible experience," said Ayumi Tanaka, a Grade 10 student from Sakura High School. "I learned so much about Nepali culture."\n\nPlans are already underway for KES students to visit Tokyo next year.`,
+        ne: `[NE] Kathmandu English School welcomed 15 students and 2 teachers from Tokyo's Sakura High School for a two-week cultural exchange program.\n\nThe program included:\n- **Joint classroom sessions**\n- **Cultural workshops** — origami, calligraphy, Nepali folk dance\n- **Field trips** to Bhaktapur, Swayambhunath, Nagarkot\n- **Homestay program**\n\n"It was an incredible experience," said Ayumi Tanaka. "I learned so much about Nepali culture."`,
+        ja: `[JA] Kathmandu English School welcomed 15 students and 2 teachers from Tokyo's Sakura High School for a two-week cultural exchange program.\n\nThe program included:\n- **Joint classroom sessions**\n- **Cultural workshops** — origami, calligraphy, Nepali folk dance\n- **Field trips** to Bhaktapur, Swayambhunath, Nagarkot\n- **Homestay program**\n\n"It was an incredible experience," said Ayumi Tanaka. "I learned so much about Nepali culture."`,
+      },
       author: "KES Media Team",
       date: "2026-03-15",
       image: "/images/news/news5.jpg",
@@ -258,26 +244,21 @@ The program concluded with a joint cultural performance where students from both
     {
       id: 6,
       slug: "kes-implements-mental-health-wellness-program",
-      title: "KES Launches Comprehensive Mental Health & Wellness Program",
-      excerpt:
-        "A full-time school counselor and weekly wellness sessions introduced to support student mental health and emotional well-being.",
-      content: `
-Recognizing the importance of mental health in overall student development, Kathmandu English School has launched a comprehensive Mental Health & Wellness Program starting the current academic session.
-
-**Program Components:**
-
-1. **Full-time School Counselor** — A licensed psychologist available for one-on-one counseling sessions for students and parents
-2. **Weekly Wellness Sessions** — 40-minute sessions integrated into the timetable covering stress management, mindfulness, emotional intelligence, and peer pressure
-3. **Peer Support Network** — Trained student volunteers (Grade 10-12) who provide peer listening and support under counselor supervision
-4. **Parent Workshops** — Monthly sessions on adolescent psychology, screen time management, and recognizing mental health red flags
-5. **Anti-Bullying Policy** — A clear reporting mechanism and zero-tolerance policy with restorative justice approach
-
-"Academic excellence means little without emotional well-being," said the school counselor, Ms. Sunita Rai. "We want our students to feel safe, heard, and supported."
-
-The initiative has been widely appreciated by parents. "My son was struggling with exam anxiety, and the counseling sessions have made a remarkable difference," shared a Grade 10 parent.
-
-KES is one of the first schools in Nepal to implement a structured mental health curriculum at the school level.
-      `,
+      title: {
+        en: "KES Launches Comprehensive Mental Health & Wellness Program",
+        ne: "केईएसले व्यापक मानसिक स्वास्थ्य र कल्याण कार्यक्रम सुरु गर्यो",
+        ja: "KESが包括的なメンタルヘルス＆ウェルネスプログラムを開始",
+      },
+      excerpt: {
+        en: "A full-time school counselor and weekly wellness sessions introduced to support student mental health and emotional well-being.",
+        ne: "विद्यार्थीहरूको मानसिक स्वास्थ्य र भावनात्मक कल्याणलाई सहयोग गर्न पूर्णकालिक विद्यालय परामर्शदाता र साप्ताहिक कल्याण सत्रहरू सुरु गरियो।",
+        ja: "生徒のメンタルヘルスと情緒的幸福を支援するため、常勤のスクールカウンセラーと週次のウェルネスセッションが導入されました。",
+      },
+      content: {
+        en: `Recognizing the importance of mental health, KES has launched a comprehensive Mental Health & Wellness Program.\n\n**Program Components:**\n1. **Full-time School Counselor** — Licensed psychologist for one-on-one sessions\n2. **Weekly Wellness Sessions** — Stress management, mindfulness, emotional intelligence\n3. **Peer Support Network** — Trained student volunteers (Grade 10-12)\n4. **Parent Workshops** — Adolescent psychology and screen time management\n5. **Anti-Bullying Policy** — Zero-tolerance with restorative justice approach\n\n"Academic excellence means little without emotional well-being," said Ms. Sunita Rai, school counselor.\n\nKES is one of the first schools in Nepal to implement a structured mental health curriculum.`,
+        ne: `[NE] Recognizing the importance of mental health, KES has launched a comprehensive Mental Health & Wellness Program.\n\n**Program Components:**\n1. **Full-time School Counselor**\n2. **Weekly Wellness Sessions**\n3. **Peer Support Network**\n4. **Parent Workshops**\n5. **Anti-Bullying Policy**\n\n"Academic excellence means little without emotional well-being," said Ms. Sunita Rai.\n\nKES is one of the first schools in Nepal with a structured mental health curriculum.`,
+        ja: `[JA] Recognizing the importance of mental health, KES has launched a comprehensive Mental Health & Wellness Program.\n\n**Program Components:**\n1. **Full-time School Counselor**\n2. **Weekly Wellness Sessions**\n3. **Peer Support Network**\n4. **Parent Workshops**\n5. **Anti-Bullying Policy**\n\n"Academic excellence means little without emotional well-being," said Ms. Sunita Rai.\n\nKES is one of the first schools in Nepal with a structured mental health curriculum.`,
+      },
       author: "KES Admin",
       date: "2026-03-01",
       image: "/images/news/news6.jpg",
@@ -387,6 +368,8 @@ KES is one of the first schools in Nepal to implement a structured mental health
       { label: "Results", href: "/results" },
       { label: "Gallery", href: "/gallery" },
       { label: "News", href: "/news" },
+      { label: "Careers", href: "/careers" },
+      { label: "Calendar", href: "/calendar" },
       { label: "Contact Us", href: "/contact" },
     ],
   },
@@ -448,5 +431,183 @@ KES is one of the first schools in Nepal to implement a structured mental health
       photo: "https://picsum.photos/seed/social/300/300",
       department: "Social Studies",
     },
+  ],
+
+  jobVacancies: [
+    {
+      id: 1,
+      title: "Secondary Level Mathematics Teacher",
+      category: "Teaching",
+      level: "Secondary (Grade 6-10)",
+      experience: "Minimum 3 years of teaching experience in a reputed school",
+      salary: "Negotiable (Based on experience and qualification)",
+      vacancies: 2,
+      workstation: "Naxal, Sanogaucharan, Kathmandu",
+      responsibilities: [
+        "Plan and deliver engaging Mathematics lessons for Grade 6-10 following the NEB curriculum.",
+        "Prepare lesson plans, assignments, and assessment papers in line with academic standards.",
+        "Evaluate student performance through regular tests, quizzes, and examinations.",
+        "Provide individual attention to weak students and conduct remedial classes.",
+        "Participate in parent-teacher meetings and provide feedback on student progress.",
+        "Contribute to the Mathematics department's resource development and curriculum planning.",
+        "Mentor junior teachers and participate in professional development workshops.",
+        "Maintain accurate student records including attendance, grades, and behavioral reports.",
+      ],
+      addedOn: "2026-05-01",
+      expiresOn: "2026-06-15",
+      isActive: true,
+    },
+    {
+      id: 2,
+      title: "Science Teacher (Physics Specialization)",
+      category: "Teaching",
+      level: "Secondary and Higher Secondary",
+      experience: "Minimum 2 years of teaching Physics; fresh Master's graduates may apply",
+      salary: "Negotiable (Based on experience and qualification)",
+      vacancies: 1,
+      workstation: "Naxal, Sanogaucharan, Kathmandu",
+      responsibilities: [
+        "Teach Physics theory and practical sessions to Grade 9-12 students.",
+        "Set up and supervise laboratory experiments ensuring safety protocols.",
+        "Prepare students for NEB board examinations and competitive entrance exams.",
+        "Develop and grade periodic assessments, assignments, and project work.",
+        "Organize science exhibitions, quizzes, and Olympiad preparation sessions.",
+        "Stay updated with curriculum changes and integrate modern teaching methods.",
+        "Collaborate with the Science department on curriculum development and lab inventory.",
+      ],
+      addedOn: "2026-04-20",
+      expiresOn: "2026-06-30",
+      isActive: true,
+    },
+    {
+      id: 3,
+      title: "English Language Teacher",
+      category: "Teaching",
+      level: "Primary Level (Grade 1-5)",
+      experience: "Minimum 1 year of teaching English; Montessori training preferred",
+      salary: "Negotiable (Based on experience and qualification)",
+      vacancies: 2,
+      workstation: "Naxal, Sanogaucharan, Kathmandu",
+      responsibilities: [
+        "Teach English language and literature using interactive and communicative methods.",
+        "Focus on developing reading, writing, speaking, and listening skills.",
+        "Organize storytelling, drama, and English club activities for students.",
+        "Prepare and grade creative writing assignments, comprehension tests, and oral assessments.",
+        "Create a positive and encouraging classroom environment for language learning.",
+        "Communicate regularly with parents regarding student language development.",
+      ],
+      addedOn: "2026-05-05",
+      expiresOn: "2026-06-20",
+      isActive: true,
+    },
+    {
+      id: 4,
+      title: "Computer Science Teacher",
+      category: "Teaching",
+      level: "Secondary and Higher Secondary",
+      experience: "Minimum 2 years of teaching programming and computer science",
+      salary: "Negotiable (Based on experience and qualification)",
+      vacancies: 1,
+      workstation: "Naxal, Sanogaucharan, Kathmandu",
+      responsibilities: [
+        "Teach Computer Science including programming (Python, C), web development, and database concepts.",
+        "Conduct practical lab sessions and guide students in project development.",
+        "Prepare students for NEB practical and theory board examinations.",
+        "Manage and maintain the school's computer lab including hardware and software updates.",
+        "Organize coding clubs, hackathons, and tech awareness programs.",
+        "Mentor students for national-level IT competitions and Olympiads.",
+        "Integrate ICT tools into classroom teaching and assist other teachers with technology.",
+      ],
+      addedOn: "2026-05-10",
+      expiresOn: "2026-06-25",
+      isActive: true,
+    },
+    {
+      id: 5,
+      title: "Administrative Assistant",
+      category: "Administration",
+      level: "Entry Level",
+      experience: "Minimum 1 year of administrative experience; school experience preferred",
+      salary: "NPR 25,000-35,000 per month (Based on experience)",
+      vacancies: 1,
+      workstation: "Naxal, Sanogaucharan, Kathmandu",
+      responsibilities: [
+        "Manage front desk operations including visitor reception and phone calls.",
+        "Maintain student records, attendance registers, and administrative files.",
+        "Assist the Principal and Vice Principal with correspondence, scheduling, and reporting.",
+        "Coordinate with parents regarding admissions, fee payments, and general inquiries.",
+        "Manage office supplies inventory and place procurement requests.",
+        "Support during school events, examinations, and parent-teacher meetings.",
+        "Handle data entry and maintain the school management system database.",
+      ],
+      addedOn: "2026-05-15",
+      expiresOn: "2026-06-10",
+      isActive: true,
+    },
+    {
+      id: 6,
+      title: "Librarian",
+      category: "Support Staff",
+      level: "Entry Level",
+      experience: "Diploma in Library Science; experience in school library preferred",
+      salary: "NPR 20,000-30,000 per month",
+      vacancies: 1,
+      workstation: "Naxal, Sanogaucharan, Kathmandu",
+      responsibilities: [
+        "Manage day-to-day operations of the school library including book issuance and returns.",
+        "Maintain the library catalog using digital library management software.",
+        "Assist students and teachers in locating reference materials and research resources.",
+        "Organize reading programs, book fairs, and author visit events.",
+        "Procure new books, journals, and educational resources based on teacher recommendations.",
+        "Ensure a quiet, welcoming, and organized library environment.",
+        "Maintain inventory and conduct annual stock verification.",
+      ],
+      addedOn: "2026-04-25",
+      expiresOn: "2026-06-05",
+      isActive: true,
+    },
+  ],
+
+  calendarEvents: [
+    { id: 1, title: "New Year's Day (Rashtriya Topi Diwas)", type: "holiday", date: "2026-01-01", description: "Public holiday. School remains closed." },
+    { id: 2, title: "Winter Vacation", type: "vacation", date: "2026-01-02", description: "Winter vacation continues." },
+    { id: 3, title: "Winter Vacation", type: "vacation", date: "2026-01-05", description: "Winter vacation continues." },
+    { id: 4, title: "Winter Vacation", type: "vacation", date: "2026-01-08", description: "Winter vacation continues." },
+    { id: 5, title: "School Reopens After Winter Break", type: "event", date: "2026-01-12", description: "All students to report by 9:00 AM in full uniform." },
+    { id: 6, title: "Staff Meeting", type: "event", date: "2026-01-13", description: "All teaching and administrative staff must attend." },
+    { id: 7, title: "Martyr's Day (Shahid Diwas)", type: "holiday", date: "2026-01-30", description: "Public holiday commemorating Nepal's martyrs." },
+    { id: 8, title: "Parent-Teacher Meeting (Grades 1-5)", type: "event", date: "2026-02-10", description: "Scheduled from 10:00 AM to 2:00 PM." },
+    { id: 9, title: "Valentine's Day Celebration", type: "event", date: "2026-02-14", description: "Cultural program and card exchange activities." },
+    { id: 10, title: "Maha Shivaratri", type: "holiday", date: "2026-02-26", description: "Public holiday for the festival of Lord Shiva." },
+    { id: 11, title: "First Monthly Test (Grade 6-10)", type: "exam", date: "2026-02-27", description: "First monthly assessment test begins." },
+    { id: 12, title: "International Women's Day", type: "event", date: "2026-03-08", description: "Special assembly and guest speaker program." },
+    { id: 13, title: "Holi Celebration", type: "event", date: "2026-03-15", description: "Holi festivities. Half-day only." },
+    { id: 14, title: "Fagu Purnima (Holi)", type: "holiday", date: "2026-03-16", description: "Public holiday for Holi." },
+    { id: 15, title: "Academics: New Session Begins", type: "event", date: "2026-04-01", description: "New Academic Session 2083 formally inaugurated." },
+    { id: 16, title: "Admissions Open for Academic Year 2083", type: "event", date: "2026-04-15", description: "Online and in-person application forms available." },
+    { id: 17, title: "School Anniversary Day", type: "event", date: "2026-04-25", description: "Cultural program and awards ceremony." },
+    { id: 18, title: "Labour Day", type: "holiday", date: "2026-05-01", description: "International Workers' Day. School closed." },
+    { id: 19, title: "Buddha Jayanti", type: "holiday", date: "2026-05-21", description: "Public holiday celebrating Lord Buddha's birth." },
+    { id: 20, title: "First Term Examination Begins", type: "exam", date: "2026-05-25", description: "First term examinations for Grade 1-12." },
+    { id: 21, title: "First Term Examination Ends", type: "exam", date: "2026-06-05", description: "Last day of first term board exams." },
+    { id: 22, title: "Result Declaration: First Term", type: "event", date: "2026-06-15", description: "Results published online and on notice board." },
+    { id: 23, title: "Summer Vacation Begins", type: "vacation", date: "2026-06-20", description: "Summer break for all students and staff." },
+    { id: 24, title: "Summer Vacation", type: "vacation", date: "2026-06-30", description: "Summer vacation continues." },
+    { id: 25, title: "School Reopens After Summer", type: "event", date: "2026-07-15", description: "Students to report by 9:00 AM." },
+    { id: 26, title: "Inter-House Sports Competition", type: "event", date: "2026-08-10", description: "Annual sports events between school houses." },
+    { id: 27, title: "Teej Festival", type: "holiday", date: "2026-08-29", description: "Festival for women. School closed." },
+    { id: 28, title: "Second Monthly Test (Grade 6-10)", type: "exam", date: "2026-09-05", description: "Second monthly assessment test." },
+    { id: 29, title: "Shree Krishna Janmashtami", type: "holiday", date: "2026-09-15", description: "Festival. Half-day." },
+    { id: 30, title: "Dashain Vacation Begins", type: "vacation", date: "2026-10-05", description: "Dashain holidays. School closed for 15 days." },
+    { id: 31, title: "School Reopens After Dashain", type: "event", date: "2026-10-20", description: "Students report back after Dashain holidays." },
+    { id: 32, title: "Tihar Vacation", type: "vacation", date: "2026-10-28", description: "Tihar holidays. School closed for 5 days." },
+    { id: 33, title: "School Reopens After Tihar", type: "event", date: "2026-11-03", description: "Regular classes resume." },
+    { id: 34, title: "Annual Sports Meet", type: "event", date: "2026-11-15", description: "Three-day athletic competition for all grades." },
+    { id: 35, title: "Art & Science Exhibition", type: "event", date: "2026-11-28", description: "Students showcase projects and models." },
+    { id: 36, title: "Second Term Examination Begins", type: "exam", date: "2026-12-05", description: "Second term board examinations for all grades." },
+    { id: 37, title: "Second Term Examination Ends", type: "exam", date: "2026-12-18", description: "Last day of second term exams." },
+    { id: 38, title: "Result Declaration: Second Term", type: "event", date: "2026-12-24", description: "Results published. Collect report cards." },
+    { id: 39, title: "Christmas Day Celebration", type: "event", date: "2026-12-25", description: "Christmas program and carol singing." },
+    { id: 40, title: "Winter Vacation Begins", type: "vacation", date: "2026-12-26", description: "Winter holidays. School closed." },
   ],
 };

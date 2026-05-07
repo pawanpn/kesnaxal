@@ -1,7 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import OptimizedImage from "@/components/ui/OptimizedImage";
 import Badge from "@/components/ui/Badge";
 import SocialShare from "@/components/ui/SocialShare";
+import { useLocale } from "@/hooks/useLocale";
+import { resolveArticle } from "@/lib/translate";
 import type { NewsArticle } from "@/types";
 
 interface NewsDetailProps {
@@ -10,12 +14,14 @@ interface NewsDetailProps {
 }
 
 export default function NewsDetail({ article, recentPosts }: NewsDetailProps) {
+  const { locale } = useLocale();
+  const resolved = resolveArticle(article, locale);
   const shareUrl = `https://kes.edu.np/news/${article.slug}`;
 
   return (
     <article>
       <div className="relative h-64 sm:h-80 lg:h-[450px] bg-primary-dark">
-        <OptimizedImage src={article.image} alt={article.title} fill priority className="object-cover" sizes="100vw" />
+        <OptimizedImage src={article.image} alt={resolved.title} fill priority className="object-cover" sizes="100vw" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
         <div className="absolute bottom-0 left-0 right-0 p-6 lg:p-12">
           <div className="container-custom">
@@ -24,10 +30,10 @@ export default function NewsDetail({ article, recentPosts }: NewsDetailProps) {
               <span>/</span>
               <Link href="/news" className="hover:text-secondary transition-colors">News</Link>
               <span>/</span>
-              <span className="text-secondary truncate">{article.title}</span>
+              <span className="text-secondary truncate">{resolved.title}</span>
             </nav>
             <Badge>{article.category}</Badge>
-            <h1 className="text-2xl lg:text-4xl font-heading font-bold text-white max-w-3xl leading-tight mt-3">{article.title}</h1>
+            <h1 className="text-2xl lg:text-4xl font-heading font-bold text-white max-w-3xl leading-tight mt-3">{resolved.title}</h1>
           </div>
         </div>
       </div>
@@ -49,7 +55,7 @@ export default function NewsDetail({ article, recentPosts }: NewsDetailProps) {
             </div>
 
             <div className="prose-custom text-sm lg:text-base">
-              {article.content.split("\n\n").map((para, i) => {
+              {resolved.content.split("\n\n").map((para, i) => {
                 const trimmed = para.trim();
                 if (!trimmed) return null;
                 if (trimmed.startsWith("**") && trimmed.includes(":**")) {
@@ -60,7 +66,7 @@ export default function NewsDetail({ article, recentPosts }: NewsDetailProps) {
                 }
                 return (
                   <p key={i} className="text-foreground leading-relaxed">
-                    {trimmed.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>').replace(/"/g, '"').replace(/"/g, '"')}
+                    {trimmed.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>')}
                   </p>
                 );
               })}
@@ -68,7 +74,7 @@ export default function NewsDetail({ article, recentPosts }: NewsDetailProps) {
 
             <div className="mt-10 pt-6 border-t border-border">
               <h3 className="text-sm font-semibold text-foreground mb-4">Share this article</h3>
-              <SocialShare url={shareUrl} title={article.title} />
+              <SocialShare url={shareUrl} title={resolved.title} />
             </div>
           </div>
 
@@ -77,17 +83,20 @@ export default function NewsDetail({ article, recentPosts }: NewsDetailProps) {
               <div className="bg-surface rounded-xl p-6 border border-border">
                 <h3 className="font-heading font-bold text-primary text-sm uppercase tracking-wider mb-4">Recent News</h3>
                 <div className="space-y-4">
-                  {recentPosts.map((post) => (
-                    <Link key={post.id} href={`/news/${post.slug}`} className="flex gap-3 group">
-                      <div className="relative w-16 h-12 shrink-0 rounded-lg overflow-hidden">
-                        <OptimizedImage src={post.image} alt={post.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="64px" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs text-muted mb-0.5">{new Date(post.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
-                        <p className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-primary transition-colors">{post.title}</p>
-                      </div>
-                    </Link>
-                  ))}
+                  {recentPosts.map((post) => {
+                    const r = resolveArticle(post, locale);
+                    return (
+                      <Link key={post.id} href={`/news/${post.slug}`} className="flex gap-3 group">
+                        <div className="relative w-16 h-12 shrink-0 rounded-lg overflow-hidden">
+                          <OptimizedImage src={post.image} alt={r.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="64px" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs text-muted mb-0.5">{new Date(post.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
+                          <p className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-primary transition-colors">{r.title}</p>
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
 

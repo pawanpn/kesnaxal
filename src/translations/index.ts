@@ -7,12 +7,13 @@ export const locales: { code: Locale; label: string; flag: string }[] = [
 ];
 
 export const en: Translations = {
-  nav: {
-    Home: "Home", About: "About", Academics: "Academics",
-    "Primary Level": "Primary Level", "Secondary Level": "Secondary Level",
-    "Higher Secondary": "Higher Secondary", "Faculty & Staff": "Faculty & Staff",
-    Admissions: "Admissions", Results: "Results", Gallery: "Gallery", News: "News", Contact: "Contact", Staff: "Staff",
-  },
+    nav: {
+      Home: "Home", About: "About", Academics: "Academics",
+      "Primary Level": "Primary Level", "Secondary Level": "Secondary Level",
+      "Higher Secondary": "Higher Secondary", "Faculty & Staff": "Faculty & Staff",
+      Admissions: "Admissions", Results: "Results", Gallery: "Gallery", News: "News", Contact: "Contact", Staff: "Staff",
+      Careers: "Careers", Calendar: "Calendar",
+    },
   hero: { motto: "Learning is Endless", enroll: "Enroll Now", learnMore: "Learn More" },
   pages: {
     home: { title: "Welcome", subtitle: "" },
@@ -25,6 +26,8 @@ export const en: Translations = {
     news: { title: "News & Events", subtitle: "Stay informed about the latest happenings at KES." },
     results: { title: "Student Results", subtitle: "Enter your Symbol Number and Date of Birth to view your marksheet" },
     staff: { title: "Our Team", subtitle: "Meet the dedicated professionals behind KES" },
+    careers: { title: "Career Portal", subtitle: "Join our team at Kathmandu English School" },
+    calendar: { title: "School Calendar", subtitle: "Upcoming events, exams, and holidays throughout the year" },
   },
   sections: {
     NoticeBoard: "Notice Board", UpcomingEvents: "Upcoming Events", LatestNews: "Latest News",
@@ -47,7 +50,8 @@ export const ne: Translations = {
     Home: "गृहपृष्ठ", About: "हाम्रो बारे", Academics: "शैक्षिक",
     "Primary Level": "प्राथमिक तह", "Secondary Level": "माध्यमिक तह",
     "Higher Secondary": "उच्च माध्यमिक", "Faculty & Staff": "शिक्षक र कर्मचारी",
-    Admissions: "भर्ना", Results: "नतिजा", Gallery: "ग्यालरी", News: "समाचार", Contact: "सम्पर्क", Staff: "कर्मचारी",
+      Admissions: "भर्ना", Results: "नतिजा", Gallery: "ग्यालरी", News: "समाचार", Contact: "सम्पर्क", Staff: "कर्मचारी",
+      Careers: "करियर", Calendar: "क्यालेन्डर",
   },
   hero: { motto: "सिकाइ अनन्त छ", enroll: "भर्ना हुनुहोस्", learnMore: "थप जान्नुहोस्" },
   pages: {
@@ -61,6 +65,8 @@ export const ne: Translations = {
     news: { title: "समाचार र कार्यक्रम", subtitle: "KES का नवीनतम घटनाहरू बारे जानकारी रहनुहोस्।" },
     results: { title: "विद्यार्थी नतिजा", subtitle: "आफ्नो अंकपत्र हेर्न प्रतीक नम्बर र जन्म मिति प्रविष्ट गर्नुहोस्" },
     staff: { title: "हाम्रो टोली", subtitle: "KES पछाडिका समर्पित पेशेवरहरूसँग भेट गर्नुहोस्" },
+    careers: { title: "करियर पोर्टल", subtitle: "काठमाडौं इंग्लिस स्कूलमा हाम्रो टोलीमा सामेल हुनुहोस्" },
+    calendar: { title: "स्कूल क्यालेन्डर", subtitle: "वर्षभरिका आगामी कार्यक्रम, परीक्षा र विदा" },
   },
   sections: {
     NoticeBoard: "सूचना पाटी", UpcomingEvents: "आगामी कार्यक्रम", LatestNews: "नवीनतम समाचार",
@@ -83,7 +89,8 @@ export const ja: Translations = {
     Home: "ホーム", About: "学校概要", Academics: "教育課程",
     "Primary Level": "初等部", "Secondary Level": "中等部",
     "Higher Secondary": "高等部", "Faculty & Staff": "教職員",
-    Admissions: "入学案内", Results: "成績", Gallery: "ギャラリー", News: "ニュース", Contact: "お問い合わせ", Staff: "教職員",
+      Admissions: "入学案内", Results: "成績", Gallery: "ギャラリー", News: "ニュース", Contact: "お問い合わせ", Staff: "教職員",
+      Careers: "採用情報", Calendar: "カレンダー",
   },
   hero: { motto: "学びは終わりがない", enroll: "入学申込", learnMore: "詳細を見る" },
   pages: {
@@ -97,6 +104,8 @@ export const ja: Translations = {
     news: { title: "ニュース＆イベント", subtitle: "KESの最新情報をご覧ください。" },
     results: { title: "学生成績", subtitle: "受験番号と生年月日を入力して成績表を表示" },
     staff: { title: "教職員チーム", subtitle: "KESを支える献身的なプロフェッショナル" },
+    careers: { title: "求人情報", subtitle: "カトマンズ・イングリッシュ・スクールで私たちのチームに参加しませんか" },
+    calendar: { title: "学校カレンダー", subtitle: "年間のイベント、試験、休暇の予定" },
   },
   sections: {
     NoticeBoard: "掲示板", UpcomingEvents: "今後のイベント", LatestNews: "最新ニュース",

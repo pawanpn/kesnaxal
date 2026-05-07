@@ -13,20 +13,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!article) return { title: "Article Not Found" };
 
   return {
-    title: article.title,
-    description: article.excerpt,
+    title: article.title.en,
+    description: article.excerpt.en,
     openGraph: {
-      title: article.title,
-      description: article.excerpt,
+      title: article.title.en,
+      description: article.excerpt.en,
       type: "article",
       publishedTime: article.date,
       authors: [article.author],
-      images: [{ url: article.image, width: 1200, height: 630, alt: article.title }],
+      images: [{ url: article.image, width: 1200, height: 630, alt: article.title.en }],
     },
     twitter: {
       card: "summary_large_image",
-      title: article.title,
-      description: article.excerpt,
+      title: article.title.en,
+      description: article.excerpt.en,
       images: [article.image],
     },
   };

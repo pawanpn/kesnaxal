@@ -197,6 +197,33 @@ export interface StaffMember {
   department?: string;
 }
 
+// ── Jobs / Careers ──
+
+export interface JobVacancy {
+  id: number;
+  title: string;
+  category: string;
+  level: string;
+  experience: string;
+  salary: string;
+  vacancies: number;
+  workstation: string;
+  responsibilities: string[];
+  addedOn: string;
+  expiresOn: string;
+  isActive: boolean;
+}
+
+// ── Calendar ──
+
+export interface CalendarEvent {
+  id: number;
+  title: string;
+  type: "holiday" | "exam" | "event" | "vacation";
+  date: string;
+  description?: string;
+}
+
 // ── Language ──
 
 export type Locale = "en" | "ne" | "ja";
@@ -225,4 +252,6 @@ export interface SiteConfig {
   academicLevels: AcademicLevel[];
   faculty: FacultyMember[];
   staff: StaffMember[];
+  jobVacancies: JobVacancy[];
+  calendarEvents: CalendarEvent[];
 }

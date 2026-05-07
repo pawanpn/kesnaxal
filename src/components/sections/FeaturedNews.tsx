@@ -1,7 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import OptimizedImage from "@/components/ui/OptimizedImage";
 import Badge from "@/components/ui/Badge";
 import SectionHeading from "@/components/ui/SectionHeading";
+import { useLocale } from "@/hooks/useLocale";
+import { resolveArticle } from "@/lib/translate";
 import type { NewsArticle } from "@/types";
 
 interface FeaturedNewsProps {
@@ -17,6 +21,9 @@ const categoryVariant: Record<string, Parameters<typeof Badge>[0]["variant"]> = 
 };
 
 export default function FeaturedNews({ article }: FeaturedNewsProps) {
+  const { locale } = useLocale();
+  const resolved = resolveArticle(article, locale);
+
   return (
     <section className="bg-surface border-b border-border">
       <div className="container-custom py-8 lg:py-12">
@@ -24,7 +31,7 @@ export default function FeaturedNews({ article }: FeaturedNewsProps) {
 
         <Link href={`/news/${article.slug}`} className="group grid grid-cols-1 lg:grid-cols-5 gap-6 bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all border border-border hover:border-primary/30">
           <div className="lg:col-span-3 relative h-64 sm:h-80 lg:h-full min-h-[320px] overflow-hidden">
-            <OptimizedImage src={article.image} alt={article.title} fill priority className="object-cover group-hover:scale-105 transition-transform duration-700" sizes="(max-width: 1024px) 100vw, 60vw" />
+            <OptimizedImage src={article.image} alt={resolved.title} fill priority className="object-cover group-hover:scale-105 transition-transform duration-700" sizes="(max-width: 1024px) 100vw, 60vw" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
             <div className="absolute top-4 left-4">
               <Badge variant={categoryVariant[article.category] || "primary"}>{article.category}</Badge>
@@ -44,8 +51,8 @@ export default function FeaturedNews({ article }: FeaturedNewsProps) {
               </span>
             </div>
 
-            <h2 className="font-heading font-bold text-xl lg:text-2xl text-foreground mb-3 group-hover:text-primary transition-colors leading-snug">{article.title}</h2>
-            <p className="text-sm text-muted leading-relaxed mb-5 line-clamp-3">{article.excerpt}</p>
+            <h2 className="font-heading font-bold text-xl lg:text-2xl text-foreground mb-3 group-hover:text-primary transition-colors leading-snug">{resolved.title}</h2>
+            <p className="text-sm text-muted leading-relaxed mb-5 line-clamp-3">{resolved.excerpt}</p>
 
             <div className="flex items-center gap-2">
               <span className="text-primary text-sm font-semibold group-hover:underline">Read Full Story</span>
