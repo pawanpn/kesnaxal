@@ -30,6 +30,7 @@ export const en: Translations = {
     staff: { title: "Our Team", subtitle: "Meet the dedicated professionals behind KES" },
     careers: { title: "Career Portal", subtitle: "Join our team at Kathmandu English School" },
     calendar: { title: "School Calendar", subtitle: "Upcoming events, exams, and holidays throughout the year" },
+    notices: { title: "Notice Board", subtitle: "Important announcements, circulars, and updates" },
   },
   sections: {
     NoticeBoard: "Notice Board", UpcomingEvents: "Upcoming Events", LatestNews: "Latest News",
@@ -315,6 +316,7 @@ export const ne: Translations = {
     staff: { title: "हाम्रो टोली", subtitle: "KES पछाडिका समर्पित पेशेवरहरूसँग भेट गर्नुहोस्" },
     careers: { title: "करियर पोर्टल", subtitle: "काठमाडौं इंग्लिस स्कूलमा हाम्रो टोलीमा सामेल हुनुहोस्" },
     calendar: { title: "स्कूल क्यालेन्डर", subtitle: "वर्षभरिका आगामी कार्यक्रम, परीक्षा र विदा" },
+    notices: { title: "सूचना पाटी", subtitle: "महत्त्वपूर्ण घोषणाहरू, परिपत्र र अद्यावधिकहरू" },
   },
   sections: {
     NoticeBoard: "सूचना पाटी", UpcomingEvents: "आगामी कार्यक्रम", LatestNews: "नवीनतम समाचार",
@@ -600,6 +602,7 @@ export const ja: Translations = {
     staff: { title: "教職員チーム", subtitle: "KESを支える献身的なプロフェッショナル" },
     careers: { title: "求人情報", subtitle: "カトマンズ・イングリッシュ・スクールで私たちのチームに参加しませんか" },
     calendar: { title: "学校カレンダー", subtitle: "年間のイベント、試験、休暇の予定" },
+    notices: { title: "掲示板", subtitle: "重要なお知らせ、回覧、最新情報" },
   },
   sections: {
     NoticeBoard: "掲示板", UpcomingEvents: "今後のイベント", LatestNews: "最新ニュース",
