@@ -238,6 +238,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { error: error.message };
+    setIsAdmin(true);
     return {};
   }, []);
 
