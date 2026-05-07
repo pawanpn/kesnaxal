@@ -5,6 +5,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { siteData } from "@/config/siteData";
 
+type NavLinkItem = {
+  label: string;
+  href: string;
+  dropdown?: { label: string; href: string }[];
+};
+
+const navLinks = siteData.nav.links as unknown as NavLinkItem[];
+
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [academicsOpen, setAcademicsOpen] = useState(false);
@@ -31,7 +39,7 @@ export default function Navbar() {
           </Link>
 
           <nav className="hidden lg:flex items-center gap-1">
-            {siteData.nav.links.map((link) =>
+            {navLinks.map((link) =>
               link.dropdown ? (
                 <div
                   key={link.label}
@@ -102,7 +110,7 @@ export default function Navbar() {
       {mobileOpen && (
         <nav className="lg:hidden border-t border-border bg-white animate-fadein">
           <div className="container-custom py-3 flex flex-col gap-1">
-            {siteData.nav.links.map((link) =>
+            {navLinks.map((link) =>
               link.dropdown ? (
                 <div key={link.label}>
                   <button
