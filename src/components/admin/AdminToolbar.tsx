@@ -23,8 +23,10 @@ export default function AdminToolbar() {
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-primary-dark/95 backdrop-blur border-t border-primary/30 text-white">
         <div className="container-custom flex items-center justify-between py-2 px-4">
           <div className="flex items-center gap-3">
-            <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
-            <span className="text-xs font-bold uppercase tracking-widest">Admin Mode</span>
+            <span className={`w-2 h-2 rounded-full animate-pulse ${isEditing ? "bg-green-400" : "bg-secondary"}`} />
+            <span className="text-xs font-bold uppercase tracking-widest">
+              {isEditing ? "EDIT MODE ON" : "Admin Mode"}
+            </span>
           </div>
 
           <div className="flex items-center gap-2">

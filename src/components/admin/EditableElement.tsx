@@ -104,7 +104,7 @@ export default function EditableElement({
   return (
     <Tag
       onClick={handleClick}
-      className={`cursor-pointer hover:bg-primary/10 hover:ring-2 hover:ring-primary/30 rounded px-1 -mx-1 transition-all duration-150 ${className}`}
+      className={`cursor-pointer border border-dashed border-primary/30 hover:bg-primary/10 hover:ring-2 hover:ring-primary/50 rounded px-1.5 py-0.5 -mx-1.5 -my-0.5 transition-all duration-150 ${className}`}
       title={`Click to edit (${section}.${contentKey})`}
     >
       {displayText}
