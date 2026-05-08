@@ -124,9 +124,8 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     setIsPreviewMode(hasPreview);
   }, []);
 
-  /* ── Load content from Supabase on admin login ── */
+  /* ── Load content from Supabase (RLS filters: published for public, all for admins) ── */
   useEffect(() => {
-    if (!isAdmin) return;
     loadAllContent();
   }, [isAdmin]);
 

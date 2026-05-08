@@ -136,14 +136,21 @@ export function generateSeedData(): SeedRow[] {
     rows.push({ section: "academics", content_key: "pdf_docs", locale, content_text: JSON.stringify(docs), content_json: { docs }, status: "published" });
   });
 
-  // ── Careers: Job Listings (JSON array, per locale) ──
+  // ── Careers: Job Listings (JSON array with FULL fields, per locale) ──
   locales.forEach((locale) => {
     const jobs = siteConfig.jobVacancies.map((job) => ({
-      id: `job_${job.id}`,
+      id: job.id,
       title: job.title[locale] || job.title.en || "",
       category: job.category[locale] || job.category.en || "",
-      type: "Full-time",
-      description: job.responsibilities[0]?.[locale] || job.responsibilities[0]?.en || "",
+      level: job.level[locale] || job.level.en || "",
+      experience: job.experience[locale] || job.experience.en || "",
+      salary: job.salary[locale] || job.salary.en || "",
+      vacancies: job.vacancies,
+      workstation: job.workstation[locale] || job.workstation.en || "",
+      responsibilities: job.responsibilities.map((r) => r[locale] || r.en || ""),
+      addedOn: job.addedOn,
+      expiresOn: job.expiresOn,
+      isActive: job.isActive,
     }));
     rows.push({ section: "careers", content_key: "job_listings", locale, content_text: JSON.stringify(jobs), content_json: { jobs }, status: "published" });
   });
