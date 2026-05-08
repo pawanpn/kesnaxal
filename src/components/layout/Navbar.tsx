@@ -12,9 +12,6 @@ const navLinks: NavLink[] = siteConfig.nav.links;
 
 export default function Navbar() {
   const pathname = usePathname();
-
-  if (pathname?.startsWith("/admin")) return null;
-
   const [mobileOpen, setMobileOpen] = useState(false);
   const [academicsOpen, setAcademicsOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
@@ -32,6 +29,8 @@ export default function Navbar() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
+
+  if (pathname?.startsWith("/admin")) return null;
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-md">

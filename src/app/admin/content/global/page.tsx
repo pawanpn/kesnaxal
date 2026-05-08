@@ -177,10 +177,10 @@ export default function GlobalSettingsPage() {
   const handleResetLogo = async () => {
     try {
       setLogoUrl("/data/logo.jpg");
-      await savePublishedContent("global", "logo_url", "en", "/data/logo.jpg");
-      await savePublishedContent("global", "logo_url", "ne", "/data/logo.jpg");
-      await savePublishedContent("global", "logo_url", "ja", "/data/logo.jpg");
-      toast("success", "Logo reset to default");
+      await saveContent("global", "logo_url", "en", "/data/logo.jpg");
+      await saveContent("global", "logo_url", "ne", "/data/logo.jpg");
+      await saveContent("global", "logo_url", "ja", "/data/logo.jpg");
+      toast("success", "Logo reset to default (draft)");
     } catch { toast("error", "Failed to reset logo"); }
   };
 
@@ -291,7 +291,7 @@ export default function GlobalSettingsPage() {
                   </div>
                   <button onClick={() => handleSaveField(field.key)} disabled={saveStatus[field.key] === "saving"}
                     className="mt-2 px-4 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
-                    {saveStatus[field.key] === "saving" ? "Saving..." : saveStatus[field.key] === "saved" ? "✓ Published" : "Save & Publish"}
+                    {saveStatus[field.key] === "saving" ? "Saving..." : saveStatus[field.key] === "saved" ? "✓ Draft Saved" : "Save Draft"}
                   </button>
                 </div>
               ))}
@@ -325,7 +325,7 @@ export default function GlobalSettingsPage() {
             </div>
             <button onClick={handleSaveSocial} disabled={socialSaving}
               className="mt-4 px-4 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
-              {socialSaving ? "Saving..." : "Save & Publish"}
+              {socialSaving ? "Saving..." : "Save Draft"}
             </button>
           </div>
         )}
@@ -356,7 +356,7 @@ export default function GlobalSettingsPage() {
             </div>
             <button onClick={handleSaveHours} disabled={hoursSaving}
               className="mt-4 px-4 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
-              {hoursSaving ? "Saving..." : "Save & Publish"}
+              {hoursSaving ? "Saving..." : "Save Draft"}
             </button>
           </div>
         )}

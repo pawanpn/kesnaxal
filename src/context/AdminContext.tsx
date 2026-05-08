@@ -434,6 +434,23 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
         size_bytes: file.size,
       });
 
+      // Auto-publish media URL as published content so public visitors see it
+      const { data: existing } = await supabase
+        .from("site_content")
+        .select("id")
+        .eq("section", section)
+        .eq("content_key", key)
+        .eq("locale", "en")
+        .maybeSingle();
+
+      if (existing) {
+        await supabase.from("site_content").update({ content_text: publicUrl, status: "published", updated_at: new Date().toISOString() }).eq("id", existing.id);
+      } else {
+        await supabase.from("site_content").insert({ section, content_key: key, locale: "en", content_text: publicUrl, status: "published" });
+        await supabase.from("site_content").insert({ section, content_key: key, locale: "ne", content_text: publicUrl, status: "published" });
+        await supabase.from("site_content").insert({ section, content_key: key, locale: "ja", content_text: publicUrl, status: "published" });
+      }
+
       return publicUrl;
     },
     []
