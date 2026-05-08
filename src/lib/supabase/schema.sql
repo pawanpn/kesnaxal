@@ -275,9 +275,9 @@ DROP POLICY IF EXISTS "Admins can delete storage media" ON storage.objects;
 CREATE POLICY "Admins can delete storage media" ON storage.objects
   FOR DELETE USING (bucket_id = 'media' AND is_admin());
 
-====================================================================
+-- ============================================================
 -- ── Postgres Functions (RPC) ──
-====================================================================
+-- ============================================================
 
 -- 9. RPC: Publish all drafts
 DROP FUNCTION IF EXISTS publish_all_drafts CASCADE;
