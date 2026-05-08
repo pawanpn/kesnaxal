@@ -29,6 +29,7 @@ export interface SiteContentRow {
 
 interface AdminContextValue {
   isAdmin: boolean;
+  authReady: boolean;
   isEditing: boolean;
   isPreviewMode: boolean;
   editingLocale: string;
@@ -56,6 +57,8 @@ interface AdminContextValue {
   seedContent: () => Promise<{ count: number; error?: string }>;
   hasDraft: (section: string, key: string, locale: string) => boolean;
   loadAllContent: () => Promise<void>;
+  deleteItem: (section: string, key: string) => Promise<void>;
+  listSectionItems: (section: string) => SiteContentRow[];
 }
 
 export const AdminContext = createContext<AdminContextValue | null>(null);
@@ -70,6 +73,7 @@ function rowKey(section: string, key: string, locale: string) {
 
 export default function AdminProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [editingLocale, setEditingLocale] = useState("en");
@@ -80,17 +84,37 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
 
   /* ── Check auth on mount ── */
   useEffect(() => {
+    let mounted = true;
+
+    const readyTimer = setTimeout(() => {
+      if (mounted) setAuthReady(true);
+    }, 10000);
+
     supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
       setIsAdmin(!!data.session);
+      setAuthReady(true);
     });
+
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
       setIsAdmin(!!session);
+      setAuthReady(true);
       if (!session) {
         setIsEditing(false);
         setIsPreviewMode(false);
+        setPublishedContent(new Map());
+        setDraftContent(new Map());
+        setDraftCount(0);
+        setRecentEdits([]);
       }
     });
-    return () => listener?.subscription.unsubscribe();
+
+    return () => {
+      mounted = false;
+      clearTimeout(readyTimer);
+      listener?.subscription.unsubscribe();
+    };
   }, []);
 
   /* ── Read preview cookie on mount ── */
@@ -370,7 +394,6 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { error: error.message };
-    setIsAdmin(true);
     return {};
   }, []);
 
@@ -379,7 +402,11 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     if (typeof document !== "undefined") {
       document.cookie = "kes_preview=; path=/; max-age=0";
     }
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      /* best-effort: clear state regardless */
+    }
     setIsAdmin(false);
     setIsEditing(false);
     setRecentEdits([]);
@@ -387,6 +414,34 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     setDraftContent(new Map());
     setDraftCount(0);
   }, []);
+
+  /* ── Delete a content row entirely (all locales) ── */
+  const deleteItem = useCallback(
+    async (section: string, key: string) => {
+      await supabase.from("site_content").delete()
+        .eq("section", section)
+        .eq("content_key", key);
+      await loadAllContent();
+    },
+    []
+  );
+
+  /* ── List all rows in a section ── */
+  const listSectionItems = useCallback(
+    (section: string): SiteContentRow[] => {
+      const all = new Map([...publishedContent, ...draftContent]);
+      const rows: SiteContentRow[] = [];
+      const seen = new Set<string>();
+      all.forEach((row) => {
+        if (row.section === section && !seen.has(row.content_key)) {
+          seen.add(row.content_key);
+          rows.push(row);
+        }
+      });
+      return rows;
+    },
+    [publishedContent, draftContent]
+  );
 
   const toggleEditMode = useCallback(() => {
     setIsEditing((prev) => !prev);
@@ -408,6 +463,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     <AdminContext.Provider
       value={{
         isAdmin,
+        authReady,
         isEditing,
         isPreviewMode,
         editingLocale,
@@ -435,6 +491,8 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
         seedContent,
         hasDraft,
         loadAllContent,
+        deleteItem,
+        listSectionItems,
       }}
     >
       {children}

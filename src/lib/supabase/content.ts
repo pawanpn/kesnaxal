@@ -112,6 +112,18 @@ export async function getEvents(locale: Locale): Promise<UpcomingEvent[]> {
 
 export async function getNewsArticles(locale: Locale): Promise<NewsArticle[]> {
   const content = await getAllContent();
+
+  // Try JSON format first (from admin panel)
+  const jsonStr = content.get(`news::news_articles::${locale}`);
+  if (jsonStr) {
+    try {
+      const parsed = JSON.parse(jsonStr);
+      if (parsed.articles && Array.isArray(parsed.articles) && parsed.articles.length > 0) {
+        return parsed.articles as NewsArticle[];
+      }
+    } catch { /* fall through to individual keys */ }
+  }
+
   if (content.size === 0) return siteConfig.newsArticles;
 
   return siteConfig.newsArticles.map((article) => {

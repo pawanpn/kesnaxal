@@ -118,6 +118,17 @@ export function useDynamicContent() {
 
   // ── News ──
   const newsArticles: NewsArticle[] = useMemo(() => {
+    // Try JSON format first (from admin panel)
+    const jsonStr = getContent("news", "news_articles", locale);
+    if (jsonStr) {
+      try {
+        const parsed = JSON.parse(jsonStr);
+        if (parsed.articles && Array.isArray(parsed.articles) && parsed.articles.length > 0) {
+          return parsed.articles as NewsArticle[];
+        }
+      } catch { /* fall through */ }
+    }
+
     if (!supabaseHasContent) return siteConfig.newsArticles;
     return siteConfig.newsArticles.map((article) => {
       const id = `article_${article.id}`;
@@ -190,6 +201,17 @@ export function useDynamicContent() {
 
   // ── Staff ──
   const staff: StaffMember[] = useMemo(() => {
+    // Try JSON format first (from admin staff panel)
+    const jsonStr = getContent("staff", "staff_members", "en");
+    if (jsonStr) {
+      try {
+        const parsed = JSON.parse(jsonStr);
+        if (parsed.members && Array.isArray(parsed.members) && parsed.members.length > 0) {
+          return parsed.members as StaffMember[];
+        }
+      } catch { /* fall through */ }
+    }
+
     if (!supabaseHasContent) return siteConfig.staff;
     return siteConfig.staff.map((m) => {
       const id = `staff_${m.id}`;

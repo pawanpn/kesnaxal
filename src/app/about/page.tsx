@@ -99,7 +99,7 @@ export default function AboutPage() {
             <EditableImage
               section="about"
               contentKey="school_image"
-              src="/images/school_building.jpg"
+              src="https://picsum.photos/seed/kesschool/800/600"
               alt="School Building"
               fill
               className="object-cover"

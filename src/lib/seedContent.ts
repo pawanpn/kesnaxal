@@ -23,33 +23,15 @@ export function generateSeedData(): SeedRow[] {
   const rows: SeedRow[] = [];
   const locales: Locale[] = ["en", "ne", "ja"];
 
-  const addLocale = (
-    section: string,
-    key: string,
-    getText: (locale: Locale) => string
-  ) => {
+  const addLocale = (section: string, key: string, getText: (locale: Locale) => string) => {
     locales.forEach((locale) => {
-      rows.push({
-        section,
-        content_key: key,
-        locale,
-        content_text: getText(locale),
-        content_json: {},
-        status: "published",
-      });
+      rows.push({ section, content_key: key, locale, content_text: getText(locale), content_json: {}, status: "published" });
     });
   };
 
   const addSimple = (section: string, key: string, value: string) => {
     locales.forEach((locale) => {
-      rows.push({
-        section,
-        content_key: key,
-        locale,
-        content_text: value,
-        content_json: {},
-        status: "published",
-      });
+      rows.push({ section, content_key: key, locale, content_text: value, content_json: {}, status: "published" });
     });
   };
 
@@ -57,29 +39,113 @@ export function generateSeedData(): SeedRow[] {
     addLocale(section, key, (l) => lc[l] || lc.en || "");
   };
 
-  // ── School Info ──
+  const addJson = (section: string, key: string, json: Record<string, unknown>) => {
+    locales.forEach((locale) => {
+      rows.push({ section, content_key: key, locale, content_text: JSON.stringify(json), content_json: json, status: "published" });
+    });
+  };
+
   const { school, contact, footer } = siteConfig;
-  addSimple("school", "name", school.name);
-  addSimple("school", "shortName", school.shortName);
-  addSimple("school", "motto", school.motto);
-  addSimple("school", "established", String(school.established));
-  addSimple("school", "history", school.history);
-  addSimple("school", "principal_name", school.principal.name);
-  addSimple("school", "principal_message", school.principal.message);
 
-  // ── Contact ──
-  addSimple("contact", "address", contact.address);
-  addSimple("contact", "phone", contact.phone);
-  addSimple("contact", "phone2", contact.phone2);
-  addSimple("contact", "email", contact.email);
-  addSimple("contact", "admissionsEmail", contact.admissionsEmail);
-  addSimple("contact", "mapEmbedUrl", contact.mapEmbedUrl);
+  // ── Global: School Info ──
+  addSimple("global", "schoolName", school.name);
+  addSimple("global", "motto", school.motto);
+  addSimple("global", "principalName", school.principal.name);
+  addSimple("global", "principalMessage", school.principal.message);
 
-  // ── Hero Slides ──
-  siteConfig.hero.slides.forEach((slide, i) => {
-    addLC("hero", `slide_${i}_title`, slide.title);
-    addLC("hero", `slide_${i}_subtitle`, slide.subtitle);
-    addSimple("hero", `slide_${i}_image`, slide.image);
+  // ── Global: Contact Info ──
+  addSimple("global", "phone", contact.phone);
+  addSimple("global", "phone2", contact.phone2);
+  addSimple("global", "email", contact.email);
+  addSimple("global", "address", contact.address);
+
+  // ── Global: Social Links (JSON array) ──
+  addJson("global", "social_links", {
+    links: [
+      { platform: "facebook", url: "https://facebook.com/kesnepal" },
+      { platform: "instagram", url: "https://instagram.com/kesnepal" },
+      { platform: "twitter", url: "https://twitter.com/kesnepal" },
+      { platform: "youtube", url: "https://youtube.com/@kesnepal" },
+    ],
+  });
+
+  // ── Global: Opening Hours (JSON array) ──
+  addJson("global", "opening_hours", {
+    hours: [
+      { days: "Sun-Fri", time: "9:00 AM - 4:00 PM" },
+      { days: "Sat", time: "9:00 AM - 1:00 PM" },
+    ],
+  });
+
+  // ── Homepage: Hero Slides (JSON array, per locale) ──
+  locales.forEach((locale) => {
+    const slides = siteConfig.hero.slides.map((slide) => ({
+      image: slide.image,
+      title: slide.title[locale] || slide.title.en || "",
+      subtitle: slide.subtitle[locale] || slide.subtitle.en || "",
+    }));
+    rows.push({ section: "homepage", content_key: "hero_slides", locale, content_text: JSON.stringify(slides), content_json: { slides }, status: "published" });
+  });
+
+  // ── Homepage: Testimonials (JSON array, per locale) ──
+  locales.forEach((locale) => {
+    const items = siteConfig.testimonials.map((t) => ({
+      name: t.name,
+      role: t.role,
+      text: t.text[locale] || t.text.en || "",
+    }));
+    rows.push({ section: "homepage", content_key: "testimonials", locale, content_text: JSON.stringify(items), content_json: { items }, status: "published" });
+  });
+
+  // ── Homepage: FAQs (JSON array, per locale) ──
+  const defaultFaqsEN = [
+    { question: "What is the admission process?", answer: "Visit our Admissions page for details on application forms, entrance exams, and required documents." },
+    { question: "What curriculum does KES follow?", answer: "KES follows the National Curriculum of Nepal (NEB) with English as the primary medium of instruction." },
+    { question: "Does KES provide transportation?", answer: "Yes, we offer bus service on selected routes across Kathmandu Valley." },
+  ];
+  const defaultFaqsNE = [
+    { question: "भर्ना प्रक्रिया के छ?", answer: "आवेदन फारम, प्रवेश परीक्षा र आवश्यक कागजातहरूको विवरणका लागि हाम्रो भर्ना पृष्ठ हेर्नुहोस्।" },
+    { question: "केईएसले कुन पाठ्यक्रम अनुसरण गर्छ?", answer: "केईएसले अंग्रेजीलाई प्रमुख शिक्षण माध्यमको रूपमा प्रयोग गर्दै नेपालको राष्ट्रिय पाठ्यक्रम (एनईबी) अनुसरण गर्दछ।" },
+    { question: "के केईएसले यातायात प्रदान गर्छ?", answer: "हो, हामी काठमाडौं उपत्यकाका चुनिएका मार्गहरूमा बस सेवा प्रदान गर्छौं।" },
+  ];
+  const defaultFaqsJA = [
+    { question: "入学手続きはどのようになっていますか？", answer: "入学申込書、入学試験、必要書類の詳細については、入学案内ページをご覧ください。" },
+    { question: "KESはどのカリキュラムに従っていますか？", answer: "KESは英語を主要教授言語として、ネパール国家カリキュラム（NEB）に従っています。" },
+    { question: "KESは交通手段を提供していますか？", answer: "はい、カトマンズバレー内の選択されたルートでバスサービスを提供しています。" },
+  ];
+  rows.push({ section: "homepage", content_key: "faqs", locale: "en", content_text: JSON.stringify(defaultFaqsEN), content_json: { items: defaultFaqsEN }, status: "published" });
+  rows.push({ section: "homepage", content_key: "faqs", locale: "ne", content_text: JSON.stringify(defaultFaqsNE), content_json: { items: defaultFaqsNE }, status: "published" });
+  rows.push({ section: "homepage", content_key: "faqs", locale: "ja", content_text: JSON.stringify(defaultFaqsJA), content_json: { items: defaultFaqsJA }, status: "published" });
+
+  // ── Academics: PDF Docs (JSON array, per locale) ──
+  const pdfLabelsEN = ["Fee Structure", "Syllabus", "Academic Calendar", "Exam Routine", "Book List", "Student Handbook"];
+  const pdfLabelsNE = ["शुल्क संरचना", "पाठ्यक्रम", "शैक्षिक पात्रो", "परीक्षा तालिका", "पुस्तक सूची", "विद्यार्थी पुस्तिका"];
+  const pdfLabelsJA = ["料金体系", "シラバス", "学年暦", "試験日程", "図書リスト", "生徒手帳"];
+  const pdfDescsEN = [
+    "Current academic year fee breakdown", "Complete course syllabus for all grades",
+    "Yearly academic schedule and holidays", "Examination schedule and time table",
+    "Required textbooks for all classes", "Rules, regulations and guidelines",
+  ];
+  locales.forEach((locale) => {
+    const labels = locale === "en" ? pdfLabelsEN : locale === "ne" ? pdfLabelsNE : pdfLabelsJA;
+    const docs = labels.map((label, i) => ({
+      key: `pdf_${i}`,
+      label,
+      description: pdfDescsEN[i],
+    }));
+    rows.push({ section: "academics", content_key: "pdf_docs", locale, content_text: JSON.stringify(docs), content_json: { docs }, status: "published" });
+  });
+
+  // ── Careers: Job Listings (JSON array, per locale) ──
+  locales.forEach((locale) => {
+    const jobs = siteConfig.jobVacancies.map((job) => ({
+      id: `job_${job.id}`,
+      title: job.title[locale] || job.title.en || "",
+      category: job.category[locale] || job.category.en || "",
+      type: "Full-time",
+      description: job.responsibilities[0]?.[locale] || job.responsibilities[0]?.en || "",
+    }));
+    rows.push({ section: "careers", content_key: "job_listings", locale, content_text: JSON.stringify(jobs), content_json: { jobs }, status: "published" });
   });
 
   // ── Events ──
@@ -107,7 +173,7 @@ export function generateSeedData(): SeedRow[] {
     addSimple("news", `${keyId}_tags`, JSON.stringify(article.tags));
   });
 
-  // ── Testimonials ──
+  // ── Legacy: Testimonials (individual keys for backward compat) ──
   siteConfig.testimonials.forEach((testimonial) => {
     const keyId = `testimonial_${testimonial.id}`;
     addLC("testimonials", `${keyId}_text`, testimonial.text);
@@ -126,12 +192,8 @@ export function generateSeedData(): SeedRow[] {
     addSimple("academics", `${keyId}_grades`, level.grades);
     addSimple("academics", `${keyId}_desc`, level.desc);
     addSimple("academics", `${keyId}_image`, level.image);
-    if (level.subjects) {
-      addSimple("academics", `${keyId}_subjects`, JSON.stringify(level.subjects));
-    }
-    if (level.streams) {
-      addSimple("academics", `${keyId}_streams`, JSON.stringify(level.streams));
-    }
+    if (level.subjects) { addSimple("academics", `${keyId}_subjects`, JSON.stringify(level.subjects)); }
+    if (level.streams) { addSimple("academics", `${keyId}_streams`, JSON.stringify(level.streams)); }
   });
 
   // ── Faculty ──
@@ -147,38 +209,30 @@ export function generateSeedData(): SeedRow[] {
     const keyId = `staff_${member.id}`;
     addSimple("staff", `${keyId}_name`, member.name);
     addSimple("staff", `${keyId}_designation`, member.designation);
-    if (member.department) {
-      addSimple("staff", `${keyId}_department`, member.department);
-    }
+    if (member.department) { addSimple("staff", `${keyId}_department`, member.department); }
     addSimple("staff", `${keyId}_photo`, member.photo);
   });
 
-  // ── Job Vacancies ──
-  siteConfig.jobVacancies.forEach((job) => {
-    const keyId = `job_${job.id}`;
-    addLC("careers", `${keyId}_title`, job.title);
-    addLC("careers", `${keyId}_category`, job.category);
-    addLC("careers", `${keyId}_level`, job.level);
-    addLC("careers", `${keyId}_experience`, job.experience);
-    addLC("careers", `${keyId}_salary`, job.salary);
-    addLC("careers", `${keyId}_workstation`, job.workstation);
-    addSimple("careers", `${keyId}_vacancies`, String(job.vacancies));
-    addSimple("careers", `${keyId}_addedOn`, job.addedOn);
-    addSimple("careers", `${keyId}_expiresOn`, job.expiresOn);
-    addSimple("careers", `${keyId}_isActive`, String(job.isActive));
-    job.responsibilities.forEach((resp, ri) => {
-      addLC("careers", `${keyId}_resp_${ri}`, resp);
-    });
+  // ── Staff (JSON format for admin panel) ──
+  locales.forEach((locale) => {
+    rows.push({ section: "staff", content_key: "staff_members", locale, content_text: JSON.stringify({ members: siteConfig.staff }), content_json: { members: siteConfig.staff }, status: "published" });
+  });
+
+  // ── News Articles (JSON format for admin panel) ──
+  locales.forEach((locale) => {
+    rows.push({ section: "news", content_key: "news_articles", locale, content_text: JSON.stringify({ articles: siteConfig.newsArticles }), content_json: { articles: siteConfig.newsArticles }, status: "published" });
   });
 
   // ── Calendar Events ──
-  siteConfig.calendarEvents.forEach((event) => {
-    const keyId = `calendar_${event.id}`;
-    addLC("calendar", `${keyId}_title`, event.title);
-    if (event.description) addLC("calendar", `${keyId}_description`, event.description);
-    addSimple("calendar", `${keyId}_date`, event.date);
-    addSimple("calendar", `${keyId}_type`, event.type);
-  });
+  if (siteConfig.calendarEvents) {
+    siteConfig.calendarEvents.forEach((event) => {
+      const keyId = `calendar_${event.id}`;
+      addLC("calendar", `${keyId}_title`, event.title);
+      if (event.description) addLC("calendar", `${keyId}_description`, event.description);
+      addSimple("calendar", `${keyId}_date`, event.date);
+      addSimple("calendar", `${keyId}_type`, event.type);
+    });
+  }
 
   // ── Gallery ──
   addSimple("gallery", "categories", JSON.stringify(siteConfig.gallery.categories));
@@ -193,18 +247,12 @@ export function generateSeedData(): SeedRow[] {
   return flatSeed(rows);
 }
 
-/**
- * Seeds the Supabase site_content table with data from siteConfig.
- * Uses upsert to avoid duplicates. All inserted as "published".
- */
 export async function seedSupabaseContent(): Promise<{ count: number; error?: string }> {
   const rows = generateSeedData();
-
   const { error } = await supabase.from("site_content").upsert(rows, {
     onConflict: "section,content_key,locale",
     ignoreDuplicates: false,
   });
-
   if (error) return { count: 0, error: error.message };
   return { count: rows.length };
 }
