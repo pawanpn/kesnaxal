@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useToast } from "@/context/ToastContext";
 
 type Locale = "en" | "ne" | "ja";
 
@@ -65,6 +66,7 @@ const DEF_FAQ: Record<Locale, Faq[]> = { en: DEF_FAQ_EN, ne: DEF_FAQ_NE, ja: DEF
 
 export default function HomepageManagerPage() {
   const { getJson, saveJson, hasDraft, discardSectionDrafts, loadAllContent } = useAdmin();
+  const { toast } = useToast();
   const [activeSection, setActiveSection] = useState<string>("hero");
   const [lang, setLang] = useState<Locale>("en");
   const [autoTranslate, setAutoTranslate] = useState(false);

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useToast } from "@/context/ToastContext";
 import { supabase } from "@/lib/supabase/client";
 
 type Locale = "en" | "ne" | "ja";
@@ -30,6 +31,7 @@ const statusColors: Record<string, string> = {
 
 export default function CareerManagerPage() {
   const { getJson, saveJson, hasDraft, discardSectionDrafts, loadAllContent } = useAdmin();
+  const { toast } = useToast();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");

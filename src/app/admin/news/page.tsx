@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useToast } from "@/context/ToastContext";
 import type { NewsArticle, LocaleContent } from "@/types";
 
 type Locale = "en" | "ne" | "ja";
@@ -181,6 +182,7 @@ function restoreSelection(saved: ReturnType<typeof saveSelection>) {
 /* ── Main Page ── */
 export default function NewsAdminPage() {
   const { getJson, saveJson, getContent, uploadMedia, hasDraft, discardSectionDrafts, loadAllContent } = useAdmin();
+  const { toast } = useToast();
 
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -231,7 +233,9 @@ export default function NewsAdminPage() {
         await saveJson("news", "news_articles", lang, { articles: updated });
       }
       setArticles(updated);
+      toast("success", "Articles saved!");
     } catch (e) {
+      toast("error", "Failed to save articles");
       console.error("Save failed:", e);
     }
     setSaving(false);
@@ -290,7 +294,7 @@ export default function NewsAdminPage() {
     if (!file) return;
     setUploading(true);
     const url = await uploadMedia(file, "news", `article_${selected?.id || "new"}_cover`);
-    if (url) handleField("image", url);
+    if (url) { handleField("image", url); toast("success", "Cover image uploaded!"); }
     setUploading(false);
     if (e.target) e.target.value = "";
   };
@@ -366,7 +370,7 @@ export default function NewsAdminPage() {
                 className="px-4 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
                 {saving ? "Saving..." : "Save All Articles"}
               </button>
-              <button onClick={async () => { setDiscarding(true); await discardSectionDrafts("news"); setDiscarding(false); window.location.reload(); }}
+              <button onClick={async () => { setDiscarding(true); await discardSectionDrafts("news"); toast("success", "Drafts discarded"); setDiscarding(false); window.location.reload(); }}
                 disabled={discarding}
                 className="px-3 py-2 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5 disabled:opacity-50">
                 Discard

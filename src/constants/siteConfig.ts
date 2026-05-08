@@ -1569,4 +1569,111 @@ export const siteConfig: SiteConfig = {
       },
     },
   ],
+  notices: [
+    {
+      id: 1,
+      title: {
+        en: "First Term Examination Schedule Released",
+        ne: "पहिलो त्रैमासिक परीक्षा तालिका प्रकाशित",
+        ja: "第1学期試験スケジュール発表",
+      },
+      date: "2026-05-06",
+      content: {
+        en: "First term examinations for Grade 1 to 12 will commence from May 25, 2026. Detailed routine is available at the school reception.",
+        ne: "कक्षा १ देखि १२ सम्मको पहिलो त्रैमासिक परीक्षा २०२६ मे २५ देखि सुरु हुनेछ। विस्तृत तालिका विद्यालय रिसेप्सनमा उपलब्ध छ।",
+        ja: "1年生から12年生までの第1学期試験は2026年5月25日から開始されます。詳細な日程は学校受付で入手できます。",
+      },
+      priority: "high" as const,
+    },
+    {
+      id: 2,
+      title: {
+        en: "Admission Open for Academic Year 2083",
+        ne: "शैक्षिक वर्ष २०८३ को लागि भर्ना खुल्ला",
+        ja: "2083年度入学受付開始",
+      },
+      date: "2026-05-03",
+      content: {
+        en: "Online and in-person admissions are now open for Nursery to Grade 11. Early bird discounts available until Asar 15.",
+        ne: "नर्सरी देखि कक्षा ११ सम्मको लागि अनलाइन र व्यक्तिगत भर्ना खुल्ला। असार १५ सम्म अग्रिम भर्ना छुट उपलब्ध।",
+        ja: "ナーサリーから11年生までのオンラインおよび対面入学受付を開始しました。Asar 15まで早期割引あり。",
+      },
+      priority: "high" as const,
+    },
+    {
+      id: 3,
+      title: {
+        en: "Summer Vacation Notice",
+        ne: "ग्रीष्म बिदा सूचना",
+        ja: "夏季休暇のお知らせ",
+      },
+      date: "2026-04-28",
+      content: {
+        en: "Summer vacation will be observed from Asar 1 to Asar 20, 2083. School reopens on Asar 21.",
+        ne: "२०८३ असार १ देखि असार २० सम्म ग्रीष्म बिदा हुनेछ। विद्यालय असार २१ मा पुनः खुल्नेछ।",
+        ja: "2083年Asar 1からAsar 20まで夏季休暇となります。学校はAsar 21に再開します。",
+      },
+      priority: "normal" as const,
+    },
+    {
+      id: 4,
+      title: {
+        en: "Annual Sports Meet Registration Open",
+        ne: "वार्षिक खेलकुद प्रतियोगिता दर्ता खुल्ला",
+        ja: "年次スポーツ大会登録受付中",
+      },
+      date: "2026-04-20",
+      content: {
+        en: "Students interested in participating in the Annual Sports Meet must register with their class teachers by Baisakh 25.",
+        ne: "वार्षिक खेलकुद प्रतियोगितामा भाग लिन इच्छुक विद्यार्थीहरूले वैशाख २५ भित्र कक्षा शिक्षकमा दर्ता गराउनु पर्नेछ।",
+        ja: "年次スポーツ大会に参加希望の生徒はBaisakh 25までに担任教師に登録してください。",
+      },
+      priority: "normal" as const,
+    },
+    {
+      id: 5,
+      title: {
+        en: "Parent-Teacher Meeting Scheduled",
+        ne: "अभिभावक-शिक्षक बैठक तय",
+        ja: "保護者面談のお知らせ",
+      },
+      date: "2026-04-15",
+      content: {
+        en: "The second Parent-Teacher Meeting for this academic year is scheduled for Jestha 10, 2083. All parents are requested to attend.",
+        ne: "यस शैक्षिक वर्षको दोस्रो अभिभावक-शिक्षक बैठक २०८३ जेठ १० मा हुने तय भएको छ। सबै अभिभावकलाई उपस्थितिको लागि अनुरोध।",
+        ja: "今年度第2回保護者面談は2083年Jestha 10に予定されています。保護者の皆様のご出席をお願いいたします。",
+      },
+      priority: "normal" as const,
+    },
+    {
+      id: 6,
+      title: {
+        en: "New Computer Lab Inauguration",
+        ne: "नयाँ कम्प्युटर ल्याब उद्घाटन",
+        ja: "新コンピューターラボ開設",
+      },
+      date: "2026-03-30",
+      content: {
+        en: "The newly upgraded computer lab with 40 workstations will be inaugurated by the Chairman on Chaitra 20.",
+        ne: "४० वर्कस्टेशन सहितको नयाँ स्तरोन्नत कम्प्युटर ल्याबको उद्घाटन अध्यक्षद्वारा चैत्र २० मा गरिनेछ।",
+        ja: "40台のワークステーションを備えた新コンピューターラボがChaitra 20に理事長により開設されます。",
+      },
+      priority: "low" as const,
+    },
+    {
+      id: 7,
+      title: {
+        en: "Holi Celebration and Early Dismissal",
+        ne: "होली उत्सव र छिटो विदाई",
+        ja: "ホーリー祭と早期下校のお知らせ",
+      },
+      date: "2026-03-10",
+      content: {
+        en: "Holi celebration will be organized at school on Chaitra 5. School will close at 12:00 PM. Students are advised to wear old clothes.",
+        ne: "चैत्र ५ मा विद्यालयमा होली उत्सव आयोजना गरिनेछ। विद्यालय दिउँसो १२:०० बजे बन्द हुनेछ। विद्यार्थीहरूलाई पुराना कपडा लगाउन सल्लाह।",
+        ja: "Chaitra 5に学校でホーリー祭が開催されます。学校は午後12時に終了します。古着の着用をお勧めします。",
+      },
+      priority: "low" as const,
+    },
+  ],
 };

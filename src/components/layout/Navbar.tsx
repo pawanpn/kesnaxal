@@ -33,8 +33,6 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  if (pathname?.startsWith("/admin")) return null;
-
   return (
     <header className="sticky top-0 z-50 bg-white shadow-md">
       <div className="container-custom">

@@ -3,10 +3,12 @@
 import { useState, useEffect, useRef } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useToast } from "@/context/ToastContext";
 import type { StaffMember } from "@/types";
 
 export default function StaffAdminPage() {
   const { getJson, saveJson, uploadMedia, hasDraft, discardSectionDrafts, loadAllContent } = useAdmin();
+  const { toast } = useToast();
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState<string | null>(null);

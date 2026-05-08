@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useToast } from "@/context/ToastContext";
 import type { CalendarEvent } from "@/types";
 
 type Locale = "en" | "ne" | "ja";
@@ -29,6 +30,7 @@ const TYPE_BADGE: Record<CalendarEvent["type"], string> = {
 
 export default function CalendarAdminPage() {
   const { getJson, getContent, saveJson, hasDraft, discardSectionDrafts, loadAllContent } = useAdmin();
+  const { toast } = useToast();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [lang, setLang] = useState<Locale>("en");
   const [autoTranslate, setAutoTranslate] = useState(false);

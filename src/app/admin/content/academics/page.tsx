@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useToast } from "@/context/ToastContext";
 
 type Locale = "en" | "ne" | "ja";
 
@@ -40,6 +41,7 @@ function genKey() { return `pdf_${Date.now()}_${Math.random().toString(36).slice
 
 export default function AcademicHubPage() {
   const { getJson, saveJson, hasDraft, discardSectionDrafts, uploadMedia, loadAllContent } = useAdmin();
+  const { toast } = useToast();
   const [lang, setLang] = useState<Locale>("en");
   const [autoTranslate, setAutoTranslate] = useState(false);
   const [docsByLocale, setDocsByLocale] = useState<Record<Locale, PdfDoc[]>>({ en: [], ne: [], ja: [] });
@@ -76,6 +78,9 @@ export default function AcademicHubPage() {
           }
         });
       }
+      toast("success", "Document uploaded");
+    } else {
+      toast("error", "Upload failed");
     }
     setUploading(null);
   };
@@ -90,15 +95,20 @@ export default function AcademicHubPage() {
 
   const handleSave = async () => {
     setSaving(true);
-    if (autoTranslate) {
-      for (const { id: l } of LOCALES) {
-        await saveJson("academics", "pdf_docs", l, { docs: docs });
+    try {
+      if (autoTranslate) {
+        for (const { id: l } of LOCALES) {
+          await saveJson("academics", "pdf_docs", l, { docs: docs });
+        }
+      } else {
+        const clean = docs.map(({ url, fileName, fileSize, ...rest }) => ({
+          ...rest, ...(url ? { url, fileName, fileSize } : {}),
+        }));
+        await saveJson("academics", "pdf_docs", lang, { docs: clean });
       }
-    } else {
-      const clean = docs.map(({ url, fileName, fileSize, ...rest }) => ({
-        ...rest, ...(url ? { url, fileName, fileSize } : {}),
-      }));
-      await saveJson("academics", "pdf_docs", lang, { docs: clean });
+      toast("success", "Saved successfully");
+    } catch {
+      toast("error", "Save failed");
     }
     setSaving(false);
   };
@@ -116,7 +126,7 @@ export default function AcademicHubPage() {
               className="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700">
               + Add Document
             </button>
-            <button onClick={async () => { setDiscarding(true); await discardSectionDrafts("academics"); setDiscarding(false); window.location.reload(); }}
+            <button onClick={async () => { setDiscarding(true); await discardSectionDrafts("academics"); toast("success", "Drafts discarded"); setDiscarding(false); window.location.reload(); }}
               disabled={discarding}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5 disabled:opacity-50">
               Discard Drafts

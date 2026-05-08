@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useToast } from "@/context/ToastContext";
 
 type Locale = "en" | "ne" | "ja";
 
@@ -12,6 +13,7 @@ const LOCALES: { id: Locale; label: string }[] = [
 
 export default function NewsAlertsPage() {
   const { getContent, getJson, saveContent, saveJson, hasDraft, discardSectionDrafts, loadAllContent } = useAdmin();
+  const { toast } = useToast();
   const [lang, setLang] = useState<Locale>("en");
   const [autoTranslate, setAutoTranslate] = useState(false);
 

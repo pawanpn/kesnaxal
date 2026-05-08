@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useToast } from "@/context/ToastContext";
 import { siteConfig } from "@/constants/siteConfig";
 
 type Locale = "en" | "ne" | "ja";
@@ -74,6 +75,7 @@ function initFieldData(fields: FieldDef[], getContent: (s: string, k: string, l:
 
 export default function GlobalSettingsPage() {
   const { getContent, saveContent, getJson, saveJson, discardSectionDrafts, hasDraft, loadAllContent, uploadMedia } = useAdmin();
+  const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState("schoolInfo");
   const [lang, setLang] = useState<Locale>("en");
@@ -125,12 +127,18 @@ export default function GlobalSettingsPage() {
 
   const handleSaveField = async (key: string) => {
     setSaveStatus((p) => ({ ...p, [key]: "saving" }));
-    const fieldData = formData[key] || { en: "", ne: "", ja: "" };
-    for (const { id: l } of LOCALES) {
-      await saveContent("global", key, l, fieldData[l] || "");
+    try {
+      const fieldData = formData[key] || { en: "", ne: "", ja: "" };
+      for (const { id: l } of LOCALES) {
+        await saveContent("global", key, l, fieldData[l] || "");
+      }
+      toast("success", "Saved successfully");
+      setSaveStatus((p) => ({ ...p, [key]: "saved" }));
+      setTimeout(() => setSaveStatus((p) => ({ ...p, [key]: "idle" })), 1500);
+    } catch {
+      toast("error", "Failed to save");
+      setSaveStatus((p) => ({ ...p, [key]: "idle" }));
     }
-    setSaveStatus((p) => ({ ...p, [key]: "saved" }));
-    setTimeout(() => setSaveStatus((p) => ({ ...p, [key]: "idle" })), 1500);
   };
 
   const handleSaveSocial = async () => {
