@@ -1,14 +1,94 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import AdminGuard from "@/components/admin/AdminGuard";
-import Link from "next/link";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useToast } from "@/context/ToastContext";
+import { supabase } from "@/lib/supabase/client";
+import { siteConfig } from "@/constants/siteConfig";
+
+type Locale = "en" | "ne" | "ja";
+
+interface SectionStats {
+  section: string;
+  label: string;
+  href: string;
+  published: number;
+  drafts: number;
+}
 
 export default function AdminDashboard() {
-  const { isEditing, editingLocale, setEditingLocale, draftCount, toggleEditMode, publishAll, seedContent } = useAdmin();
+  const { draftCount, publishedContent, draftContent, loadAllContent, seedContent } = useAdmin();
+  const { toast } = useToast();
+  const router = useRouter();
+
   const [seeding, setSeeding] = useState(false);
   const [seedResult, setSeedResult] = useState<{ count?: number; error?: string } | null>(null);
+  const [appCount, setAppCount] = useState<number | null>(null);
+  const [appStatusCounts, setAppStatusCounts] = useState<Record<string, number>>({});
+
+  useEffect(() => { loadAllContent(); }, []);
+
+  useEffect(() => {
+    supabase
+      .from("career_applications")
+      .select("id, status", { count: "exact" })
+      .then(({ count, data }) => {
+        setAppCount(count ?? 0);
+        const statuses: Record<string, number> = {};
+        data?.forEach((r: { status: string }) => {
+          statuses[r.status] = (statuses[r.status] || 0) + 1;
+        });
+        setAppStatusCounts(statuses);
+      })
+      .catch(() => {});
+  }, []);
+
+  const sectionStats: SectionStats[] = useMemo(() => {
+    const sections: Record<string, { label: string; href: string }> = {
+      global: { label: "Global Settings", href: "/admin/content/global" },
+      homepage: { label: "Homepage", href: "/admin/content/homepage" },
+      news: { label: "News Articles", href: "/admin/news" },
+      "news-alerts": { label: "News & Alerts", href: "/admin/content/news-alerts" },
+      academics: { label: "Academic Hub", href: "/admin/content/academics" },
+      staff: { label: "Staff Manager", href: "/admin/content/staff" },
+      careers: { label: "Career Manager", href: "/admin/content/careers" },
+      notices: { label: "Notices", href: "/admin/content/notices" },
+      calendar: { label: "Calendar", href: "/admin/content/calendar" },
+      gallery: { label: "Gallery", href: "/admin/content/gallery" },
+      footer: { label: "Footer", href: "/admin/content/footer" },
+    };
+
+    const stats: SectionStats[] = [];
+    const pubCounts: Record<string, number> = {};
+    const draftCounts: Record<string, number> = {};
+
+    publishedContent.forEach((_, k) => {
+      const sec = k.split("::")[0];
+      if (sec) pubCounts[sec] = (pubCounts[sec] || 0) + 1;
+    });
+    draftContent.forEach((_, k) => {
+      const sec = k.split("::")[0];
+      if (sec) draftCounts[sec] = (draftCounts[sec] || 0) + 1;
+    });
+
+    Object.entries(sections).forEach(([key, val]) => {
+      stats.push({
+        section: key,
+        label: val.label,
+        href: val.href,
+        published: pubCounts[key] || 0,
+        drafts: draftCounts[key] || 0,
+      });
+    });
+
+    return stats.sort((a, b) => (b.drafts + b.published) - (a.drafts + a.published));
+  }, [publishedContent, draftContent]);
+
+  const newsCount = siteConfig.newsArticles?.length || 0;
+  const noticeCount = siteConfig.notices?.length || 0;
+  const vacancyCount = siteConfig.careerJobs?.length || 0;
 
   const handleSeed = async () => {
     setSeeding(true);
@@ -18,149 +98,201 @@ export default function AdminDashboard() {
     setSeeding(false);
   };
 
-  const locales = [
-    { code: "en", label: "English" },
-    { code: "ne", label: "नेपाली" },
-    { code: "ja", label: "日本語" },
-  ];
-
   return (
     <AdminGuard>
       <div className="min-h-screen bg-surface">
-        <div className="container-custom py-12">
-          <h1 className="text-2xl font-heading font-bold text-primary mb-2">Admin Dashboard</h1>
-          <p className="text-sm text-muted mb-8">SuperAdmin Visual CMS Control Panel</p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white rounded-xl p-6 border border-border shadow-sm">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{isEditing ? "On" : "Off"}</p>
-                  <p className="text-xs text-muted">Edit Mode</p>
-                </div>
-              </div>
-              <button
-                onClick={toggleEditMode}
-                className={`w-full py-2 rounded-lg text-xs font-semibold transition-all ${
-                  isEditing
-                    ? "bg-secondary text-primary"
-                    : "bg-primary text-white hover:bg-primary-dark"
-                }`}
-              >
-                {isEditing ? "Exit Edit Mode" : "Enable Edit Mode"}
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-xl font-heading font-bold text-foreground">Dashboard</h1>
+              <p className="text-xs text-muted mt-0.5">Website overview & content status</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={() => router.push("/admin/publish")}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-primary/30 text-primary hover:bg-primary/5">
+                Review & Publish
+              </button>
+              <button onClick={() => router.push("/")}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-border text-muted hover:text-foreground hover:bg-white">
+                View Site
               </button>
             </div>
+          </div>
 
-            <div className="bg-white rounded-xl p-6 border border-border shadow-sm">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <button onClick={() => router.push("/admin/news")}
+              className="bg-white rounded-xl p-5 border border-border shadow-sm hover:shadow-md hover:border-primary/30 transition-all text-left">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
                   </svg>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-foreground">{draftCount}</p>
-                  <p className="text-xs text-muted">Draft Changes</p>
+                  <p className="text-2xl font-bold text-foreground">{newsCount}</p>
+                  <p className="text-xs text-muted">News Articles</p>
                 </div>
               </div>
-              <button
-                onClick={() => publishAll()}
-                disabled={draftCount === 0}
-                className="w-full py-2 rounded-lg text-xs font-semibold bg-accent text-white hover:bg-accent-dark disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-              >
-                Publish All
-              </button>
-            </div>
+              {(() => {
+                const ns = sectionStats.find((s) => s.section === "news");
+                return (
+                  <div className="flex items-center gap-2 text-[10px]">
+                    {ns && ns.drafts > 0 && <span className="px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700 font-medium">{ns.drafts} draft{ns.drafts !== 1 ? "s" : ""}</span>}
+                    {ns && ns.published > 0 && <span className="px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-medium">{ns.published} published</span>}
+                    {(!ns || (ns.drafts === 0 && ns.published === 0)) && <span className="text-muted">Not seeded</span>}
+                  </div>
+                );
+              })()}
+            </button>
 
-            <div className="bg-white rounded-xl p-6 border border-border shadow-sm">
+            <button onClick={() => router.push("/admin/content/notices")}
+              className="bg-white rounded-xl p-5 border border-border shadow-sm hover:shadow-md hover:border-primary/30 transition-all text-left">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                   </svg>
                 </div>
                 <div>
-                  <p className="text-xs text-muted">Quick Links</p>
+                  <p className="text-2xl font-bold text-foreground">{noticeCount}</p>
+                  <p className="text-xs text-muted">Notices</p>
                 </div>
               </div>
-              <Link
-                href="/"
-                className="block w-full py-2 rounded-lg text-xs font-semibold text-center bg-surface text-foreground hover:bg-primary hover:text-white transition-all"
-              >
-                Go to Website
-              </Link>
-            </div>
+              {(() => {
+                const ns = sectionStats.find((s) => s.section === "notices");
+                return (
+                  <div className="flex items-center gap-2 text-[10px]">
+                    {ns && ns.drafts > 0 && <span className="px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700 font-medium">{ns.drafts} draft{ns.drafts !== 1 ? "s" : ""}</span>}
+                    {ns && ns.published > 0 && <span className="px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-medium">{ns.published} published</span>}
+                    {(!ns || (ns.drafts === 0 && ns.published === 0)) && <span className="text-muted">Not seeded</span>}
+                  </div>
+                );
+              })()}
+            </button>
 
-            <div className="bg-white rounded-xl p-6 border border-border shadow-sm">
+            <button onClick={() => router.push("/admin/content/careers")}
+              className="bg-white rounded-xl p-5 border border-border shadow-sm hover:shadow-md hover:border-primary/30 transition-all text-left">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                 </div>
                 <div>
-                  <p className="text-xs text-muted">Seed Data</p>
+                  <p className="text-2xl font-bold text-foreground">{vacancyCount}</p>
+                  <p className="text-xs text-muted">Job Vacancies</p>
                 </div>
               </div>
-              <button
-                onClick={handleSeed}
-                disabled={seeding}
-                className="w-full py-2 rounded-lg text-xs font-semibold bg-green-600 text-white hover:bg-green-700 disabled:opacity-40 transition-all"
-              >
-                {seeding ? "Seeding..." : "Seed from siteConfig"}
-              </button>
-              {seedResult && (
-                <p className={`text-xs mt-2 text-center ${seedResult.error ? "text-accent" : "text-green-600"}`}>
-                  {seedResult.error || `Seeded ${seedResult.count} rows to Supabase`}
-                </p>
+              {appCount !== null && (
+                <div className="flex items-center gap-2 text-[10px]">
+                  <span className="px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 font-medium">{appCount} applications</span>
+                  {appStatusCounts.pending > 0 && <span className="px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700">{appStatusCounts.pending} pending</span>}
+                </div>
               )}
-            </div>
-          </div>
+            </button>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <div className="bg-white rounded-2xl border border-border p-6">
-              <h2 className="font-heading font-bold text-primary text-sm uppercase tracking-wider mb-3">
-                How to Edit
-              </h2>
-              <ol className="text-sm text-muted space-y-2 list-decimal list-inside">
-                <li>Enable <strong className="text-foreground">Edit Mode</strong> above</li>
-                <li>Select your editing language below</li>
-                <li>Navigate to any page on the website</li>
-                <li>Click any text to edit it in-place</li>
-                <li>Changes save as <strong className="text-orange-600">drafts</strong> automatically</li>
-                <li>Click <strong className="text-accent">Publish All</strong> when ready</li>
-              </ol>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-border p-6">
-              <h2 className="font-heading font-bold text-primary text-sm uppercase tracking-wider mb-3">
-                Editing Language
-              </h2>
-              <p className="text-xs text-muted mb-4">
-                Select which language you want to edit. Each language has its own content.
-              </p>
-              <div className="flex gap-2">
-                {locales.map((l) => (
-                  <button
-                    key={l.code}
-                    onClick={() => setEditingLocale(l.code)}
-                    className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
-                      editingLocale === l.code
-                        ? "bg-primary text-white shadow-sm"
-                        : "bg-surface text-foreground hover:bg-primary/10"
-                    }`}
-                  >
-                    {l.label}
-                  </button>
-                ))}
+            <button onClick={() => router.push("/admin/career-applications")}
+              className="bg-white rounded-xl p-5 border border-border shadow-sm hover:shadow-md hover:border-primary/30 transition-all text-left">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{appCount ?? "..."}</p>
+                  <p className="text-xs text-muted">Applications</p>
+                </div>
               </div>
+              {appCount !== null && (
+                <div className="flex items-center gap-2 text-[10px]">
+                  {Object.entries(appStatusCounts).map(([k, v]) => (
+                    <span key={k} className={`px-1.5 py-0.5 rounded capitalize font-medium ${
+                      k === "pending" ? "bg-yellow-100 text-yellow-700" :
+                      k === "reviewed" ? "bg-blue-100 text-blue-700" :
+                      k === "shortlisted" ? "bg-green-100 text-green-700" :
+                      k === "rejected" ? "bg-red-100 text-red-700" :
+                      "bg-gray-100 text-gray-700"
+                    }`}>{k}: {v}</span>
+                  ))}
+                </div>
+              )}
+            </button>
+          </div>
+
+          {/* Content Sections Status */}
+          <div className="bg-white rounded-xl border border-border overflow-hidden mb-8">
+            <div className="px-5 py-3 border-b border-border bg-surface/50">
+              <h2 className="font-heading font-bold text-sm text-foreground">Content Section Status</h2>
+              <p className="text-[10px] text-muted mt-0.5">Published vs. Draft rows per section in Supabase</p>
+            </div>
+            <div className="divide-y divide-border">
+              {sectionStats.length === 0 && (
+                <div className="px-5 py-8 text-center">
+                  <p className="text-xs text-muted">No content in database yet.</p>
+                  <button onClick={handleSeed} disabled={seeding}
+                    className="mt-3 px-4 py-2 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">
+                    {seeding ? "Seeding..." : "Seed from siteConfig"}
+                  </button>
+                  {seedResult && (
+                    <p className={`text-xs mt-2 ${seedResult.error ? "text-accent" : "text-green-600"}`}>
+                      {seedResult.error || `Seeded ${seedResult.count} rows`}
+                    </p>
+                  )}
+                </div>
+              )}
+              {sectionStats.map((s) => (
+                <button key={s.section} onClick={() => router.push(s.href)}
+                  className="w-full flex items-center justify-between px-5 py-3 hover:bg-surface/50 transition-colors text-left">
+                  <div className="flex items-center gap-3">
+                    <span className={`w-2 h-2 rounded-full ${s.drafts > 0 ? "bg-yellow-500" : s.published > 0 ? "bg-green-500" : "bg-gray-300"}`} />
+                    <span className="text-xs font-medium text-foreground">{s.label}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {s.published > 0 && <span className="text-[10px] px-2 py-0.5 rounded bg-green-50 text-green-600 font-medium">{s.published} published</span>}
+                    {s.drafts > 0 && <span className="text-[10px] px-2 py-0.5 rounded bg-yellow-50 text-yellow-600 font-medium">{s.drafts} drafts</span>}
+                    {s.published === 0 && s.drafts === 0 && <span className="text-[10px] text-muted italic">empty</span>}
+                    <svg className="w-3 h-3 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
+
+          {/* Quick Stats Row */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white rounded-xl border border-border p-4">
+              <p className="text-[10px] text-muted uppercase tracking-wider mb-1">Total Content Rows</p>
+              <p className="text-xl font-bold text-foreground">{publishedContent.size + draftContent.size}</p>
+              <p className="text-[10px] text-muted">{draftContent.size} drafts · {publishedContent.size} published</p>
+            </div>
+            <div className="bg-white rounded-xl border border-border p-4">
+              <p className="text-[10px] text-muted uppercase tracking-wider mb-1">Draft Changes</p>
+              <p className="text-xl font-bold text-foreground">{draftCount}</p>
+              <p className="text-[10px] text-muted">Pending review</p>
+            </div>
+            <div className="bg-white rounded-xl border border-border p-4">
+              <p className="text-[10px] text-muted uppercase tracking-wider mb-1">Calendar Events</p>
+              <p className="text-xl font-bold text-foreground">{siteConfig.events?.length || 0}</p>
+              <p className="text-[10px] text-muted">From siteConfig</p>
+            </div>
+            <div className="bg-white rounded-xl border border-border p-4">
+              <p className="text-[10px] text-muted uppercase tracking-wider mb-1">Gallery Images</p>
+              <p className="text-xl font-bold text-foreground">{siteConfig.galleryImages?.length || 0}</p>
+              <p className="text-[10px] text-muted">From siteConfig</p>
+            </div>
+          </div>
+
+          {seedResult && (
+            <div className={`mt-6 px-4 py-3 rounded-xl text-sm font-medium ${
+              seedResult.error ? "bg-accent/10 border border-accent/20 text-accent" : "bg-green-50 border border-green-200 text-green-700"
+            }`}>
+              {seedResult.error || `Seeded ${seedResult.count} rows to Supabase`}
+            </div>
+          )}
         </div>
       </div>
     </AdminGuard>

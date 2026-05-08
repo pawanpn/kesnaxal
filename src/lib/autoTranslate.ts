@@ -48,7 +48,7 @@ export async function translateToAll(text: string, from: Locale): Promise<Partia
 
 /** Hook for manual translate button — trigger translate, get results */
 export function useTranslateField() {
-  const [translating, setTranslating] = useRef(false);
+  const translating = useRef(false);
 
   const handleTranslate = useCallback(
     async (text: string, from: Locale, onResult: (locale: Locale, translated: string) => void): Promise<boolean> => {

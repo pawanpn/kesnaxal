@@ -100,18 +100,16 @@ function ToolbarBtn({ cmd, val, label, title, cls }: { cmd: string; val?: string
 export default function NewsAdminPage() {
   const { getJson, saveJson, getContent, uploadMedia, hasDraft, discardSectionDrafts, loadAllContent, publishedContent, draftContent } = useAdmin();
   const { toast } = useToast();
-  const { translateAll } = useAutoTranslate();
 
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [lang, setLang] = useState<Locale>("en");
-  const [autoTranslate, setAutoTranslate] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [discarding, setDiscarding] = useState(false);
   const [tagInput, setTagInput] = useState("");
   const [showList, setShowList] = useState(true);
-  const [syncing, setSyncing] = useState(false);
   const [translatingTitle, setTranslatingTitle] = useState(false);
   const [translatingExcerpt, setTranslatingExcerpt] = useState(false);
   const [translatingContent, setTranslatingContent] = useState(false);

@@ -1,0 +1,32 @@
+﻿
+> kesnaxal@0.1.0 build
+> next build
+
+node.exe :  ΓÜá turbopack.root should be absolute, using: C:\Users\Pudas\OneDrive\Desktop\kesnaxal
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( ΓÜá turbopack....esktop\kesnaxal:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+   Γû▓ Next.js 15.5.16
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ Γ£ô Compiled successfully in 7.6s
+   Skipping linting
+   Checking validity of types ...
+Failed to compile.
+
+./src/app/admin/page.tsx:45:8
+Type error: Property 'catch' does not exist on type 'PromiseLike<void>'.
+
+[0m [90m 43 |[39m         setAppStatusCounts(statuses)[33m;[39m
+ [90m 44 |[39m       })
+[31m[1m>[22m[39m[90m 45 |[39m       [33m.[39m[36mcatch[39m(() [33m=>[39m {})[33m;[39m
+ [90m    |[39m        [31m[1m^[22m[39m
+ [90m 46 |[39m   }[33m,[39m [])[33m;[39m
+ [90m 47 |[39m
+ [90m 48 |[39m   [36mconst[39m sectionStats[33m:[39m [33mSectionStats[39m[] [33m=[39m useMemo(() 
+[33m=>[39m {[0m
+Next.js build worker exited with code: 1 and signal: null
