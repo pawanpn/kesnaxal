@@ -235,27 +235,34 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
         .eq("locale", locale)
         .maybeSingle();
 
+      let error = null;
       if (existing) {
-        await supabase
+        const res = await supabase
           .from("site_content")
-          .update({ content_text: text, status: "draft", updated_at: new Date().toISOString() })
+          .update({ content_text: text, status: "draft", updated_at: new Date().toISOString(), updated_by: (await supabase.auth.getSession()).data.session?.user.id })
           .eq("id", existing.id);
+        error = res.error;
       } else {
-        await supabase.from("site_content").insert({
+        const res = await supabase.from("site_content").insert({
           section,
           content_key: key,
           locale,
           content_text: text,
           status: "draft",
+          updated_by: (await supabase.auth.getSession()).data.session?.user.id,
         });
+        error = res.error;
       }
 
-      await supabase.from("edit_log").insert({
-        section,
-        content_key: key,
-        locale,
-        new_value: JSON.parse(JSON.stringify({ text })),
-      });
+      if (!error) {
+        await supabase.from("edit_log").insert({
+          section,
+          content_key: key,
+          locale,
+          new_value: JSON.parse(JSON.stringify({ text })),
+        });
+        await loadAllContent();
+      }
     },
     []
   );
@@ -271,21 +278,29 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
         .eq("locale", locale)
         .maybeSingle();
 
+      const uid = (await supabase.auth.getSession()).data.session?.user.id;
+      let error = null;
       if (existing) {
-        await supabase
+        const res = await supabase
           .from("site_content")
-          .update({ content_json: json, status: "draft", updated_at: new Date().toISOString() })
+          .update({ content_json: json, status: "draft", updated_at: new Date().toISOString(), updated_by: uid })
           .eq("id", existing.id);
+        error = res.error;
       } else {
-        await supabase.from("site_content").insert({
+        const res = await supabase.from("site_content").insert({
           section,
           content_key: key,
           locale,
           content_json: json,
           content_text: JSON.stringify(json),
           status: "draft",
+          updated_by: uid,
         });
+        error = res.error;
       }
+
+      if (error) throw error;
+      await loadAllContent();
     },
     []
   );

@@ -146,14 +146,13 @@ export default function NewsAdminPage() {
   const saveArticles = async (updated: NewsArticle[]) => {
     setSaving(true);
     try {
-      for (const { id: l } of LOCALES) {
-        if (autoTranslate && l !== lang) {
-          await saveJson("news", "news_articles", l, { articles: updated });
-        } else if (!autoTranslate && l === lang) {
+      if (autoTranslate) {
+        for (const { id: l } of LOCALES) {
           await saveJson("news", "news_articles", l, { articles: updated });
         }
+      } else {
+        await saveJson("news", "news_articles", lang, { articles: updated });
       }
-      if (!autoTranslate) await saveJson("news", "news_articles", lang, { articles: updated });
       setArticles(updated);
       toast("success", "Saved as draft - publish from Review page");
     } catch { toast("error", "Save failed"); }
