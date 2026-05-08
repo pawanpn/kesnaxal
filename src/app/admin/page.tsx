@@ -31,18 +31,20 @@ export default function AdminDashboard() {
   useEffect(() => { loadAllContent(); }, []);
 
   useEffect(() => {
-    supabase
-      .from("career_applications")
-      .select("id, status", { count: "exact" })
-      .then(({ count, data }) => {
+    const fetchApps = async () => {
+      try {
+        const { count, data } = await supabase
+          .from("career_applications")
+          .select("id, status", { count: "exact" });
         setAppCount(count ?? 0);
         const statuses: Record<string, number> = {};
         data?.forEach((r: { status: string }) => {
           statuses[r.status] = (statuses[r.status] || 0) + 1;
         });
         setAppStatusCounts(statuses);
-      })
-      .catch(() => {});
+      } catch { /* ignore */ }
+    };
+    fetchApps();
   }, []);
 
   const sectionStats: SectionStats[] = useMemo(() => {
