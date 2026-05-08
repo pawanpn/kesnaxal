@@ -29,6 +29,7 @@ export interface SiteContentRow {
 
 interface AdminContextValue {
   isAdmin: boolean;
+  authReady: boolean;
   isEditing: boolean;
   isPreviewMode: boolean;
   editingLocale: string;
@@ -72,6 +73,7 @@ function rowKey(section: string, key: string, locale: string) {
 
 export default function AdminProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [editingLocale, setEditingLocale] = useState("en");
@@ -84,6 +86,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setIsAdmin(!!data.session);
+      setAuthReady(true);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAdmin(!!session);
@@ -438,6 +441,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     <AdminContext.Provider
       value={{
         isAdmin,
+        authReady,
         isEditing,
         isPreviewMode,
         editingLocale,

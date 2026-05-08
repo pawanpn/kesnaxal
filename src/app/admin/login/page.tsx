@@ -5,34 +5,12 @@ import { useRouter } from "next/navigation";
 import { useAdmin } from "@/hooks/useAdmin";
 
 export default function AdminLoginPage() {
-  const { isAdmin, login } = useAdmin();
+  const { isAdmin, authReady, login } = useAdmin();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [checking, setChecking] = useState(true);
-
-  useEffect(() => {
-    const t0 = Date.now();
-    console.log("[Admin Login] Mounted, checking existing session...");
-
-    const timeout = setTimeout(() => {
-      if (checking) {
-        console.log("[Admin Login] Session check still pending after 3s, isAdmin:", isAdmin);
-      }
-    }, 3000);
-
-    if (isAdmin) {
-      console.log("[Admin Login] Existing session found, redirecting to /admin");
-      router.replace("/admin");
-    } else {
-      console.log("[Admin Login] No active session, showing login form (isAdmin=", isAdmin, ")");
-      setChecking(false);
-    }
-
-    return () => clearTimeout(timeout);
-  }, [isAdmin, router]);
 
   useEffect(() => {
     if (isAdmin) {
@@ -46,32 +24,24 @@ export default function AdminLoginPage() {
 
     if (!email.trim() || !password.trim()) {
       setError("Email and password are required.");
-      console.warn("[Admin Login] Empty email or password submitted");
       return;
     }
 
     setLoading(true);
-    console.log("[Admin Login] Attempting sign in with:", email);
 
     try {
       const result = await login(email, password);
       if (result.error) {
-        console.error("[Admin Login] Login failed:", result.error);
         setError(result.error);
-      } else {
-        console.log("[Admin Login] Login successful, redirecting...");
-        router.replace("/admin");
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Unexpected error during login";
-      console.error("[Admin Login] Exception:", err);
-      setError(msg);
+      setError(err instanceof Error ? err.message : "Unexpected error during login");
     } finally {
       setLoading(false);
     }
   };
 
-  if (checking && !isAdmin) {
+  if (!authReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-dark via-primary to-primary-light">
         <div className="bg-white/90 rounded-2xl shadow-2xl p-8 text-center">
