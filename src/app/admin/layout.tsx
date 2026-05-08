@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAdmin } from "@/hooks/useAdmin";
 
@@ -49,20 +49,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return pathname?.startsWith(href);
   };
 
+  useEffect(() => {
+    if (authReady && !isAdmin && pathname !== "/admin/login") {
+      router.replace("/admin/login");
+    }
+  }, [authReady, isAdmin, pathname, router]);
+
   if (pathname === "/admin/login") {
     return <>{children}</>;
   }
 
-  if (!authReady) {
+  if (!authReady || !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface">
         <div className="w-10 h-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </div>
     );
-  }
-
-  if (!isAdmin) {
-    return null;
   }
 
   return (
