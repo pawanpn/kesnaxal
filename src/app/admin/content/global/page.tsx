@@ -66,7 +66,7 @@ const DEF_HOURS: HourEntry[] = [
 type FormDataType = Record<string, Record<Locale, string>>;
 
 export default function GlobalSettingsPage() {
-  const { getContent, savePublishedContent, getJson, savePublishedJson, discardSectionDrafts, hasDraft, loadAllContent, uploadMedia } = useAdmin();
+  const { getContent, saveContent, getJson, saveJson, discardSectionDrafts, hasDraft, loadAllContent, uploadMedia } = useAdmin();
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState("schoolInfo");
@@ -124,9 +124,9 @@ export default function GlobalSettingsPage() {
     try {
       const data = formData[key] || { en: "", ne: "", ja: "" };
       for (const { id: l } of LOCALES) {
-        await savePublishedContent("global", key, l, data[l] || "");
+        await saveContent("global", key, l, data[l] || "");
       }
-      toast("success", `${key} saved & published`);
+      toast("success", `${key} saved as draft`);
     } catch { toast("error", "Failed to save"); }
     setSaveStatus((p) => ({ ...p, [key]: "saved" }));
     setTimeout(() => setSaveStatus((p) => ({ ...p, [key]: "idle" })), 1500);
@@ -136,9 +136,9 @@ export default function GlobalSettingsPage() {
     setSocialSaving(true);
     try {
       for (const { id: l } of LOCALES) {
-        await savePublishedJson("global", "social_links", l, { links: socialLinks });
+        await saveJson("global", "social_links", l, { links: socialLinks });
       }
-      toast("success", "Social links saved & published");
+      toast("success", "Social links saved as draft");
     } catch { toast("error", "Failed to save social links"); }
     setSocialSaving(false);
   };
@@ -147,11 +147,11 @@ export default function GlobalSettingsPage() {
     setHoursSaving(true);
     try {
       if (autoTranslate) {
-        for (const { id: l } of LOCALES) await savePublishedJson("global", "opening_hours", l, { hours });
+        for (const { id: l } of LOCALES) await saveJson("global", "opening_hours", l, { hours });
       } else {
-        await savePublishedJson("global", "opening_hours", lang, { hours });
+        await saveJson("global", "opening_hours", lang, { hours });
       }
-      toast("success", "Hours saved & published");
+      toast("success", "Hours saved as draft");
     } catch { toast("error", "Failed to save hours"); }
     setHoursSaving(false);
   };
@@ -164,10 +164,10 @@ export default function GlobalSettingsPage() {
       const url = await uploadMedia(file, "global", "logo");
       if (url) {
         setLogoUrl(url);
-        await savePublishedContent("global", "logo_url", "en", url);
-        await savePublishedContent("global", "logo_url", "ne", url);
-        await savePublishedContent("global", "logo_url", "ja", url);
-        toast("success", "Logo uploaded & published");
+        await saveContent("global", "logo_url", "en", url);
+        await saveContent("global", "logo_url", "ne", url);
+        await saveContent("global", "logo_url", "ja", url);
+        toast("success", "Logo saved as draft - publish from Review page");
       }
     } catch { toast("error", "Logo upload failed"); }
     setLogoUploading(false);

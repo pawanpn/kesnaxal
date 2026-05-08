@@ -184,6 +184,7 @@ function restoreSelection(saved: ReturnType<typeof saveSelection>) {
 export default function NewsAdminPage() {
   const { getJson, saveJson, getContent, uploadMedia, hasDraft, discardSectionDrafts, loadAllContent } = useAdmin();
   const { toast } = useToast();
+  const { translateAll } = useAutoTranslate();
 
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -275,8 +276,12 @@ export default function NewsAdminPage() {
   const handleLocaleField = (field: "title" | "excerpt" | "content", locale: Locale, value: string) => {
     if (!selected) return;
     const next = { ...selected[field], [locale]: value };
-    if (autoTranslate) {
-      LOCALES.forEach((l) => { next[l.id] = value; });
+    if (autoTranslate && locale === lang && value.trim()) {
+      translateAll(value, lang, (targetLocale, translated) => {
+        if (selected) {
+          setSelected({ ...selected, [field]: { ...selected[field], [targetLocale]: translated } });
+        }
+      });
     }
     handleField(field, next);
   };

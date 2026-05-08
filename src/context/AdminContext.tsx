@@ -48,6 +48,7 @@ interface AdminContextValue {
   savePublishedContent: (section: string, key: string, locale: string, text: string) => Promise<void>;
   savePublishedJson: (section: string, key: string, locale: string, json: Record<string, unknown>) => Promise<void>;
   publishAll: () => Promise<{ count: number }>;
+  publishSelectedDrafts: (ids: string[]) => Promise<{ count: number }>;
   discardAllDrafts: () => Promise<{ count: number }>;
   discardSectionDrafts: (section: string) => Promise<{ count: number }>;
   discardEdit: (section: string, key: string, locale: string) => void;
@@ -378,6 +379,19 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     return { count: (data as number) || 0 };
   }, []);
 
+  /* ── Publish selected drafts by ID ── */
+  const publishSelectedDrafts = useCallback(async (ids: string[]): Promise<{ count: number }> => {
+    if (!ids.length) return { count: 0 };
+    const { error } = await supabase
+      .from("site_content")
+      .update({ status: "published", updated_at: new Date().toISOString() })
+      .in("id", ids);
+    if (error) return { count: 0 };
+    setRecentEdits([]);
+    await loadAllContent();
+    return { count: ids.length };
+  }, []);
+
   /* ── Discard all drafts ── */
   const discardAllDrafts = useCallback(async (): Promise<{ count: number }> => {
     const { data, error } = await supabase.rpc("discard_all_drafts");
@@ -541,6 +555,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
         savePublishedContent,
         savePublishedJson,
         publishAll,
+        publishSelectedDrafts,
         discardAllDrafts,
         discardSectionDrafts,
         discardEdit,
