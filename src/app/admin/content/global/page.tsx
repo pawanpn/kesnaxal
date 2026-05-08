@@ -34,7 +34,9 @@ const FIELDS: Record<string, FieldDef[]> = {
     { key: "phone", label: "Primary Phone", type: "text", placeholder: "014514369" },
     { key: "phone2", label: "Secondary Phone", type: "text", placeholder: "014514370" },
     { key: "email", label: "Email Address", type: "email", placeholder: "info@kes.edu.np" },
+    { key: "admissionsEmail", label: "Admissions Email", type: "email", placeholder: "admissions@kes.edu.np" },
     { key: "address", label: "Full Address", type: "textarea", rows: 2, placeholder: "Naxal Sanogaucharan Mandev Marga, Kathmandu" },
+    { key: "mapEmbedUrl", label: "Google Maps Embed URL", type: "url", placeholder: "https://www.google.com/maps/embed?pb=..." },
   ],
 };
 
@@ -44,7 +46,8 @@ function getFallback(key: string): string {
     schoolName: school.name, motto: school.motto,
     principalName: school.principal.name, principalMessage: school.principal.message,
     phone: contact.phone, phone2: contact.phone2,
-    email: contact.email, address: contact.address,
+    email: contact.email, admissionsEmail: contact.admissionsEmail,
+    address: contact.address, mapEmbedUrl: contact.mapEmbedUrl,
   };
   return map[key] || "";
 }
