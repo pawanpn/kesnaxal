@@ -38,9 +38,6 @@ export default function Footer() {
 
   const { locale, t } = useLocale();
   const { school, contact, social, footer } = siteConfig;
-  const pathname = usePathname();
-
-  if (pathname?.startsWith("/admin")) return null;
 
   return (
     <footer className="bg-primary-dark text-white mt-auto">
