@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/context/ToastContext";
-import { useAutoTranslate } from "@/lib/autoTranslate";
+import { useAutoTranslate } from "@/lib/syncing";
 
 type Locale = "en" | "ne" | "ja";
 
@@ -41,7 +41,7 @@ export default function NoticesPage() {
   const { toast } = useToast();
   const { translateAll } = useAutoTranslate();
   const [lang, setLang] = useState<Locale>("en");
-  const [autoTranslate, setAutoTranslate] = useState(false);
+  const [syncing, setAutoTranslate] = useState(false);
   const [notices, setNotices] = useState<Notice[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<Notice>(emptyNotice());
@@ -67,7 +67,7 @@ export default function NoticesPage() {
   const handleSave = async (updated: Notice[]) => {
     setSaving(true);
     try {
-    const locales = autoTranslate ? LOCALES : [{ id: lang }];
+    const locales = syncing ? LOCALES : [{ id: lang }];
     for (const { id: l } of locales) {
       await saveJson("notices", "notices_list", l, { notices: updated });
     }
@@ -86,7 +86,7 @@ export default function NoticesPage() {
   const handleLocaleChange = (field: "title" | "content", locale: Locale, value: string) => {
     setForm((prev) => {
       const nextFC = { ...prev[field], [locale]: value };
-      if (autoTranslate && locale === lang && value.trim()) {
+      if (syncing && locale === lang && value.trim()) {
         translateAll(value, lang, (targetLocale, translated) => {
           setForm((p) => ({ ...p, [field]: { ...p[field], [targetLocale]: translated } }));
         });
@@ -153,9 +153,9 @@ export default function NoticesPage() {
               ))}
             </div>
             <label className="flex items-center gap-1.5 text-[11px] text-muted cursor-pointer select-none">
-              <button onClick={() => setAutoTranslate(!autoTranslate)}
-                className={`w-8 h-4 rounded-full transition-colors relative ${autoTranslate ? "bg-green-500" : "bg-gray-300"}`}>
-                <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${autoTranslate ? "translate-x-4" : "translate-x-0.5"}`} />
+              <button onClick={() => setAutoTranslate(!syncing)}
+                className={`w-8 h-4 rounded-full transition-colors relative ${syncing ? "bg-green-500" : "bg-gray-300"}`}>
+                <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${syncing ? "translate-x-4" : "translate-x-0.5"}`} />
               </button>
               Auto
             </label>
@@ -167,7 +167,7 @@ export default function NoticesPage() {
           </div>
         </div>
 
-        {autoTranslate && (
+        {syncing && (
           <div className="mb-4 p-2 rounded-lg bg-blue-50 border border-blue-200 text-[11px] text-blue-700 max-w-4xl">
             Auto-translate ON — editing any locale copies to all. Toggle OFF for per-language editing.
           </div>

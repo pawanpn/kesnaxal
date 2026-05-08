@@ -69,7 +69,7 @@ export default function HomepageManagerPage() {
   const { toast } = useToast();
   const [activeSection, setActiveSection] = useState<string>("hero");
   const [lang, setLang] = useState<Locale>("en");
-  const [autoTranslate, setAutoTranslate] = useState(false);
+  const [syncing, setAutoTranslate] = useState(false);
   const [discarding, setDiscarding] = useState(false);
 
   const [heroSlides, setHeroSlides] = useState<Record<Locale, HeroSlide[]>>({ en: [], ne: [], ja: [] });
@@ -104,17 +104,17 @@ export default function HomepageManagerPage() {
     try {
       if (activeSection === "hero") {
         for (const { id: l } of LOCALES) {
-          await saveJson("homepage", "hero_slides", l, { slides: autoTranslate ? heroSlides[lang] : heroSlides[l] });
+          await saveJson("homepage", "hero_slides", l, { slides: syncing ? heroSlides[lang] : heroSlides[l] });
         }
       }
       if (activeSection === "testimonials") {
         for (const { id: l } of LOCALES) {
-          await saveJson("homepage", "testimonials", l, { items: autoTranslate ? testimonials[lang] : testimonials[l] });
+          await saveJson("homepage", "testimonials", l, { items: syncing ? testimonials[lang] : testimonials[l] });
         }
       }
       if (activeSection === "faq") {
         for (const { id: l } of LOCALES) {
-          await saveJson("homepage", "faqs", l, { items: autoTranslate ? faqs[lang] : faqs[l] });
+          await saveJson("homepage", "faqs", l, { items: syncing ? faqs[lang] : faqs[l] });
         }
       }
       toast("success", "Saved successfully");
@@ -176,9 +176,9 @@ export default function HomepageManagerPage() {
               ))}
             </div>
             <label className="flex items-center gap-1.5 text-[11px] text-muted cursor-pointer select-none">
-              <button onClick={() => setAutoTranslate(!autoTranslate)}
-                className={`w-8 h-4 rounded-full transition-colors relative ${autoTranslate ? "bg-green-500" : "bg-gray-300"}`}>
-                <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${autoTranslate ? "translate-x-4" : "translate-x-0.5"}`} />
+              <button onClick={() => setAutoTranslate(!syncing)}
+                className={`w-8 h-4 rounded-full transition-colors relative ${syncing ? "bg-green-500" : "bg-gray-300"}`}>
+                <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${syncing ? "translate-x-4" : "translate-x-0.5"}`} />
               </button>
               Auto
             </label>
@@ -258,9 +258,9 @@ export default function HomepageManagerPage() {
 
           <button onClick={handleSave} disabled={saving}
             className="mt-4 px-4 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
-            {saving ? "Saving..." : `Save All (${autoTranslate ? "Copies to All Languages" : lang.toUpperCase()})`}
+            {saving ? "Saving..." : `Save All (${syncing ? "Copies to All Languages" : lang.toUpperCase()})`}
           </button>
-          {autoTranslate && (
+          {syncing && (
             <span className="ml-2 text-[10px] text-blue-600">Auto ON — saves to all locales</span>
           )}
           {hasDraft("homepage", dataKey, "en") && <span className="ml-2 text-xs text-yellow-600">Draft pending</span>}

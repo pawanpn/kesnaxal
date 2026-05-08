@@ -67,7 +67,7 @@ export default function AcademicHubPage() {
 
   const [activeTab, setActiveTab] = useState("pdfs");
   const [lang, setLang] = useState<Locale>("en");
-  const [autoTranslate, setAutoTranslate] = useState(false);
+  const [syncing, setAutoTranslate] = useState(false);
   const [saving, setSaving] = useState(false);
   const [discarding, setDiscarding] = useState(false);
 
@@ -166,7 +166,7 @@ export default function AcademicHubPage() {
       const clean = docs.map(({ url, fileName, fileSize, ...rest }) => ({
         ...rest, ...(url ? { url, fileName, fileSize } : {}),
       }));
-      if (autoTranslate) {
+      if (syncing) {
         for (const { id: l } of LOCALES) await saveJson("academics", "pdf_docs", l, { docs });
       } else {
         await saveJson("academics", "pdf_docs", lang, { docs: clean });
@@ -287,9 +287,9 @@ export default function AcademicHubPage() {
               ))}
             </div>
             <label className="flex items-center gap-1.5 text-[11px] text-muted cursor-pointer select-none">
-              <button onClick={() => setAutoTranslate(!autoTranslate)}
-                className={`w-8 h-4 rounded-full transition-colors relative ${autoTranslate ? "bg-green-500" : "bg-gray-300"}`}>
-                <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${autoTranslate ? "translate-x-4" : "translate-x-0.5"}`} />
+              <button onClick={() => setAutoTranslate(!syncing)}
+                className={`w-8 h-4 rounded-full transition-colors relative ${syncing ? "bg-green-500" : "bg-gray-300"}`}>
+                <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${syncing ? "translate-x-4" : "translate-x-0.5"}`} />
               </button>
               Auto
             </label>

@@ -15,7 +15,7 @@ export default function NewsAlertsPage() {
   const { getContent, getJson, saveContent, saveJson, hasDraft, discardSectionDrafts, loadAllContent } = useAdmin();
   const { toast } = useToast();
   const [lang, setLang] = useState<Locale>("en");
-  const [autoTranslate, setAutoTranslate] = useState(false);
+  const [syncing, setAutoTranslate] = useState(false);
 
   const [breakingNews, setBreakingNews] = useState<Record<Locale, string>>({ en: "", ne: "", ja: "" });
   const [breakingActive, setBreakingActive] = useState(false);
@@ -59,7 +59,7 @@ export default function NewsAlertsPage() {
   const handleSaveBreaking = async () => {
     setSaving("breaking_news_text");
     try {
-      if (autoTranslate) {
+      if (syncing) {
         for (const { id: l } of LOCALES) {
           await saveContent("news", "breaking_news_text", l, breakingNews[lang]);
         }
@@ -78,7 +78,7 @@ export default function NewsAlertsPage() {
   const handleSaveEmergency = async () => {
     setSaving("emergency");
     try {
-      if (autoTranslate) {
+      if (syncing) {
         for (const { id: l } of LOCALES) {
           await saveContent("news", "emergency_title", l, emergencyTitle[lang]);
           await saveContent("news", "emergency_message", l, emergencyMsg[lang]);
@@ -99,21 +99,21 @@ export default function NewsAlertsPage() {
   const setBreaking = (l: Locale, val: string) => {
     setBreakingNews((p) => {
       const next = { ...p, [l]: val };
-      if (autoTranslate) LOCALES.forEach(({ id: ll }) => { next[ll] = val; });
+      if (syncing) LOCALES.forEach(({ id: ll }) => { next[ll] = val; });
       return next;
     });
   };
   const setETitle = (l: Locale, val: string) => {
     setEmergencyTitle((p) => {
       const next = { ...p, [l]: val };
-      if (autoTranslate) LOCALES.forEach(({ id: ll }) => { next[ll] = val; });
+      if (syncing) LOCALES.forEach(({ id: ll }) => { next[ll] = val; });
       return next;
     });
   };
   const setEMsg = (l: Locale, val: string) => {
     setEmergencyMsg((p) => {
       const next = { ...p, [l]: val };
-      if (autoTranslate) LOCALES.forEach(({ id: ll }) => { next[ll] = val; });
+      if (syncing) LOCALES.forEach(({ id: ll }) => { next[ll] = val; });
       return next;
     });
   };
@@ -136,9 +136,9 @@ export default function NewsAlertsPage() {
               ))}
             </div>
             <label className="flex items-center gap-1.5 text-[11px] text-muted cursor-pointer select-none">
-              <button onClick={() => setAutoTranslate(!autoTranslate)}
-                className={`w-8 h-4 rounded-full transition-colors relative ${autoTranslate ? "bg-green-500" : "bg-gray-300"}`}>
-                <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${autoTranslate ? "translate-x-4" : "translate-x-0.5"}`} />
+              <button onClick={() => setAutoTranslate(!syncing)}
+                className={`w-8 h-4 rounded-full transition-colors relative ${syncing ? "bg-green-500" : "bg-gray-300"}`}>
+                <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${syncing ? "translate-x-4" : "translate-x-0.5"}`} />
               </button>
               Auto
             </label>

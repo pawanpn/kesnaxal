@@ -74,7 +74,7 @@ export default function GlobalSettingsPage() {
 
   const [activeTab, setActiveTab] = useState("schoolInfo");
   const [lang, setLang] = useState<Locale>("en");
-  const [autoTranslate, setAutoTranslate] = useState(false);
+  const [syncing, setAutoTranslate] = useState(false);
   const [formData, setFormData] = useState<FormDataType>({});
   const [saveStatus, setSaveStatus] = useState<Record<string, "idle" | "saving" | "saved">>({});
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
@@ -116,7 +116,7 @@ export default function GlobalSettingsPage() {
     setFormData((prev) => {
       const next = { ...prev };
       if (!next[key]) next[key] = { en: "", ne: "", ja: "" };
-      if (autoTranslate) LOCALES.forEach(({ id: l }) => { next[key] = { ...next[key], [l]: value }; });
+      if (syncing) LOCALES.forEach(({ id: l }) => { next[key] = { ...next[key], [l]: value }; });
       else next[key] = { ...next[key], [locale]: value };
       return next;
     });
@@ -149,7 +149,7 @@ export default function GlobalSettingsPage() {
   const handleSaveHours = async () => {
     setHoursSaving(true);
     try {
-      if (autoTranslate) {
+      if (syncing) {
         for (const { id: l } of LOCALES) await saveJson("global", "opening_hours", l, { hours });
       } else {
         await saveJson("global", "opening_hours", lang, { hours });
@@ -231,9 +231,9 @@ export default function GlobalSettingsPage() {
               ))}
             </div>
             <label className="flex items-center gap-1.5 text-[11px] text-muted cursor-pointer select-none">
-              <button onClick={() => setAutoTranslate(!autoTranslate)}
-                className={`w-8 h-4 rounded-full transition-colors relative ${autoTranslate ? "bg-green-500" : "bg-gray-300"}`}>
-                <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${autoTranslate ? "translate-x-4" : "translate-x-0.5"}`} />
+              <button onClick={() => setAutoTranslate(!syncing)}
+                className={`w-8 h-4 rounded-full transition-colors relative ${syncing ? "bg-green-500" : "bg-gray-300"}`}>
+                <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${syncing ? "translate-x-4" : "translate-x-0.5"}`} />
               </button>
               Auto
             </label>
@@ -269,7 +269,7 @@ export default function GlobalSettingsPage() {
                 </div>
               </div>
             )}
-            {autoTranslate && (
+            {syncing && (
               <div className="mb-4 p-2 rounded-lg bg-blue-50 border border-blue-200 text-[11px] text-blue-700">
                 Auto ON — editing any language copies to all.
               </div>

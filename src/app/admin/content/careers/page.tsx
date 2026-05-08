@@ -39,7 +39,7 @@ export default function CareerManagerPage() {
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
   const [lang, setLang] = useState<Locale>("en");
-  const [autoTranslate, setAutoTranslate] = useState(false);
+  const [syncing, setAutoTranslate] = useState(false);
   const [jobsByLocale, setJobsByLocale] = useState<Record<Locale, JobItem[]>>({ en: [], ne: [], ja: [] });
   const [jobTitle, setJobTitle] = useState("");
   const [jobCategory, setJobCategory] = useState("Teaching");
@@ -83,7 +83,7 @@ export default function CareerManagerPage() {
   const handleSaveJobs = async () => {
     setSavingJobs(true);
     try {
-      if (autoTranslate) {
+      if (syncing) {
         for (const { id: l } of LOCALES) {
           await saveJson("careers", "job_listings", l, { jobs: jobsByLocale[lang] });
         }
@@ -149,9 +149,9 @@ export default function CareerManagerPage() {
             ))}
           </div>
           <label className="flex items-center gap-1.5 text-[11px] text-muted cursor-pointer select-none">
-            <button onClick={() => setAutoTranslate(!autoTranslate)}
-              className={`w-8 h-4 rounded-full transition-colors relative ${autoTranslate ? "bg-green-500" : "bg-gray-300"}`}>
-              <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${autoTranslate ? "translate-x-4" : "translate-x-0.5"}`} />
+            <button onClick={() => setAutoTranslate(!syncing)}
+              className={`w-8 h-4 rounded-full transition-colors relative ${syncing ? "bg-green-500" : "bg-gray-300"}`}>
+              <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${syncing ? "translate-x-4" : "translate-x-0.5"}`} />
             </button>
             Auto
           </label>
