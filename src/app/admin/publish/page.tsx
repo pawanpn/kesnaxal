@@ -30,22 +30,35 @@ export default function PublishReviewPage() {
 
   const handlePublish = async () => {
     setPublishing(true);
-    const { count } = await publishAll();
-    setResult({ type: "publish", count });
+    try {
+      const { count } = await publishAll();
+      setResult({ type: "publish", count });
+      toast("success", `Published ${count} change${count !== 1 ? "s" : ""}`);
+    } catch (e) {
+      toast("error", "Failed to publish");
+      console.error("Publish failed:", e);
+    }
     setPublishing(false);
   };
 
   const handleDiscardAll = async () => {
     if (!confirm("Are you sure? This will discard ALL draft changes permanently.")) return;
     setDiscarding(true);
-    const { count } = await discardAllDrafts();
-    setResult({ type: "discard", count });
+    try {
+      const { count } = await discardAllDrafts();
+      setResult({ type: "discard", count });
+      toast("success", "Drafts discarded");
+    } catch (e) {
+      toast("error", "Failed to discard drafts");
+      console.error("Discard failed:", e);
+    }
     setDiscarding(false);
   };
 
   const handleDiscardSection = async (section: string) => {
     if (!confirm(`Discard all draft changes in "${section}"?`)) return;
     await discardSectionDrafts(section);
+    toast("success", "Drafts discarded");
   };
 
   return (

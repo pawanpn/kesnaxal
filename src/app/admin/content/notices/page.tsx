@@ -64,9 +64,15 @@ export default function NoticesPage() {
 
   const handleSave = async (updated: Notice[]) => {
     setSaving(true);
+    try {
     const locales = autoTranslate ? LOCALES : [{ id: lang }];
     for (const { id: l } of locales) {
       await saveJson("notices", "notices_list", l, { notices: updated });
+    }
+      toast("success", "Notices saved!");
+    } catch (e) {
+      toast("error", "Failed to save notices");
+      console.error("Save failed:", e);
     }
     setSaving(false);
   };
@@ -147,7 +153,7 @@ export default function NoticesPage() {
               </button>
               Auto
             </label>
-            <button onClick={async () => { setDiscarding(true); await discardSectionDrafts("notices"); setDiscarding(false); window.location.reload(); }}
+            <button onClick={async () => { setDiscarding(true); await discardSectionDrafts("notices"); toast("success", "Drafts discarded"); setDiscarding(false); window.location.reload(); }}
               disabled={discarding}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5 disabled:opacity-50">
               Discard Drafts

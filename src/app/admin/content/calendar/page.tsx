@@ -79,10 +79,16 @@ export default function CalendarAdminPage() {
             : undefined,
         }))
       : updated;
-    for (const { id: l } of LOCALES) {
-      await saveJson("calendar", "calendar_events", l, { events: toSave });
+    try {
+      for (const { id: l } of LOCALES) {
+        await saveJson("calendar", "calendar_events", l, { events: toSave });
+      }
+      setEvents(toSave);
+      toast("success", "Calendar events saved!");
+    } catch (e) {
+      toast("error", "Failed to save calendar events");
+      console.error("Save failed:", e);
     }
-    setEvents(toSave);
     setSaving(false);
   };
 
@@ -128,7 +134,7 @@ export default function CalendarAdminPage() {
               className="px-4 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
               {saving ? "Saving..." : "Save All"}
             </button>
-            <button onClick={async () => { setDiscarding(true); await discardSectionDrafts("calendar"); setDiscarding(false); window.location.reload(); }}
+            <button onClick={async () => { setDiscarding(true); await discardSectionDrafts("calendar"); toast("success", "Drafts discarded"); setDiscarding(false); window.location.reload(); }}
               disabled={discarding}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5 disabled:opacity-50">
               Discard Drafts

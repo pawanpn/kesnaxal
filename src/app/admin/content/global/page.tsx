@@ -156,10 +156,15 @@ export default function GlobalSettingsPage() {
 
   const handleSaveHours = async () => {
     setHoursSaving(true);
-    if (autoTranslate) {
-      for (const { id: l } of LOCALES) await saveJson("global", "opening_hours", l, { hours });
-    } else {
-      await saveJson("global", "opening_hours", lang, { hours });
+    try {
+      if (autoTranslate) {
+        for (const { id: l } of LOCALES) await saveJson("global", "opening_hours", l, { hours });
+      } else {
+        await saveJson("global", "opening_hours", lang, { hours });
+      }
+      toast("success", "Saved successfully");
+    } catch {
+      toast("error", "Failed to save hours");
     }
     setHoursSaving(false);
   };
@@ -168,12 +173,17 @@ export default function GlobalSettingsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     setLogoUploading(true);
-    const url = await uploadMedia(file, "global", "logo");
-    if (url) {
-      setLogoUrl(url);
-      await saveContent("global", "logo_url", "en", url);
-      await saveContent("global", "logo_url", "ne", url);
-      await saveContent("global", "logo_url", "ja", url);
+    try {
+      const url = await uploadMedia(file, "global", "logo");
+      if (url) {
+        setLogoUrl(url);
+        await saveContent("global", "logo_url", "en", url);
+        await saveContent("global", "logo_url", "ne", url);
+        await saveContent("global", "logo_url", "ja", url);
+      }
+      toast("success", "Logo uploaded");
+    } catch {
+      toast("error", "Failed to upload logo");
     }
     setLogoUploading(false);
     if (e.target) e.target.value = "";
@@ -194,7 +204,7 @@ export default function GlobalSettingsPage() {
             <h1 className="text-xl font-heading font-bold text-foreground">Global Settings</h1>
             <p className="text-xs text-muted mt-1">Manage school info, contact, social links, and hours</p>
           </div>
-          <button onClick={async () => { setDiscarding(true); await discardSectionDrafts("global"); setDiscarding(false); window.location.reload(); }}
+          <button onClick={async () => { setDiscarding(true); try { await discardSectionDrafts("global"); toast("success", "Drafts discarded"); } catch { toast("error", "Failed to discard drafts"); } setDiscarding(false); window.location.reload(); }}
             disabled={discarding}
             className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5 disabled:opacity-50">
             {discarding ? "Discarding..." : "Discard Drafts"}
@@ -254,9 +264,14 @@ export default function GlobalSettingsPage() {
                       <button
                         onClick={async () => {
                           setLogoUrl("/data/logo.jpg");
-                          await saveContent("global", "logo_url", "en", "/data/logo.jpg");
-                          await saveContent("global", "logo_url", "ne", "/data/logo.jpg");
-                          await saveContent("global", "logo_url", "ja", "/data/logo.jpg");
+                          try {
+                            await saveContent("global", "logo_url", "en", "/data/logo.jpg");
+                            await saveContent("global", "logo_url", "ne", "/data/logo.jpg");
+                            await saveContent("global", "logo_url", "ja", "/data/logo.jpg");
+                            toast("success", "Logo reset");
+                          } catch {
+                            toast("error", "Failed to reset logo");
+                          }
                         }}
                         className="ml-2 px-3 py-2 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5"
                       >

@@ -133,7 +133,7 @@ export default function CareerManagerPage() {
             <h1 className="text-xl font-heading font-bold text-foreground">Career Manager</h1>
             <p className="text-xs text-muted mt-1">Post jobs and manage applications</p>
           </div>
-          <button onClick={async () => { await discardSectionDrafts("careers"); window.location.reload(); }}
+          <button onClick={async () => { await discardSectionDrafts("careers"); toast("success", "Drafts discarded"); window.location.reload(); }}
             className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5">
             Discard Drafts
           </button>

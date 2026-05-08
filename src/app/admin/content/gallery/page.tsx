@@ -36,12 +36,18 @@ export default function GalleryAdminPage() {
 
   const handleSave = async (updatedImages: GalleryImage[], updatedCategories?: string[]) => {
     setSaving(true);
+    try {
     const cats = updatedCategories ?? categories;
     await saveJson("gallery", "gallery_images", "en", { images: updatedImages, categories: cats });
     await saveJson("gallery", "gallery_images", "ne", { images: updatedImages, categories: cats });
     await saveJson("gallery", "gallery_images", "ja", { images: updatedImages, categories: cats });
     setImages(updatedImages);
     if (updatedCategories) setCategories(updatedCategories);
+      toast("success", "Gallery saved!");
+    } catch (e) {
+      toast("error", "Failed to save gallery");
+      console.error("Save failed:", e);
+    }
     setSaving(false);
   };
 
@@ -78,7 +84,7 @@ export default function GalleryAdminPage() {
     setUploading(file.name);
     const key = `gallery_${Date.now()}`;
     const url = await uploadMedia(file, "gallery", key);
-    if (url) setNewUrl(url);
+    if (url) { setNewUrl(url); toast("success", "Image uploaded!"); }
     setUploading(null);
   };
 
@@ -98,7 +104,7 @@ export default function GalleryAdminPage() {
               className="px-4 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
               {saving ? "Saving..." : "Save All"}
             </button>
-            <button onClick={async () => { setDiscarding(true); await discardSectionDrafts("gallery"); setDiscarding(false); window.location.reload(); }}
+            <button onClick={async () => { setDiscarding(true); await discardSectionDrafts("gallery"); toast("success", "Drafts discarded"); setDiscarding(false); window.location.reload(); }}
               disabled={discarding}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5 disabled:opacity-50">
               Discard

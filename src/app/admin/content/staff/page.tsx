@@ -24,10 +24,15 @@ export default function StaffAdminPage() {
 
   const handleSave = async (updated: StaffMember[]) => {
     setSaving(true);
-    await saveJson("staff", "staff_members", "en", { members: updated });
-    await saveJson("staff", "staff_members", "ne", { members: updated });
-    await saveJson("staff", "staff_members", "ja", { members: updated });
-    setStaff(updated);
+    try {
+      await saveJson("staff", "staff_members", "en", { members: updated });
+      await saveJson("staff", "staff_members", "ne", { members: updated });
+      await saveJson("staff", "staff_members", "ja", { members: updated });
+      setStaff(updated);
+      toast("success", "Saved successfully");
+    } catch {
+      toast("error", "Save failed");
+    }
     setSaving(false);
   };
 
@@ -50,7 +55,12 @@ export default function StaffAdminPage() {
     const member = staff[index];
     setUploading(String(member.id));
     const url = await uploadMedia(file, "staff", `staff_${member.id}`);
-    if (url) handleChange(index, "photo", url);
+    if (url) {
+      handleChange(index, "photo", url);
+      toast("success", "Photo uploaded");
+    } else {
+      toast("error", "Photo upload failed");
+    }
     setUploading(null);
   };
 
@@ -71,7 +81,7 @@ export default function StaffAdminPage() {
               className="px-4 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
               {saving ? "Saving..." : "Save All"}
             </button>
-            <button onClick={async () => { setDiscarding(true); await discardSectionDrafts("staff"); setDiscarding(false); window.location.reload(); }}
+            <button onClick={async () => { setDiscarding(true); await discardSectionDrafts("staff"); toast("success", "Drafts discarded"); setDiscarding(false); window.location.reload(); }}
               disabled={discarding}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5 disabled:opacity-50">
               Discard

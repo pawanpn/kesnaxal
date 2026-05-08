@@ -149,7 +149,7 @@ export default function HomepageManagerPage() {
             <h1 className="text-xl font-heading font-bold text-foreground">Homepage Manager</h1>
             <p className="text-xs text-muted mt-1">Manage hero slider, testimonials, and FAQ content</p>
           </div>
-          <button onClick={async () => { setDiscarding(true); await discardSectionDrafts("homepage"); setDiscarding(false); window.location.reload(); }}
+          <button onClick={async () => { setDiscarding(true); try { await discardSectionDrafts("homepage"); toast("success", "Drafts discarded"); } catch { toast("error", "Failed to discard drafts"); } setDiscarding(false); window.location.reload(); }}
             disabled={discarding}
             className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5 disabled:opacity-50">
             Discard Drafts

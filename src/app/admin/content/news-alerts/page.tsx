@@ -58,30 +58,40 @@ export default function NewsAlertsPage() {
 
   const handleSaveBreaking = async () => {
     setSaving("breaking_news_text");
-    if (autoTranslate) {
-      for (const { id: l } of LOCALES) {
-        await saveContent("news", "breaking_news_text", l, breakingNews[lang]);
+    try {
+      if (autoTranslate) {
+        for (const { id: l } of LOCALES) {
+          await saveContent("news", "breaking_news_text", l, breakingNews[lang]);
+        }
+      } else {
+        for (const { id: l } of LOCALES) {
+          await saveContent("news", "breaking_news_text", l, breakingNews[l]);
+        }
       }
-    } else {
-      for (const { id: l } of LOCALES) {
-        await saveContent("news", "breaking_news_text", l, breakingNews[l]);
-      }
+      toast("success", "Saved successfully");
+    } catch {
+      toast("error", "Failed to save breaking news");
     }
     setSaving(null);
   };
 
   const handleSaveEmergency = async () => {
     setSaving("emergency");
-    if (autoTranslate) {
-      for (const { id: l } of LOCALES) {
-        await saveContent("news", "emergency_title", l, emergencyTitle[lang]);
-        await saveContent("news", "emergency_message", l, emergencyMsg[lang]);
+    try {
+      if (autoTranslate) {
+        for (const { id: l } of LOCALES) {
+          await saveContent("news", "emergency_title", l, emergencyTitle[lang]);
+          await saveContent("news", "emergency_message", l, emergencyMsg[lang]);
+        }
+      } else {
+        for (const { id: l } of LOCALES) {
+          await saveContent("news", "emergency_title", l, emergencyTitle[l]);
+          await saveContent("news", "emergency_message", l, emergencyMsg[l]);
+        }
       }
-    } else {
-      for (const { id: l } of LOCALES) {
-        await saveContent("news", "emergency_title", l, emergencyTitle[l]);
-        await saveContent("news", "emergency_message", l, emergencyMsg[l]);
-      }
+      toast("success", "Saved successfully");
+    } catch {
+      toast("error", "Failed to save emergency popup");
     }
     setSaving(null);
   };
@@ -132,7 +142,7 @@ export default function NewsAlertsPage() {
               </button>
               Auto
             </label>
-            <button onClick={async () => { setDiscarding(true); await discardSectionDrafts("news"); setDiscarding(false); window.location.reload(); }}
+            <button onClick={async () => { setDiscarding(true); try { await discardSectionDrafts("news"); toast("success", "Drafts discarded"); } catch { toast("error", "Failed to discard drafts"); } setDiscarding(false); window.location.reload(); }}
               disabled={discarding}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5 disabled:opacity-50">
               Discard Drafts
