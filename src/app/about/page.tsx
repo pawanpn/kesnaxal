@@ -6,10 +6,8 @@ import ValueCards from "@/components/sections/ValueCards";
 import OptimizedImage from "@/components/ui/OptimizedImage";
 import EditableElement from "@/components/admin/EditableElement";
 import EditableImage from "@/components/admin/EditableImage";
-import { siteConfig } from "@/constants/siteConfig";
+import { useDynamicContent } from "@/hooks/useDynamicContent";
 import type { ValueCard } from "@/types";
-
-const { school } = siteConfig;
 
 const values: ValueCard[] = [
   {

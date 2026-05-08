@@ -4,9 +4,9 @@ import { useState } from "react";
 import PageHero from "@/components/ui/PageHero";
 import JobCard from "@/components/sections/JobCard";
 import ApplicationForm from "@/components/sections/ApplicationForm";
-import { siteConfig } from "@/constants/siteConfig";
 import type { JobVacancy } from "@/types";
 import { useLocale } from "@/hooks/useLocale";
+import { useDynamicContent } from "@/hooks/useDynamicContent";
 import { resolveJob } from "@/lib/translate";
 
 function formatDateLocale(
@@ -26,7 +26,7 @@ export default function CareersPage() {
   const [selectedJob, setSelectedJob] = useState<JobVacancy | null>(null);
   const [applyingJob, setApplyingJob] = useState<JobVacancy | null>(null);
   const { locale, t } = useLocale();
-  const jobs = siteConfig.jobVacancies;
+  const { jobVacancies: jobs, school } = useDynamicContent();
   const activeJobs = jobs.filter((j) => j.isActive);
 
   const toggleDetails = (job: JobVacancy) => {
@@ -186,7 +186,7 @@ export default function CareersPage() {
           locale={locale}
           t={t}
           onClose={() => setApplyingJob(null)}
-          schoolName={siteConfig.school.name}
+          schoolName={school.name}
         />
       )}
     </div>
