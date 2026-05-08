@@ -39,7 +39,7 @@ const navSections = [
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { isAdmin, logout, draftCount, togglePreviewMode, isPreviewMode } = useAdmin();
+  const { isAdmin, authReady, logout, draftCount, togglePreviewMode, isPreviewMode } = useAdmin();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
@@ -53,7 +53,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return <>{children}</>;
   }
 
-  if (!isAdmin) return null;
+  if (!authReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface">
+        <div className="w-10 h-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-surface flex">

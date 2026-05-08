@@ -18,13 +18,13 @@
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
 AS $$ BEGIN
-  RETURN EXISTS (SELECT 1 FROM admin_profiles WHERE id = auth.uid());
+  RETURN EXISTS (SELECT 1 FROM public.admin_profiles WHERE id = auth.uid());
 END; $$;
 
 CREATE OR REPLACE FUNCTION public.is_superadmin()
 RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
 AS $$ BEGIN
-  RETURN EXISTS (SELECT 1 FROM admin_profiles WHERE id = auth.uid() AND role = 'superadmin');
+  RETURN EXISTS (SELECT 1 FROM public.admin_profiles WHERE id = auth.uid() AND role = 'superadmin');
 END; $$;
 
 -- ============================================================
@@ -202,7 +202,7 @@ CREATE FUNCTION publish_all_drafts()
 RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
 AS $$ DECLARE cnt integer; BEGIN
   WITH updated AS (
-    UPDATE site_content SET status = 'published', content_meta = content_meta || '{"publishedAt":"' || NOW()::text || '"}'::jsonb
+    UPDATE public.site_content SET status = 'published', content_meta = content_meta || ('{"publishedAt":"' || NOW()::text || '"}')::jsonb
     WHERE status = 'draft' RETURNING 1
   ) SELECT count(*) INTO cnt FROM updated;
   RETURN cnt;
@@ -216,7 +216,7 @@ CREATE FUNCTION discard_all_drafts()
 RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
 AS $$ DECLARE cnt integer; BEGIN
   WITH deleted AS (
-    DELETE FROM site_content WHERE status = 'draft' RETURNING 1
+    DELETE FROM public.site_content WHERE status = 'draft' RETURNING 1
   ) SELECT count(*) INTO cnt FROM deleted;
   RETURN cnt;
 END; $$;
@@ -229,7 +229,7 @@ CREATE FUNCTION discard_section_drafts(p_section TEXT)
 RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
 AS $$ DECLARE cnt integer; BEGIN
   WITH deleted AS (
-    DELETE FROM site_content WHERE section = p_section AND status = 'draft' RETURNING 1
+    DELETE FROM public.site_content WHERE section = p_section AND status = 'draft' RETURNING 1
   ) SELECT count(*) INTO cnt FROM deleted;
   RETURN cnt;
 END; $$;
@@ -242,7 +242,7 @@ DROP FUNCTION IF EXISTS handle_new_user CASCADE;
 CREATE FUNCTION handle_new_user()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
 AS $$ BEGIN
-  INSERT INTO admin_profiles (id, display_name, role) VALUES (NEW.id, NEW.email, 'editor');
+  INSERT INTO public.admin_profiles (id, display_name, role) VALUES (NEW.id, NEW.email, 'editor');
   RETURN NEW;
 END; $$;
 CREATE TRIGGER on_auth_user_created
