@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/context/ToastContext";
-import { useAutoTranslate } from "@/lib/autoTranslate";
+import { translateToAll } from "@/lib/autoTranslate";
 import type { NewsArticle, LocaleContent } from "@/types";
 
 type Locale = "en" | "ne" | "ja";
@@ -111,6 +111,10 @@ export default function NewsAdminPage() {
   const [discarding, setDiscarding] = useState(false);
   const [tagInput, setTagInput] = useState("");
   const [showList, setShowList] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [translatingTitle, setTranslatingTitle] = useState(false);
+  const [translatingExcerpt, setTranslatingExcerpt] = useState(false);
+  const [translatingContent, setTranslatingContent] = useState(false);
 
   useEffect(() => { loadAllContent(); }, []);
 
@@ -146,7 +150,7 @@ export default function NewsAdminPage() {
   const saveArticles = async (updated: NewsArticle[]) => {
     setSaving(true);
     try {
-      if (autoTranslate) {
+      if (syncing) {
         for (const { id: l } of LOCALES) {
           await saveJson("news", "news_articles", l, { articles: updated });
         }
@@ -186,12 +190,27 @@ export default function NewsAdminPage() {
   const handleLocaleField = (field: "title" | "excerpt" | "content", locale: Locale, value: string) => {
     if (!selected) return;
     const next = { ...selected[field], [locale]: value };
-    if (autoTranslate && locale === lang && value.trim()) {
-      translateAll(value, lang, (targetLocale, translated) => {
-        if (selected) setSelected({ ...selected, [field]: { ...selected[field], [targetLocale]: translated } });
+    if (syncing && locale === lang && value.trim()) {
+      LOCALES.forEach(({ id: l }) => {
+        if (l !== locale) next[l] = value;
       });
     }
     handleField(field, next);
+  };
+
+  const handleTranslate = async (field: "title" | "excerpt" | "content") => {
+    if (!selected) return;
+    const sourceText = selected[field]?.[lang];
+    if (!sourceText?.trim()) return;
+    const setter = field === "title" ? setTranslatingTitle : field === "excerpt" ? setTranslatingExcerpt : setTranslatingContent;
+    setter(true);
+    try {
+      const results = await translateToAll(sourceText, lang);
+      const next = { ...selected[field] };
+      Object.entries(results).forEach(([loc, val]) => { if (val) next[loc as Locale] = val; });
+      handleField(field, next);
+    } catch { /* ignore */ }
+    setter(false);
   };
 
   const handleTitleChange = (locale: Locale, value: string) => {
@@ -296,11 +315,11 @@ export default function NewsAdminPage() {
             </div>
             <div className="flex items-center gap-2">
               <label className="flex items-center gap-1.5 text-[11px] text-muted cursor-pointer select-none">
-                <button onClick={() => setAutoTranslate(!autoTranslate)}
-                  className={`w-8 h-4 rounded-full transition-colors relative ${autoTranslate ? "bg-green-500" : "bg-gray-300"}`}>
-                  <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${autoTranslate ? "translate-x-4" : "translate-x-0.5"}`} />
+                <button type="button" onClick={() => setSyncing(!syncing)}
+                  className={`w-7 h-4 rounded-full transition-colors relative shrink-0 ${syncing ? "bg-green-500" : "bg-gray-300"}`}>
+                  <span className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${syncing ? "translate-x-3" : "translate-x-0"}`} />
                 </button>
-                Auto
+                <span className="whitespace-nowrap">Sync</span>
               </label>
               <button onClick={() => saveArticles(articles)} disabled={saving || articles.length === 0}
                 className="px-4 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
@@ -315,15 +334,25 @@ export default function NewsAdminPage() {
           {/* Editor body */}
           {selected ? (
             <div className="flex-1 overflow-y-auto p-6">
-              {autoTranslate && (
+              {syncing && (
                 <div className="mb-4 p-2 rounded-lg bg-blue-50 border border-blue-200 text-[11px] text-blue-700 max-w-4xl">
-                  Auto-translate ON — editing in <strong>{lang.toUpperCase()}</strong> auto-translates to other languages.
+                  Sync ON — editing in <strong>{lang.toUpperCase()}</strong> copies text to all languages. Use 🌐 button to translate instead.
                 </div>
               )}
               <div className="space-y-5 max-w-4xl">
                 {/* Title */}
                 <div>
-                  <label className="block text-xs font-semibold text-foreground mb-1.5">Title</label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-semibold text-foreground">Title</label>
+                    <button type="button" onClick={() => handleTranslate("title")} disabled={translatingTitle || !selected.title[lang]?.trim()}
+                      className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border border-border hover:bg-primary/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                      {translatingTitle ? (
+                        <><div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" /> Translating...</>
+                      ) : (
+                        <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg> Translate</>
+                      )}
+                    </button>
+                  </div>
                   <div className="grid grid-cols-3 gap-2">
                     {LOCALES.map((l) => (
                       <div key={l.id} className="relative">
@@ -399,7 +428,17 @@ export default function NewsAdminPage() {
 
                 {/* Excerpt */}
                 <div>
-                  <label className="block text-xs font-semibold text-foreground mb-1.5">Excerpt</label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-semibold text-foreground">Excerpt</label>
+                    <button type="button" onClick={() => handleTranslate("excerpt")} disabled={translatingExcerpt || !selected.excerpt[lang]?.trim()}
+                      className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border border-border hover:bg-primary/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                      {translatingExcerpt ? (
+                        <><div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" /> Translating...</>
+                      ) : (
+                        <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg> Translate</>
+                      )}
+                    </button>
+                  </div>
                   <div className="grid grid-cols-3 gap-2">
                     {LOCALES.map((l) => (
                       <div key={l.id} className="relative">
@@ -414,7 +453,17 @@ export default function NewsAdminPage() {
 
                 {/* Content */}
                 <div>
-                  <label className="block text-xs font-semibold text-foreground mb-1.5">Content — <span className="text-primary font-bold">{lang.toUpperCase()}</span></label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-semibold text-foreground">Content — <span className="text-primary font-bold">{lang.toUpperCase()}</span></label>
+                    <button type="button" onClick={() => handleTranslate("content")} disabled={translatingContent || !selected.content[lang]?.trim()}
+                      className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border border-border hover:bg-primary/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                      {translatingContent ? (
+                        <><div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" /> Translating...</>
+                      ) : (
+                        <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg> Translate</>
+                      )}
+                    </button>
+                  </div>
                   <RichTextEditor html={selected.content[lang] || ""}
                     onChange={(val) => handleLocaleField("content", lang, val)}
                     placeholder={`Write article content in ${lang.toUpperCase()}...`} />

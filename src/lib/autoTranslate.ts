@@ -31,35 +31,43 @@ export async function translateText(text: string, from: Locale, to: Locale): Pro
     cache.set(key, translated);
     return translated;
   } catch {
-    return text; // fallback to original text
+    return text;
   }
 }
 
-export function useAutoTranslate() {
-  const timers = useRef<Map<string, NodeJS.Timeout>>(new Map());
+/** Translate text to all other locales at once — returns the translated map */
+export async function translateToAll(text: string, from: Locale): Promise<Partial<Record<Locale, string>>> {
+  if (!text.trim()) return {};
+  const targets = LOCALES.filter((l) => l !== from);
+  const results: Partial<Record<Locale, string>> = {};
+  for (const to of targets) {
+    results[to] = await translateText(text, from, to);
+  }
+  return results;
+}
 
-  const translateAll = useCallback(
-    async (text: string, fromLocale: Locale, onTranslated: (locale: Locale, translated: string) => void) => {
-      if (!text.trim()) return;
+/** Hook for manual translate button — trigger translate, get results */
+export function useTranslateField() {
+  const [translating, setTranslating] = useRef(false);
 
-      const targets = LOCALES.filter((l) => l !== fromLocale);
-
-      for (const to of targets) {
-        const timerKey = `${fromLocale}→${to}`;
-        const existing = timers.current.get(timerKey);
-        if (existing) clearTimeout(existing);
-
-        timers.current.set(
-          timerKey,
-          setTimeout(async () => {
-            const translated = await translateText(text, fromLocale, to);
-            onTranslated(to, translated);
-          }, 400)
-        );
+  const handleTranslate = useCallback(
+    async (text: string, from: Locale, onResult: (locale: Locale, translated: string) => void): Promise<boolean> => {
+      if (!text.trim() || translating.current) return false;
+      translating.current = true;
+      try {
+        const results = await translateToAll(text, from);
+        for (const [loc, val] of Object.entries(results)) {
+          if (val) onResult(loc as Locale, val);
+        }
+        return true;
+      } catch {
+        return false;
+      } finally {
+        translating.current = false;
       }
     },
     []
   );
 
-  return { translateAll };
+  return { handleTranslate };
 }
