@@ -50,12 +50,12 @@ CREATE POLICY "Superadmins can manage all profiles" ON admin_profiles
 -- 2. UNIFIED CONTENT STORE (key-value, draft/published)
 -- ============================================================
 -- Content types guide:
---   content_text  = plain text, used for: titles, descriptions, labels, short text
---   content_json  = JSON object, used for: arrays (sliders, FAQs), complex objects (contactInfo, socialLinks)
---   content_meta  = JSON for media URLs, timestamps, boolean flags (publishedAt, isActive, etc.)
+--   content_text  = plain text → titles, descriptions, labels, short text
+--   content_json  = JSON object → arrays (sliders, FAQs), complex objects (contactInfo, socialLinks)
+--   content_meta  = JSON → media URLs, timestamps, boolean flags (publishedAt, isActive, etc.)
 CREATE TABLE IF NOT EXISTS site_content (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  section TEXT NOT NULL,          -- e.g. 'global', 'hero', 'about', 'news', 'academics', 'footer', 'careers'
+  section TEXT NOT NULL,          -- e.g. 'global', 'homepage', 'hero', 'about', 'news', 'academics', 'careers', 'footer'
   content_key TEXT NOT NULL,      -- e.g. 'schoolName', 'slide_0_title', 'alert_active'
   locale TEXT NOT NULL DEFAULT 'en',
   content_text TEXT,              -- plain text value
@@ -126,14 +126,95 @@ CREATE TABLE IF NOT EXISTS career_applications (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+DROP INDEX IF EXISTS idx_career_applications_status;
+CREATE INDEX idx_career_applications_status ON career_applications(status);
+
+DROP INDEX IF EXISTS idx_career_applications_job;
+CREATE INDEX idx_career_applications_job ON career_applications(job_id);
+
 ALTER TABLE career_applications ENABLE ROW LEVEL SECURITY;
 
+-- Public: anyone can submit a job application
+DROP POLICY IF EXISTS "Public can insert applications" ON career_applications;
+CREATE POLICY "Public can insert applications" ON career_applications
+  FOR INSERT WITH CHECK (true);
+
+-- Admins can read/manage all applications
 DROP POLICY IF EXISTS "Admins can manage applications" ON career_applications;
 CREATE POLICY "Admins can manage applications" ON career_applications
   FOR ALL USING (is_admin());
 
 -- ============================================================
--- 4. Media table
+-- 4. Contact Messages / Parent Suggestions
+-- ============================================================
+-- Used by: Contact form, parent suggestion box, general inquiries
+CREATE TABLE IF NOT EXISTS contact_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT,
+  subject TEXT,
+  message TEXT NOT NULL,
+  category TEXT DEFAULT 'general' CHECK (category IN ('general', 'admission', 'academic', 'complaint', 'suggestion', 'other')),
+  status TEXT DEFAULT 'unread' CHECK (status IN ('unread', 'read', 'replied', 'archived')),
+  replied_at TIMESTAMPTZ,
+  reply_message TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+DROP INDEX IF EXISTS idx_contact_messages_status;
+CREATE INDEX idx_contact_messages_status ON contact_messages(status);
+
+DROP INDEX IF EXISTS idx_contact_messages_category;
+CREATE INDEX idx_contact_messages_category ON contact_messages(category);
+
+ALTER TABLE contact_messages ENABLE ROW LEVEL SECURITY;
+
+-- Public: anyone can submit a contact message
+DROP POLICY IF EXISTS "Public can insert messages" ON contact_messages;
+CREATE POLICY "Public can insert messages" ON contact_messages
+  FOR INSERT WITH CHECK (true);
+
+-- Admins can read/manage all messages
+DROP POLICY IF EXISTS "Admins can manage messages" ON contact_messages;
+CREATE POLICY "Admins can manage messages" ON contact_messages
+  FOR ALL USING (is_admin());
+
+-- ============================================================
+-- 5. Admission Inquiries
+-- ============================================================
+CREATE TABLE IF NOT EXISTS admission_inquiries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_name TEXT NOT NULL,
+  parent_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT,
+  grade_applying TEXT,
+  academic_year TEXT,
+  previous_school TEXT,
+  message TEXT,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'contacted', 'enrolled', 'declined')),
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+DROP INDEX IF EXISTS idx_admission_inquiries_status;
+CREATE INDEX idx_admission_inquiries_status ON admission_inquiries(status);
+
+ALTER TABLE admission_inquiries ENABLE ROW LEVEL SECURITY;
+
+-- Public: anyone can submit admission inquiry
+DROP POLICY IF EXISTS "Public can insert admission inquiry" ON admission_inquiries;
+CREATE POLICY "Public can insert admission inquiry" ON admission_inquiries
+  FOR INSERT WITH CHECK (true);
+
+-- Admins can read/manage
+DROP POLICY IF EXISTS "Admins can manage admission inquiries" ON admission_inquiries;
+CREATE POLICY "Admins can manage admission inquiries" ON admission_inquiries
+  FOR ALL USING (is_admin());
+
+-- ============================================================
+-- 6. Media table
 -- ============================================================
 CREATE TABLE IF NOT EXISTS media (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -159,7 +240,7 @@ DROP POLICY IF EXISTS "Admins delete media" ON media;
 CREATE POLICY "Admins delete media" ON media FOR DELETE USING (is_admin());
 
 -- ============================================================
--- 5. Edit log
+-- 7. Edit log (audit trail)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS edit_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -180,7 +261,7 @@ DROP POLICY IF EXISTS "Admins insert log" ON edit_log;
 CREATE POLICY "Admins insert log" ON edit_log FOR INSERT WITH CHECK (is_admin());
 
 -- ============================================================
--- 6. Storage bucket policies
+-- 8. Storage bucket policies
 -- ============================================================
 DROP POLICY IF EXISTS "Anyone can view media" ON storage.objects;
 CREATE POLICY "Anyone can view media" ON storage.objects
@@ -194,9 +275,11 @@ DROP POLICY IF EXISTS "Admins can delete storage media" ON storage.objects;
 CREATE POLICY "Admins can delete storage media" ON storage.objects
   FOR DELETE USING (bucket_id = 'media' AND is_admin());
 
--- ============================================================
--- 7. RPC: Publish all drafts
--- ============================================================
+====================================================================
+-- ── Postgres Functions (RPC) ──
+====================================================================
+
+-- 9. RPC: Publish all drafts
 DROP FUNCTION IF EXISTS publish_all_drafts CASCADE;
 CREATE FUNCTION publish_all_drafts()
 RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
@@ -208,9 +291,19 @@ AS $$ DECLARE cnt integer; BEGIN
   RETURN cnt;
 END; $$;
 
--- ============================================================
--- 8. RPC: Discard all drafts
--- ============================================================
+-- 10. RPC: Publish selected drafts by ID array
+DROP FUNCTION IF EXISTS publish_selected_drafts CASCADE;
+CREATE FUNCTION publish_selected_drafts(p_ids UUID[])
+RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
+AS $$ DECLARE cnt integer; BEGIN
+  WITH updated AS (
+    UPDATE public.site_content SET status = 'published', content_meta = content_meta || ('{"publishedAt":"' || NOW()::text || '"}')::jsonb
+    WHERE id = ANY(p_ids) AND status = 'draft' RETURNING 1
+  ) SELECT count(*) INTO cnt FROM updated;
+  RETURN cnt;
+END; $$;
+
+-- 11. RPC: Discard all drafts
 DROP FUNCTION IF EXISTS discard_all_drafts CASCADE;
 CREATE FUNCTION discard_all_drafts()
 RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
@@ -221,9 +314,7 @@ AS $$ DECLARE cnt integer; BEGIN
   RETURN cnt;
 END; $$;
 
--- ============================================================
--- 9. RPC: Discard drafts in a section
--- ============================================================
+-- 12. RPC: Discard drafts in a section
 DROP FUNCTION IF EXISTS discard_section_drafts CASCADE;
 CREATE FUNCTION discard_section_drafts(p_section TEXT)
 RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
@@ -234,8 +325,17 @@ AS $$ DECLARE cnt integer; BEGIN
   RETURN cnt;
 END; $$;
 
+-- 13. RPC: Get unread message count
+DROP FUNCTION IF EXISTS get_message_counts CASCADE;
+CREATE FUNCTION get_message_counts()
+RETURNS TABLE(category TEXT, total bigint, unread bigint) LANGUAGE sql SECURITY DEFINER SET search_path = ''
+AS $$
+  SELECT category, count(*)::bigint, count(*) FILTER (WHERE status = 'unread')::bigint
+  FROM public.contact_messages GROUP BY category ORDER BY category;
+$$;
+
 -- ============================================================
--- 10. Auto-create admin profile trigger
+-- 14. Auto-create admin profile trigger
 -- ============================================================
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 DROP FUNCTION IF EXISTS handle_new_user CASCADE;
@@ -250,10 +350,14 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 
 -- ============================================================
--- 11. Create media storage bucket
+-- 15. Create media storage bucket
 -- ============================================================
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
   'media', 'media', true, 52428800,
   ARRAY['image/png','image/jpeg','image/gif','image/webp','image/svg+xml','application/pdf']
 ) ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================
+-- DONE — All tables, policies, functions, and storage created.
+-- ============================================================
