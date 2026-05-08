@@ -90,7 +90,7 @@ export default function AdminDashboard() {
 
   const newsCount = siteConfig.newsArticles?.length || 0;
   const noticeCount = siteConfig.notices?.length || 0;
-  const vacancyCount = siteConfig.careerJobs?.length || 0;
+  const vacancyCount = siteConfig.jobVacancies?.length || 0;
 
   const handleSeed = async () => {
     setSeeding(true);
@@ -278,12 +278,12 @@ export default function AdminDashboard() {
             </div>
             <div className="bg-white rounded-xl border border-border p-4">
               <p className="text-[10px] text-muted uppercase tracking-wider mb-1">Calendar Events</p>
-              <p className="text-xl font-bold text-foreground">{siteConfig.events?.length || 0}</p>
+              <p className="text-xl font-bold text-foreground">{siteConfig.calendarEvents?.length || 0}</p>
               <p className="text-[10px] text-muted">From siteConfig</p>
             </div>
             <div className="bg-white rounded-xl border border-border p-4">
               <p className="text-[10px] text-muted uppercase tracking-wider mb-1">Gallery Images</p>
-              <p className="text-xl font-bold text-foreground">{siteConfig.galleryImages?.length || 0}</p>
+              <p className="text-xl font-bold text-foreground">{siteConfig.gallery?.images?.length || 0}</p>
               <p className="text-[10px] text-muted">From siteConfig</p>
             </div>
           </div>

@@ -13,20 +13,55 @@ At line:1 char:1
    - Environments: .env.local
 
    Creating an optimized production build ...
- Γ£ô Compiled successfully in 7.6s
+ Γ£ô Compiled successfully in 13.1s
    Skipping linting
    Checking validity of types ...
-Failed to compile.
+   Collecting page data ...
+   Generating static pages (0/32) ...
+   Generating static pages (8/32) 
+   Generating static pages (16/32) 
+   Generating static pages (24/32) 
+ Γ£ô Generating static pages (32/32)
+   Finalizing page optimization ...
+   Collecting build traces ...
 
-./src/app/admin/page.tsx:45:8
-Type error: Property 'catch' does not exist on type 'PromiseLike<void>'.
+Route (app)                                 Size  First Load JS
+Γöî Γùï /                                    3.29 kB         216 kB
+Γö£ Γùï /_not-found                            148 B         103 kB
+Γö£ Γùï /about                               5.01 kB         210 kB
+Γö£ Γùï /academics                           2.39 kB         208 kB
+Γö£ Γùï /admin                               3.36 kB         190 kB
+Γö£ Γùï /admin/career-applications           2.66 kB         167 kB
+Γö£ Γùï /admin/content/academics             4.68 kB         169 kB
+Γö£ Γùï /admin/content/calendar              2.82 kB         167 kB
+Γö£ Γùï /admin/content/careers               3.69 kB         168 kB
+Γö£ Γùï /admin/content/gallery               2.58 kB         167 kB
+Γö£ Γùï /admin/content/global                4.84 kB         192 kB
+Γö£ Γùï /admin/content/homepage              4.96 kB         170 kB
+Γö£ Γùï /admin/content/media                 1.65 kB         166 kB
+Γö£ Γùï /admin/content/news-alerts           3.08 kB         168 kB
+Γö£ Γùï /admin/content/notices               3.99 kB         169 kB
+Γö£ Γùï /admin/content/staff                 2.47 kB         167 kB
+Γö£ Γùï /admin/login                         3.97 kB         166 kB
+Γö£ Γùï /admin/news                          5.87 kB         170 kB
+Γö£ Γùï /admin/publish                       2.66 kB         167 kB
+Γö£ Γùï /admission                           1.02 kB         141 kB
+Γö£ Γùï /admissions                            178 B         140 kB
+Γö£ Γùï /calendar                            10.2 kB         207 kB
+Γö£ Γùï /careers                             11.1 kB         213 kB
+Γö£ Γùï /contact                             3.84 kB         204 kB
+Γö£ Γùï /gallery                               631 B         211 kB
+Γö£ Γùï /news                                4.89 kB         213 kB
+Γö£ ╞Æ /news/[slug]                         3.73 kB         190 kB
+Γö£ Γùï /notices                             2.29 kB         117 kB
+Γö£ Γùï /results                             5.66 kB         120 kB
+Γöö Γùï /staff                               3.53 kB         209 kB
++ First Load JS shared by all             103 kB
+  Γö£ chunks/1255-769661468ce59a91.js      46.2 kB
+  Γö£ chunks/4bd1b696-f785427dddbba9fb.js  54.2 kB
+  Γöö other shared chunks (total)          2.05 kB
 
-[0m [90m 43 |[39m         setAppStatusCounts(statuses)[33m;[39m
- [90m 44 |[39m       })
-[31m[1m>[22m[39m[90m 45 |[39m       [33m.[39m[36mcatch[39m(() [33m=>[39m {})[33m;[39m
- [90m    |[39m        [31m[1m^[22m[39m
- [90m 46 |[39m   }[33m,[39m [])[33m;[39m
- [90m 47 |[39m
- [90m 48 |[39m   [36mconst[39m sectionStats[33m:[39m [33mSectionStats[39m[] [33m=[39m useMemo(() 
-[33m=>[39m {[0m
-Next.js build worker exited with code: 1 and signal: null
+
+Γùï  (Static)   prerendered as static content
+╞Æ  (Dynamic)  server-rendered on demand
+
