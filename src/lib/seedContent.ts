@@ -213,6 +213,16 @@ export function generateSeedData(): SeedRow[] {
     addSimple("staff", `${keyId}_photo`, member.photo);
   });
 
+  // ── Staff (JSON format for admin panel) ──
+  locales.forEach((locale) => {
+    rows.push({ section: "staff", content_key: "staff_members", locale, content_text: JSON.stringify({ members: siteConfig.staff }), content_json: { members: siteConfig.staff }, status: "published" });
+  });
+
+  // ── News Articles (JSON format for admin panel) ──
+  locales.forEach((locale) => {
+    rows.push({ section: "news", content_key: "news_articles", locale, content_text: JSON.stringify({ articles: siteConfig.newsArticles }), content_json: { articles: siteConfig.newsArticles }, status: "published" });
+  });
+
   // ── Calendar Events ──
   if (siteConfig.calendarEvents) {
     siteConfig.calendarEvents.forEach((event) => {
