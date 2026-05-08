@@ -119,8 +119,8 @@ export default function GalleryGrid({ images }: GalleryGridProps) {
             </>
           )}
 
-          <div className="relative max-w-5xl w-full max-h-[85vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-            <OptimizedImage src={filtered[lightboxIndex].src} alt={filtered[lightboxIndex].alt} width={1200} height={800} priority className="max-h-[85vh] w-auto rounded-xl object-contain shadow-2xl" sizes="(max-width: 1024px) 100vw, 80vw" />
+          <div className="relative max-w-[90vw] max-h-[85vh] w-auto h-auto flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <img src={filtered[lightboxIndex].src} alt={filtered[lightboxIndex].alt} className="max-h-[85vh] max-w-[90vw] w-auto h-auto rounded-xl object-contain shadow-2xl" />
           </div>
 
           <div className="absolute bottom-6 left-0 right-0 text-center">
