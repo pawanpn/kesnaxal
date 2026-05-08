@@ -69,20 +69,30 @@ export default function CareerManagerPage() {
 
   const updateStatus = async (id: string, status: string) => {
     setUpdatingStatus(id);
-    await supabase.from("career_applications").update({ status }).eq("id", id);
-    await fetchApplications();
-    if (selectedApp?.id === id) setSelectedApp((prev) => prev ? { ...prev, status } : null);
+    try {
+      await supabase.from("career_applications").update({ status }).eq("id", id);
+      await fetchApplications();
+      if (selectedApp?.id === id) setSelectedApp((prev) => prev ? { ...prev, status } : null);
+      toast("success", "Status updated");
+    } catch {
+      toast("error", "Status update failed");
+    }
     setUpdatingStatus(null);
   };
 
   const handleSaveJobs = async () => {
     setSavingJobs(true);
-    if (autoTranslate) {
-      for (const { id: l } of LOCALES) {
-        await saveJson("careers", "job_listings", l, { jobs: jobsByLocale[lang] });
+    try {
+      if (autoTranslate) {
+        for (const { id: l } of LOCALES) {
+          await saveJson("careers", "job_listings", l, { jobs: jobsByLocale[lang] });
+        }
+      } else {
+        await saveJson("careers", "job_listings", lang, { jobs: jobsByLocale[lang] });
       }
-    } else {
-      await saveJson("careers", "job_listings", lang, { jobs: jobsByLocale[lang] });
+      toast("success", "Saved successfully");
+    } catch {
+      toast("error", "Save failed");
     }
     setSavingJobs(false);
   };

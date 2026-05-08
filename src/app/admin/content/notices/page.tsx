@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useToast } from "@/context/ToastContext";
 
 type Locale = "en" | "ne" | "ja";
 
@@ -36,6 +37,7 @@ function emptyNotice(): Notice {
 
 export default function NoticesPage() {
   const { getJson, saveJson, hasDraft, discardSectionDrafts, loadAllContent } = useAdmin();
+  const { toast } = useToast();
   const [lang, setLang] = useState<Locale>("en");
   const [autoTranslate, setAutoTranslate] = useState(false);
   const [notices, setNotices] = useState<Notice[]>([]);

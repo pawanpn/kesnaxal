@@ -47,7 +47,12 @@ export default function NewsAlertsPage() {
 
   const handleToggleSave = async (key: string, active: boolean) => {
     setSaving(key);
-    await saveJson("news", key, "en", { active });
+    try {
+      await saveJson("news", key, "en", { active });
+      toast("success", "Saved successfully");
+    } catch {
+      toast("error", "Failed to save");
+    }
     setSaving(null);
   };
 

@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useToast } from "@/context/ToastContext";
 import type { SiteContentRow } from "@/context/AdminContext";
 
 export default function PublishReviewPage() {
   const { draftContent, publishAll, discardAllDrafts, discardSectionDrafts, loadAllContent, draftCount } = useAdmin();
+  const { toast } = useToast();
   const [publishing, setPublishing] = useState(false);
   const [discarding, setDiscarding] = useState(false);
   const [result, setResult] = useState<{ type: "publish" | "discard"; count: number } | null>(null);

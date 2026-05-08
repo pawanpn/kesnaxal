@@ -143,8 +143,13 @@ export default function GlobalSettingsPage() {
 
   const handleSaveSocial = async () => {
     setSocialSaving(true);
-    for (const { id: l } of LOCALES) {
-      await saveJson("global", "social_links", l, { links: socialLinks });
+    try {
+      for (const { id: l } of LOCALES) {
+        await saveJson("global", "social_links", l, { links: socialLinks });
+      }
+      toast("success", "Saved successfully");
+    } catch {
+      toast("error", "Failed to save social links");
     }
     setSocialSaving(false);
   };

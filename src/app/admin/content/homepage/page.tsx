@@ -101,20 +101,25 @@ export default function HomepageManagerPage() {
 
   const handleSave = async () => {
     setSaving(true);
-    if (activeSection === "hero") {
-      for (const { id: l } of LOCALES) {
-        await saveJson("homepage", "hero_slides", l, { slides: autoTranslate ? heroSlides[lang] : heroSlides[l] });
+    try {
+      if (activeSection === "hero") {
+        for (const { id: l } of LOCALES) {
+          await saveJson("homepage", "hero_slides", l, { slides: autoTranslate ? heroSlides[lang] : heroSlides[l] });
+        }
       }
-    }
-    if (activeSection === "testimonials") {
-      for (const { id: l } of LOCALES) {
-        await saveJson("homepage", "testimonials", l, { items: autoTranslate ? testimonials[lang] : testimonials[l] });
+      if (activeSection === "testimonials") {
+        for (const { id: l } of LOCALES) {
+          await saveJson("homepage", "testimonials", l, { items: autoTranslate ? testimonials[lang] : testimonials[l] });
+        }
       }
-    }
-    if (activeSection === "faq") {
-      for (const { id: l } of LOCALES) {
-        await saveJson("homepage", "faqs", l, { items: autoTranslate ? faqs[lang] : faqs[l] });
+      if (activeSection === "faq") {
+        for (const { id: l } of LOCALES) {
+          await saveJson("homepage", "faqs", l, { items: autoTranslate ? faqs[lang] : faqs[l] });
+        }
       }
+      toast("success", "Saved successfully");
+    } catch {
+      toast("error", "Failed to save");
     }
     setSaving(false);
   };

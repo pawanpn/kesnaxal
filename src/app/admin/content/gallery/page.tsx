@@ -3,10 +3,12 @@
 import { useState, useEffect, useRef } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useToast } from "@/context/ToastContext";
 import type { GalleryImage } from "@/types";
 
 export default function GalleryAdminPage() {
   const { getJson, saveJson, uploadMedia, hasDraft, discardSectionDrafts, loadAllContent } = useAdmin();
+  const { toast } = useToast();
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [filter, setFilter] = useState<string>("All");
