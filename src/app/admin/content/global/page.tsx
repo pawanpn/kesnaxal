@@ -8,27 +8,27 @@ import { siteConfig } from "@/constants/siteConfig";
 
 type Locale = "en" | "ne" | "ja";
 
-interface FieldDef {
-  key: string;
-  label: string;
-  type: "text" | "textarea" | "number" | "url" | "email";
-  placeholder?: string;
-  rows?: number;
-}
-
-interface SocialLink { platform: string; url: string; }
-interface HourEntry { days: string; time: string; }
-
 const LOCALES: { id: Locale; label: string }[] = [
   { id: "en", label: "EN" }, { id: "ne", label: "NE" }, { id: "ja", label: "JA" },
 ];
 
-const FIXED_FIELDS: Record<string, FieldDef[]> = {
+interface FieldDef {
+  key: string; label: string; type: "text" | "textarea" | "url" | "email"; placeholder?: string; rows?: number;
+}
+
+const TABS: { id: string; label: string }[] = [
+  { id: "schoolInfo", label: "School Info" },
+  { id: "contactInfo", label: "Contact" },
+  { id: "socialLinks", label: "Social" },
+  { id: "openingHours", label: "Hours" },
+];
+
+const FIELDS: Record<string, FieldDef[]> = {
   schoolInfo: [
     { key: "schoolName", label: "School Name", type: "text", placeholder: "Kathmandu English School" },
     { key: "motto", label: "Motto / Tagline", type: "text", placeholder: "Quality Education for a Better Future" },
     { key: "principalName", label: "Principal Name", type: "text", placeholder: "Dinesh Khatiwada" },
-    { key: "principalMessage", label: "Principal Message", type: "textarea", rows: 4 },
+    { key: "principalMessage", label: "Principal Message", type: "textarea", rows: 3 },
   ],
   contactInfo: [
     { key: "phone", label: "Primary Phone", type: "text", placeholder: "014514369" },
@@ -49,6 +49,9 @@ function getFallback(key: string): string {
   return map[key] || "";
 }
 
+interface SocialLink { platform: string; url: string; }
+interface HourEntry { days: string; time: string; }
+
 const DEF_SOCIAL: SocialLink[] = [
   { platform: "facebook", url: "https://facebook.com/kesnepal" },
   { platform: "instagram", url: "https://instagram.com/kesnepal" },
@@ -62,19 +65,8 @@ const DEF_HOURS: HourEntry[] = [
 
 type FormDataType = Record<string, Record<Locale, string>>;
 
-function initFieldData(fields: FieldDef[], getContent: (s: string, k: string, l: string) => string): FormDataType {
-  const data: FormDataType = {};
-  fields.forEach((f) => {
-    data[f.key] = { en: "", ne: "", ja: "" };
-    LOCALES.forEach(({ id: l }) => {
-      data[f.key][l] = getContent("global", f.key, l) || getFallback(f.key);
-    });
-  });
-  return data;
-}
-
 export default function GlobalSettingsPage() {
-  const { getContent, saveContent, getJson, saveJson, discardSectionDrafts, hasDraft, loadAllContent, uploadMedia } = useAdmin();
+  const { getContent, savePublishedContent, getJson, savePublishedJson, discardSectionDrafts, hasDraft, loadAllContent, uploadMedia } = useAdmin();
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState("schoolInfo");
@@ -82,21 +74,26 @@ export default function GlobalSettingsPage() {
   const [autoTranslate, setAutoTranslate] = useState(false);
   const [formData, setFormData] = useState<FormDataType>({});
   const [saveStatus, setSaveStatus] = useState<Record<string, "idle" | "saving" | "saved">>({});
-  const [discarding, setDiscarding] = useState(false);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [socialSaving, setSocialSaving] = useState(false);
   const [hours, setHours] = useState<HourEntry[]>([]);
   const [hoursSaving, setHoursSaving] = useState(false);
-  const [logoUrl, setLogoUrl] = useState<string>("");
+  const [logoUrl, setLogoUrl] = useState("");
   const [logoUploading, setLogoUploading] = useState(false);
-  const logoInputRef = useRef<HTMLInputElement | null>(null);
+  const [discarding, setDiscarding] = useState(false);
 
   useEffect(() => { loadAllContent(); }, []);
 
   useEffect(() => {
     setLogoUrl(getContent("global", "logo_url", "en") || "/data/logo.jpg");
     if (activeTab === "schoolInfo" || activeTab === "contactInfo") {
-      const data = initFieldData(FIXED_FIELDS[activeTab] || [], getContent);
+      const data: FormDataType = {};
+      (FIELDS[activeTab] || []).forEach((f) => {
+        data[f.key] = { en: "", ne: "", ja: "" };
+        LOCALES.forEach(({ id: l }) => {
+          data[f.key][l] = getContent("global", f.key, l) || getFallback(f.key);
+        });
+      });
       setFormData(data);
       setSaveStatus({});
     }
@@ -112,15 +109,12 @@ export default function GlobalSettingsPage() {
     }
   }, [activeTab, lang, getContent, getJson]);
 
-  const updateFieldValue = (fieldKey: string, locale: Locale, value: string) => {
+  const updateField = (key: string, locale: Locale, value: string) => {
     setFormData((prev) => {
       const next = { ...prev };
-      if (!next[fieldKey]) next[fieldKey] = { en: "", ne: "", ja: "" };
-      if (autoTranslate) {
-        LOCALES.forEach(({ id: l }) => { next[fieldKey] = { ...next[fieldKey], [l]: value }; });
-      } else {
-        next[fieldKey] = { ...next[fieldKey], [locale]: value };
-      }
+      if (!next[key]) next[key] = { en: "", ne: "", ja: "" };
+      if (autoTranslate) LOCALES.forEach(({ id: l }) => { next[key] = { ...next[key], [l]: value }; });
+      else next[key] = { ...next[key], [locale]: value };
       return next;
     });
   };
@@ -128,29 +122,24 @@ export default function GlobalSettingsPage() {
   const handleSaveField = async (key: string) => {
     setSaveStatus((p) => ({ ...p, [key]: "saving" }));
     try {
-      const fieldData = formData[key] || { en: "", ne: "", ja: "" };
+      const data = formData[key] || { en: "", ne: "", ja: "" };
       for (const { id: l } of LOCALES) {
-        await saveContent("global", key, l, fieldData[l] || "");
+        await savePublishedContent("global", key, l, data[l] || "");
       }
-      toast("success", "Saved successfully");
-      setSaveStatus((p) => ({ ...p, [key]: "saved" }));
-      setTimeout(() => setSaveStatus((p) => ({ ...p, [key]: "idle" })), 1500);
-    } catch {
-      toast("error", "Failed to save");
-      setSaveStatus((p) => ({ ...p, [key]: "idle" }));
-    }
+      toast("success", `${key} saved & published`);
+    } catch { toast("error", "Failed to save"); }
+    setSaveStatus((p) => ({ ...p, [key]: "saved" }));
+    setTimeout(() => setSaveStatus((p) => ({ ...p, [key]: "idle" })), 1500);
   };
 
   const handleSaveSocial = async () => {
     setSocialSaving(true);
     try {
       for (const { id: l } of LOCALES) {
-        await saveJson("global", "social_links", l, { links: socialLinks });
+        await savePublishedJson("global", "social_links", l, { links: socialLinks });
       }
-      toast("success", "Saved successfully");
-    } catch {
-      toast("error", "Failed to save social links");
-    }
+      toast("success", "Social links saved & published");
+    } catch { toast("error", "Failed to save social links"); }
     setSocialSaving(false);
   };
 
@@ -158,14 +147,12 @@ export default function GlobalSettingsPage() {
     setHoursSaving(true);
     try {
       if (autoTranslate) {
-        for (const { id: l } of LOCALES) await saveJson("global", "opening_hours", l, { hours });
+        for (const { id: l } of LOCALES) await savePublishedJson("global", "opening_hours", l, { hours });
       } else {
-        await saveJson("global", "opening_hours", lang, { hours });
+        await savePublishedJson("global", "opening_hours", lang, { hours });
       }
-      toast("success", "Saved successfully");
-    } catch {
-      toast("error", "Failed to save hours");
-    }
+      toast("success", "Hours saved & published");
+    } catch { toast("error", "Failed to save hours"); }
     setHoursSaving(false);
   };
 
@@ -177,24 +164,35 @@ export default function GlobalSettingsPage() {
       const url = await uploadMedia(file, "global", "logo");
       if (url) {
         setLogoUrl(url);
-        await saveContent("global", "logo_url", "en", url);
-        await saveContent("global", "logo_url", "ne", url);
-        await saveContent("global", "logo_url", "ja", url);
+        await savePublishedContent("global", "logo_url", "en", url);
+        await savePublishedContent("global", "logo_url", "ne", url);
+        await savePublishedContent("global", "logo_url", "ja", url);
+        toast("success", "Logo uploaded & published");
       }
-      toast("success", "Logo uploaded");
-    } catch {
-      toast("error", "Failed to upload logo");
-    }
+    } catch { toast("error", "Logo upload failed"); }
     setLogoUploading(false);
     if (e.target) e.target.value = "";
   };
 
-  const tabs = [
-    { id: "schoolInfo", label: "School Info" },
-    { id: "contactInfo", label: "Contact" },
-    { id: "socialLinks", label: "Social" },
-    { id: "openingHours", label: "Hours" },
-  ];
+  const handleResetLogo = async () => {
+    try {
+      setLogoUrl("/data/logo.jpg");
+      await savePublishedContent("global", "logo_url", "en", "/data/logo.jpg");
+      await savePublishedContent("global", "logo_url", "ne", "/data/logo.jpg");
+      await savePublishedContent("global", "logo_url", "ja", "/data/logo.jpg");
+      toast("success", "Logo reset to default");
+    } catch { toast("error", "Failed to reset logo"); }
+  };
+
+  const handleDiscard = async () => {
+    setDiscarding(true);
+    try {
+      await discardSectionDrafts("global");
+      toast("success", "Drafts discarded");
+    } catch { toast("error", "Failed to discard"); }
+    setDiscarding(false);
+    window.location.reload();
+  };
 
   return (
     <AdminGuard>
@@ -202,18 +200,18 @@ export default function GlobalSettingsPage() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-xl font-heading font-bold text-foreground">Global Settings</h1>
-            <p className="text-xs text-muted mt-1">Manage school info, contact, social links, and hours</p>
+            <p className="text-xs text-muted mt-1">Manage school info, logo, contact, social links, and hours</p>
           </div>
-          <button onClick={async () => { setDiscarding(true); try { await discardSectionDrafts("global"); toast("success", "Drafts discarded"); } catch { toast("error", "Failed to discard drafts"); } setDiscarding(false); window.location.reload(); }}
-            disabled={discarding}
+          <button onClick={handleDiscard} disabled={discarding}
             className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5 disabled:opacity-50">
             {discarding ? "Discarding..." : "Discard Drafts"}
           </button>
         </div>
 
+        {/* Tabs + Lang */}
         <div className="flex items-center justify-between mb-4 max-w-2xl">
           <div className="flex gap-1 bg-white rounded-xl border border-border p-1">
-            {tabs.map((t) => (
+            {TABS.map((t) => (
               <button key={t.id} onClick={() => setActiveTab(t.id)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${activeTab === t.id ? "bg-primary text-white shadow-sm" : "text-muted hover:text-foreground hover:bg-surface"}`}>
                 {t.label}
@@ -239,7 +237,7 @@ export default function GlobalSettingsPage() {
           </div>
         </div>
 
-        {/* Fixed Fields */}
+        {/* School Info & Contact fields */}
         {(activeTab === "schoolInfo" || activeTab === "contactInfo") && (
           <div className="bg-white rounded-xl border border-border p-6 max-w-2xl">
             {activeTab === "schoolInfo" && (
@@ -256,76 +254,44 @@ export default function GlobalSettingsPage() {
                     )}
                   </div>
                   <div>
-                    <label className="inline-flex cursor-pointer px-4 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark transition-colors">
+                    <label className="inline-flex cursor-pointer px-4 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark">
                       {logoUploading ? "Uploading..." : logoUrl && logoUrl !== "/data/logo.jpg" ? "Change Logo" : "Upload Logo"}
-                      <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+                      <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
                     </label>
                     {logoUrl && logoUrl !== "/data/logo.jpg" && (
-                      <button
-                        onClick={async () => {
-                          setLogoUrl("/data/logo.jpg");
-                          try {
-                            await saveContent("global", "logo_url", "en", "/data/logo.jpg");
-                            await saveContent("global", "logo_url", "ne", "/data/logo.jpg");
-                            await saveContent("global", "logo_url", "ja", "/data/logo.jpg");
-                            toast("success", "Logo reset");
-                          } catch {
-                            toast("error", "Failed to reset logo");
-                          }
-                        }}
-                        className="ml-2 px-3 py-2 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5"
-                      >
-                        Reset
-                      </button>
+                      <button onClick={handleResetLogo} className="ml-2 px-3 py-2 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5">Reset</button>
                     )}
-                    <p className="text-[10px] text-muted mt-1">Recommended: square image, max 2MB</p>
+                    <p className="text-[10px] text-muted mt-1">Square image, max 2MB. Saves instantly to all pages.</p>
                   </div>
                 </div>
               </div>
             )}
             {autoTranslate && (
               <div className="mb-4 p-2 rounded-lg bg-blue-50 border border-blue-200 text-[11px] text-blue-700">
-                Auto-translate ON — editing any language copies to all. Toggle OFF for per-language editing.
+                Auto ON — editing any language copies to all.
               </div>
             )}
             <div className="space-y-5">
-              {FIXED_FIELDS[activeTab]?.map((field) => (
+              {FIELDS[activeTab]?.map((field) => (
                 <div key={field.key}>
-                  <label className="block text-xs font-semibold text-foreground mb-1.5">
-                    {field.label}
-                    {hasDraft("global", field.key, "en") && (
-                      <span className="ml-2 inline-flex items-center gap-1 text-[10px] font-normal px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700">
-                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" />Draft
-                      </span>
-                    )}
-                  </label>
+                  <label className="block text-xs font-semibold text-foreground mb-1.5">{field.label}</label>
                   <div className="grid grid-cols-3 gap-2">
                     {LOCALES.map(({ id: l }) => (
                       <div key={l} className="relative">
                         <span className="absolute -top-2 left-2 text-[9px] font-bold text-muted bg-white px-1">{l.toUpperCase()}</span>
                         {field.type === "textarea" ? (
-                          <textarea
-                            value={formData[field.key]?.[l] || ""}
-                            onChange={(e) => updateFieldValue(field.key, l, e.target.value)}
-                            rows={field.rows || 2}
-                            className="w-full px-2 py-1.5 pt-3 rounded border border-border text-[11px] focus:border-primary outline-none resize-y"
-                            placeholder={field.placeholder}
-                          />
+                          <textarea value={formData[field.key]?.[l] || ""} onChange={(e) => updateField(field.key, l, e.target.value)}
+                            rows={field.rows || 2} className="w-full px-2 py-1.5 pt-3 rounded border border-border text-[11px] focus:border-primary outline-none resize-y" placeholder={field.placeholder} />
                         ) : (
-                          <input type={field.type}
-                            value={formData[field.key]?.[l] || ""}
-                            onChange={(e) => updateFieldValue(field.key, l, e.target.value)}
-                            className="w-full px-2 py-1.5 pt-3 rounded border border-border text-[11px] focus:border-primary outline-none"
-                            placeholder={field.placeholder}
-                          />
+                          <input type={field.type} value={formData[field.key]?.[l] || ""} onChange={(e) => updateField(field.key, l, e.target.value)}
+                            className="w-full px-2 py-1.5 pt-3 rounded border border-border text-[11px] focus:border-primary outline-none" placeholder={field.placeholder} />
                         )}
                       </div>
                     ))}
                   </div>
-                  <button onClick={() => handleSaveField(field.key)}
-                    disabled={saveStatus[field.key] === "saving"}
+                  <button onClick={() => handleSaveField(field.key)} disabled={saveStatus[field.key] === "saving"}
                     className="mt-2 px-4 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
-                    {saveStatus[field.key] === "saving" ? "..." : saveStatus[field.key] === "saved" ? "✓ Saved" : "Save"}
+                    {saveStatus[field.key] === "saving" ? "Saving..." : saveStatus[field.key] === "saved" ? "✓ Published" : "Save & Publish"}
                   </button>
                 </div>
               ))}
@@ -339,41 +305,28 @@ export default function GlobalSettingsPage() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-heading font-bold text-sm text-foreground">Social Media Links</h2>
               <button onClick={() => setSocialLinks((p) => [...p, { platform: "", url: "" }])}
-                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700">
-                + Add Platform
-              </button>
+                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700">+ Add</button>
             </div>
-            {socialLinks.length === 0 ? (
-              <p className="text-xs text-muted italic">No social media links configured.</p>
-            ) : (
-              <div className="space-y-3">
-                {socialLinks.map((link, i) => (
-                  <div key={i} className="flex gap-2 items-start p-3 rounded-lg bg-surface/50 border border-border/50">
-                    <div className="flex-1 space-y-2">
-                      <input type="text" value={link.platform}
-                        onChange={(e) => setSocialLinks((p) => p.map((l, j) => j === i ? { ...l, platform: e.target.value } : l))}
-                        placeholder="Platform name (e.g., facebook, instagram)"
-                        className="w-full px-3 py-1.5 rounded border border-border text-xs focus:border-primary outline-none" />
-                      <input type="url" value={link.url}
-                        onChange={(e) => setSocialLinks((p) => p.map((l, j) => j === i ? { ...l, url: e.target.value } : l))}
-                        placeholder="https://..."
-                        className="w-full px-3 py-1.5 rounded border border-border text-xs focus:border-primary outline-none" />
-                    </div>
-                    <button onClick={() => setSocialLinks((p) => p.filter((_, j) => j !== i))}
-                      className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-50" title="Remove">
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
+            <div className="space-y-3">
+              {socialLinks.map((link, i) => (
+                <div key={i} className="flex gap-2 items-start p-3 rounded-lg bg-surface/50 border border-border/50">
+                  <div className="flex-1 space-y-2">
+                    <input value={link.platform} onChange={(e) => setSocialLinks((p) => p.map((l, j) => j === i ? { ...l, platform: e.target.value } : l))}
+                      placeholder="Platform (e.g., facebook)" className="w-full px-3 py-1.5 rounded border border-border text-xs focus:border-primary outline-none" />
+                    <input type="url" value={link.url} onChange={(e) => setSocialLinks((p) => p.map((l, j) => j === i ? { ...l, url: e.target.value } : l))}
+                      placeholder="https://..." className="w-full px-3 py-1.5 rounded border border-border text-xs focus:border-primary outline-none" />
                   </div>
-                ))}
-              </div>
-            )}
+                  <button onClick={() => setSocialLinks((p) => p.filter((_, j) => j !== i))}
+                    className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-50">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  </button>
+                </div>
+              ))}
+            </div>
             <button onClick={handleSaveSocial} disabled={socialSaving}
               className="mt-4 px-4 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
-              {socialSaving ? "Saving..." : "Save Social Links"}
+              {socialSaving ? "Saving..." : "Save & Publish"}
             </button>
-            {hasDraft("global", "social_links", "en") && <span className="ml-2 text-xs text-yellow-600">Draft pending</span>}
           </div>
         )}
 
@@ -383,46 +336,28 @@ export default function GlobalSettingsPage() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-heading font-bold text-sm text-foreground">Operating Hours</h2>
               <button onClick={() => setHours((p) => [...p, { days: "", time: "" }])}
-                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700">
-                + Add Hours
-              </button>
+                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700">+ Add</button>
             </div>
-            {autoTranslate && (
-              <div className="mb-4 p-2 rounded-lg bg-blue-50 border border-blue-200 text-[11px] text-blue-700">
-                Auto-translate ON — saving applies to all languages. Enter day names in <strong>{lang.toUpperCase()}</strong>.
-              </div>
-            )}
-            {hours.length === 0 ? (
-              <p className="text-xs text-muted italic">No operating hours configured.</p>
-            ) : (
-              <div className="space-y-3">
-                {hours.map((h, i) => (
-                  <div key={i} className="flex gap-2 items-start p-3 rounded-lg bg-surface/50 border border-border/50">
-                    <div className="flex-1 space-y-2">
-                      <input type="text" value={h.days}
-                        onChange={(e) => setHours((p) => p.map((hh, j) => j === i ? { ...hh, days: e.target.value } : hh))}
-                        placeholder={`Days (${lang.toUpperCase()}, e.g., Sun-Fri)`}
-                        className="w-full px-3 py-1.5 rounded border border-border text-xs focus:border-primary outline-none" />
-                      <input type="text" value={h.time}
-                        onChange={(e) => setHours((p) => p.map((hh, j) => j === i ? { ...hh, time: e.target.value } : hh))}
-                        placeholder="Time (e.g., 9:00 AM - 4:00 PM)"
-                        className="w-full px-3 py-1.5 rounded border border-border text-xs focus:border-primary outline-none" />
-                    </div>
-                    <button onClick={() => setHours((p) => p.filter((_, j) => j !== i))}
-                      className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-50" title="Remove">
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
+            <div className="space-y-3">
+              {hours.map((h, i) => (
+                <div key={i} className="flex gap-2 items-start p-3 rounded-lg bg-surface/50 border border-border/50">
+                  <div className="flex-1 space-y-2">
+                    <input value={h.days} onChange={(e) => setHours((p) => p.map((hh, j) => j === i ? { ...hh, days: e.target.value } : hh))}
+                      placeholder="Days (e.g., Sun-Fri)" className="w-full px-3 py-1.5 rounded border border-border text-xs focus:border-primary outline-none" />
+                    <input value={h.time} onChange={(e) => setHours((p) => p.map((hh, j) => j === i ? { ...hh, time: e.target.value } : hh))}
+                      placeholder="Time (e.g., 9:00 AM - 4:00 PM)" className="w-full px-3 py-1.5 rounded border border-border text-xs focus:border-primary outline-none" />
                   </div>
-                ))}
-              </div>
-            )}
+                  <button onClick={() => setHours((p) => p.filter((_, j) => j !== i))}
+                    className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-50">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  </button>
+                </div>
+              ))}
+            </div>
             <button onClick={handleSaveHours} disabled={hoursSaving}
               className="mt-4 px-4 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
-              {hoursSaving ? "Saving..." : `Save Hours (${autoTranslate ? "All Languages" : lang.toUpperCase()})`}
+              {hoursSaving ? "Saving..." : "Save & Publish"}
             </button>
-            {hasDraft("global", "opening_hours", lang) && <span className="ml-2 text-xs text-yellow-600">Draft pending</span>}
           </div>
         )}
       </div>

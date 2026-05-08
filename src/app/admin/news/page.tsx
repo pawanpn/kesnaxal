@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/context/ToastContext";
+import { useAutoTranslate } from "@/lib/autoTranslate";
 import type { NewsArticle, LocaleContent } from "@/types";
 
 type Locale = "en" | "ne" | "ja";

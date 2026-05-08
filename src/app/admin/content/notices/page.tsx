@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/context/ToastContext";
+import { useAutoTranslate } from "@/lib/autoTranslate";
 
 type Locale = "en" | "ne" | "ja";
 
@@ -38,6 +39,7 @@ function emptyNotice(): Notice {
 export default function NoticesPage() {
   const { getJson, saveJson, hasDraft, discardSectionDrafts, loadAllContent } = useAdmin();
   const { toast } = useToast();
+  const { translateAll } = useAutoTranslate();
   const [lang, setLang] = useState<Locale>("en");
   const [autoTranslate, setAutoTranslate] = useState(false);
   const [notices, setNotices] = useState<Notice[]>([]);
@@ -83,9 +85,13 @@ export default function NoticesPage() {
 
   const handleLocaleChange = (field: "title" | "content", locale: Locale, value: string) => {
     setForm((prev) => {
-      const next = { ...prev[field], [locale]: value };
-      if (autoTranslate) LOCALES.forEach((l) => { next[l.id] = value; });
-      return { ...prev, [field]: next };
+      const nextFC = { ...prev[field], [locale]: value };
+      if (autoTranslate && locale === lang && value.trim()) {
+        translateAll(value, lang, (targetLocale, translated) => {
+          setForm((p) => ({ ...p, [field]: { ...p[field], [targetLocale]: translated } }));
+        });
+      }
+      return { ...prev, [field]: nextFC };
     });
   };
 
