@@ -41,7 +41,7 @@ export default function AdminLoginPage() {
     }
   };
 
-  if (!authReady) {
+  if (!authReady || isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-dark via-primary to-primary-light">
         <div className="bg-white/90 rounded-2xl shadow-2xl p-8 text-center">

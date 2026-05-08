@@ -84,18 +84,37 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
 
   /* ── Check auth on mount ── */
   useEffect(() => {
+    let mounted = true;
+
+    const readyTimer = setTimeout(() => {
+      if (mounted) setAuthReady(true);
+    }, 10000);
+
     supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
       setIsAdmin(!!data.session);
       setAuthReady(true);
     });
+
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
       setIsAdmin(!!session);
+      setAuthReady(true);
       if (!session) {
         setIsEditing(false);
         setIsPreviewMode(false);
+        setPublishedContent(new Map());
+        setDraftContent(new Map());
+        setDraftCount(0);
+        setRecentEdits([]);
       }
     });
-    return () => listener?.subscription.unsubscribe();
+
+    return () => {
+      mounted = false;
+      clearTimeout(readyTimer);
+      listener?.subscription.unsubscribe();
+    };
   }, []);
 
   /* ── Read preview cookie on mount ── */
@@ -375,7 +394,6 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { error: error.message };
-    setIsAdmin(true);
     return {};
   }, []);
 
@@ -384,7 +402,11 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     if (typeof document !== "undefined") {
       document.cookie = "kes_preview=; path=/; max-age=0";
     }
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      /* best-effort: clear state regardless */
+    }
     setIsAdmin(false);
     setIsEditing(false);
     setRecentEdits([]);
