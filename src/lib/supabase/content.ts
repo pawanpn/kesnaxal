@@ -27,15 +27,19 @@ async function getAllContent(): Promise<ContentMap> {
   if (_contentCache && Date.now() - _cacheTime < CACHE_TTL) return _contentCache;
 
   const map = new Map<string, string>();
-  const { data } = await supabase
-    .from("site_content")
-    .select("section, content_key, locale, content_text")
-    .eq("status", "published");
+  try {
+    const { data } = await supabase
+      .from("site_content")
+      .select("section, content_key, locale, content_text")
+      .eq("status", "published");
 
-  if (data) {
-    for (const row of data) {
-      map.set(`${row.section}::${row.content_key}::${row.locale}`, row.content_text || "");
+    if (data) {
+      for (const row of data) {
+        map.set(`${row.section}::${row.content_key}::${row.locale}`, row.content_text || "");
+      }
     }
+  } catch {
+    // Return empty map on connection failure; siteConfig fallback handles the rest
   }
 
   _contentCache = map;

@@ -151,26 +151,30 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
   }, [isAdmin]);
 
   const loadAllContent = useCallback(async () => {
-    const { data } = await supabase.from("site_content").select("*");
-    if (!data) return;
+    try {
+      const { data } = await supabase.from("site_content").select("*");
+      if (!data) return;
 
-    const pub = new Map<string, SiteContentRow>();
-    const draft = new Map<string, SiteContentRow>();
-    let dCount = 0;
+      const pub = new Map<string, SiteContentRow>();
+      const draft = new Map<string, SiteContentRow>();
+      let dCount = 0;
 
-    (data as SiteContentRow[]).forEach((row) => {
-      const key = rowKey(row.section, row.content_key, row.locale);
-      if (row.status === "published") {
-        pub.set(key, row);
-      } else {
-        draft.set(key, row);
-        dCount++;
-      }
-    });
+      (data as SiteContentRow[]).forEach((row) => {
+        const key = rowKey(row.section, row.content_key, row.locale);
+        if (row.status === "published") {
+          pub.set(key, row);
+        } else {
+          draft.set(key, row);
+          dCount++;
+        }
+      });
 
-    setPublishedContent(pub);
-    setDraftContent(draft);
-    setDraftCount(dCount);
+      setPublishedContent(pub);
+      setDraftContent(draft);
+      setDraftCount(dCount);
+    } catch {
+      // Silently fail for non-admin users or connection issues
+    }
   }, []);
 
   /* ── Get content (draft overrides published) ── */
