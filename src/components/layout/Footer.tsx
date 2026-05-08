@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { siteConfig } from "@/constants/siteConfig";
 import { useLocale } from "@/hooks/useLocale";
 import { resolveContent } from "@/lib/translate";
@@ -31,6 +32,10 @@ const socialIcons: Record<string, React.ReactNode> = {
 };
 
 export default function Footer() {
+  const pathname = usePathname();
+
+  if (pathname?.startsWith("/admin")) return null;
+
   const { locale, t } = useLocale();
   const { school, contact, social, footer } = siteConfig;
 

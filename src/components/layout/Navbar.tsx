@@ -11,10 +11,13 @@ import type { NavLink } from "@/types";
 const navLinks: NavLink[] = siteConfig.nav.links;
 
 export default function Navbar() {
+  const pathname = usePathname();
+
+  if (pathname?.startsWith("/admin")) return null;
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const [academicsOpen, setAcademicsOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
-  const pathname = usePathname();
   const { locale, setLocale, t, locales } = useLocale();
   const langRef = useRef<HTMLDivElement>(null);
 

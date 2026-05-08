@@ -46,7 +46,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return pathname?.startsWith(href);
   };
 
-  if (!isAdmin) return null;
+  if (!isAdmin) {
+    if (pathname === "/admin/login") {
+      return <>{children}</>;
+    }
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-surface flex">
