@@ -47,10 +47,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   if (!isAdmin) {
-    if (pathname === "/admin/login") {
-      return <>{children}</>;
-    }
-    return null;
+    return <div className="min-h-screen">{children}</div>;
   }
 
   return (
