@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { siteConfig } from "@/constants/siteConfig";
 import { useLocale } from "@/hooks/useLocale";
+import SiteLogo from "@/components/SiteLogo";
 import type { NavLink } from "@/types";
 
 const navLinks: NavLink[] = siteConfig.nav.links;
@@ -36,11 +36,8 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16 lg:h-20">
           <Link href="/" className="flex items-center gap-2 shrink-0 min-w-0">
             <div className="relative shrink-0">
-              <Image
-                src="/data/logo.jpg"
-                alt={`${siteConfig.school.name} Logo`}
-                width={48}
-                height={48}
+              <SiteLogo
+                size={48}
                 className="h-9 lg:h-12 w-auto object-contain"
                 priority
               />

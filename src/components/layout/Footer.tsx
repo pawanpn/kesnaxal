@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { siteConfig } from "@/constants/siteConfig";
 import { useLocale } from "@/hooks/useLocale";
 import { resolveContent } from "@/lib/translate";
 import EditableElement from "@/components/admin/EditableElement";
+import SiteLogo from "@/components/SiteLogo";
 
 const socialIcons: Record<string, React.ReactNode> = {
   facebook: (
@@ -42,13 +42,7 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-3 mb-4">
               <div className="relative shrink-0">
-                <Image
-                  src="/data/logo.jpg"
-                  alt={`${school.name} Logo`}
-                  width={48}
-                  height={48}
-                  className="h-10 w-auto object-contain"
-                />
+                <SiteLogo size={48} className="h-10 w-auto object-contain" />
               </div>
               <div>
                 <h3 className="font-heading font-bold text-white text-sm">

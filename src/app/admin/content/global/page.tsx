@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
 import { siteConfig } from "@/constants/siteConfig";
@@ -73,7 +73,7 @@ function initFieldData(fields: FieldDef[], getContent: (s: string, k: string, l:
 }
 
 export default function GlobalSettingsPage() {
-  const { getContent, saveContent, getJson, saveJson, discardSectionDrafts, hasDraft, loadAllContent } = useAdmin();
+  const { getContent, saveContent, getJson, saveJson, discardSectionDrafts, hasDraft, loadAllContent, uploadMedia } = useAdmin();
 
   const [activeTab, setActiveTab] = useState("schoolInfo");
   const [lang, setLang] = useState<Locale>("en");
@@ -85,10 +85,14 @@ export default function GlobalSettingsPage() {
   const [socialSaving, setSocialSaving] = useState(false);
   const [hours, setHours] = useState<HourEntry[]>([]);
   const [hoursSaving, setHoursSaving] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string>("");
+  const [logoUploading, setLogoUploading] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => { loadAllContent(); }, []);
 
   useEffect(() => {
+    setLogoUrl(getContent("global", "logo_url", "en") || "/data/logo.jpg");
     if (activeTab === "schoolInfo" || activeTab === "contactInfo") {
       const data = initFieldData(FIXED_FIELDS[activeTab] || [], getContent);
       setFormData(data);
@@ -147,6 +151,21 @@ export default function GlobalSettingsPage() {
     setHoursSaving(false);
   };
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoUploading(true);
+    const url = await uploadMedia(file, "global", "logo");
+    if (url) {
+      setLogoUrl(url);
+      await saveContent("global", "logo_url", "en", url);
+      await saveContent("global", "logo_url", "ne", url);
+      await saveContent("global", "logo_url", "ja", url);
+    }
+    setLogoUploading(false);
+    if (e.target) e.target.value = "";
+  };
+
   const tabs = [
     { id: "schoolInfo", label: "School Info" },
     { id: "contactInfo", label: "Contact" },
@@ -200,6 +219,42 @@ export default function GlobalSettingsPage() {
         {/* Fixed Fields */}
         {(activeTab === "schoolInfo" || activeTab === "contactInfo") && (
           <div className="bg-white rounded-xl border border-border p-6 max-w-2xl">
+            {activeTab === "schoolInfo" && (
+              <div className="mb-6 pb-6 border-b border-border">
+                <label className="block text-xs font-semibold text-foreground mb-2">School Logo</label>
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-xl border border-border bg-surface flex items-center justify-center overflow-hidden">
+                    {logoUrl ? (
+                      <img src={logoUrl} alt="Logo preview" className="w-full h-full object-contain" />
+                    ) : (
+                      <svg className="w-8 h-8 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+                      </svg>
+                    )}
+                  </div>
+                  <div>
+                    <label className="inline-flex cursor-pointer px-4 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark transition-colors">
+                      {logoUploading ? "Uploading..." : logoUrl && logoUrl !== "/data/logo.jpg" ? "Change Logo" : "Upload Logo"}
+                      <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+                    </label>
+                    {logoUrl && logoUrl !== "/data/logo.jpg" && (
+                      <button
+                        onClick={async () => {
+                          setLogoUrl("/data/logo.jpg");
+                          await saveContent("global", "logo_url", "en", "/data/logo.jpg");
+                          await saveContent("global", "logo_url", "ne", "/data/logo.jpg");
+                          await saveContent("global", "logo_url", "ja", "/data/logo.jpg");
+                        }}
+                        className="ml-2 px-3 py-2 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5"
+                      >
+                        Reset
+                      </button>
+                    )}
+                    <p className="text-[10px] text-muted mt-1">Recommended: square image, max 2MB</p>
+                  </div>
+                </div>
+              </div>
+            )}
             {autoTranslate && (
               <div className="mb-4 p-2 rounded-lg bg-blue-50 border border-blue-200 text-[11px] text-blue-700">
                 Auto-translate ON — editing any language copies to all. Toggle OFF for per-language editing.
