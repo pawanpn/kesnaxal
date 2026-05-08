@@ -38,10 +38,6 @@ export const metadata: Metadata = {
     "Nepal",
     "school",
   ],
-
-  verification: {
-    google: "googlef387d18f57e91ec0",
-  },
 };
 
 export default function RootLayout({
@@ -54,6 +50,13 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${merriweather.variable} h-full`}
     >
+      <head>
+        <meta
+          name="google-site-verification"
+          content="googlef387d18f57e91ec0"
+        />
+      </head>
+
       <body className="min-h-full flex flex-col">
         <LocaleProvider>
           <AdminProvider>
