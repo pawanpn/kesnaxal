@@ -1,5 +1,6 @@
 "use client";
 
+
 import PageHero from "@/components/ui/PageHero";
 import SectionHeading from "@/components/ui/SectionHeading";
 import ValueCards from "@/components/sections/ValueCards";
@@ -33,6 +34,7 @@ const values: ValueCard[] = [
 ];
 
 export default function AboutPage() {
+  const { school } = useDynamicContent();
   return (
     <div className="min-h-screen">
       <PageHero pageKey="about" />
