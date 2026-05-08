@@ -60,7 +60,7 @@ export const siteConfig: SiteConfig = {
   hero: {
     slides: [
       {
-        image: "/images/hero/heroslide1.jpg",
+        image: "https://picsum.photos/seed/keshero1/1200/600",
         title: {
           en: "Welcome to Kathmandu English School",
           ne: "काठमाडौं इंग्लिश स्कूलमा स्वागत छ",
@@ -73,7 +73,7 @@ export const siteConfig: SiteConfig = {
         },
       },
       {
-        image: "/images/hero/heroslide2.jpg",
+        image: "https://picsum.photos/seed/keshero2/1200/600",
         title: {
           en: "Academic Excellence",
           ne: "शैक्षिक उत्कृष्टता",
@@ -86,7 +86,7 @@ export const siteConfig: SiteConfig = {
         },
       },
       {
-        image: "/images/hero/heroslide3.jpg",
+        image: "https://picsum.photos/seed/keshero3/1200/600",
         title: {
           en: "Holistic Development",
           ne: "समग्र विकास",
@@ -116,7 +116,7 @@ export const siteConfig: SiteConfig = {
         ne: "विद्यालय फुटबल मैदान",
         ja: "学校サッカーグラウンド",
       },
-      image: "/images/events/event1.jpg",
+      image: "https://picsum.photos/seed/kesevent1/800/600",
       description: {
         en: "Join us for three days of thrilling athletic competition. Students from Grade 3 to 12 will compete in track & field, team sports, and fun relays.",
         ne: "तीन दिनसम्म चल्ने रोमाञ्चक खेलकुद प्रतियोगितामा सहभागी हुनुहोस्। कक्षा ३ देखि १२ सम्मका विद्यार्थीहरूले ट्र्याक एण्ड फिल्ड, टोली खेल र मनोरञ्जनात्मक रिलेमा प्रतिस्पर्धा गर्नेछन्।",
@@ -137,7 +137,7 @@ export const siteConfig: SiteConfig = {
         ne: "विद्यालय सभागार",
         ja: "学校講堂",
       },
-      image: "/images/events/event2.jpg",
+      image: "https://picsum.photos/seed/kesevent2/800/600",
       description: {
         en: "Students showcase innovative science projects, robotics demos, and tech prototypes. Parents and community members are welcome to attend.",
         ne: "विद्यार्थीहरूले नवीन विज्ञान परियोजनाहरू, रोबोटिक्स प्रदर्शन र प्रविधि प्रोटोटाइपहरू प्रस्तुत गर्नेछन्। अभिभावक र समुदायका सदस्यहरूलाई उपस्थितिका लागि स्वागत छ।",
@@ -158,7 +158,7 @@ export const siteConfig: SiteConfig = {
         ne: "मुख्य सभा हल",
         ja: "メイン集会ホール",
       },
-      image: "/images/events/event3.jpg",
+      image: "https://picsum.photos/seed/kesevent3/800/600",
       description: {
         en: "New parents are invited to meet the faculty, tour the campus, and learn about our curriculum, policies, and co-curricular programs.",
         ne: "नयाँ अभिभावकहरूलाई शिक्षकहरूसँग भेट्न, विद्यालय परिसरको भ्रमण गर्न र हाम्रो पाठ्यक्रम, नीतिहरू र सह-पाठ्यक्रम कार्यक्रमहरूबारे जान्न आमन्त्रित गरिन्छ।",
@@ -179,7 +179,7 @@ export const siteConfig: SiteConfig = {
         ne: "विद्यालय परिसर",
         ja: "学校敷地内",
       },
-      image: "/images/events/event4.jpg",
+      image: "https://picsum.photos/seed/kesevent4/800/600",
       description: {
         en: "Celebrate Nepal's rich diversity with cultural dances, music performances, food stalls, and art exhibitions by our talented students.",
         ne: "हाम्रा प्रतिभाशाली विद्यार्थीहरूद्वारा सांस्कृतिक नृत्य, सङ्गीत प्रस्तुति, खानाका स्टल र कला प्रदर्शनीहरू सहित नेपालको समृद्ध विविधताको उत्सव मनाउनुहोस्।",
@@ -209,7 +209,7 @@ export const siteConfig: SiteConfig = {
       },
       author: "KES Media Team",
       date: "2026-05-05",
-      image: "/images/news/news1.jpg",
+      image: "https://picsum.photos/seed/kesnews1/800/600",
       category: "Achievement",
       tags: ["science", "olympiad", "achievement", "national"],
     },
@@ -233,7 +233,7 @@ export const siteConfig: SiteConfig = {
       },
       author: "KES Media Team",
       date: "2026-04-20",
-      image: "/images/news/news2.jpg",
+      image: "https://picsum.photos/seed/kesnews2/800/600",
       category: "Infrastructure",
       tags: ["computer-lab", "technology", "inauguration", "infrastructure"],
     },
@@ -257,7 +257,7 @@ export const siteConfig: SiteConfig = {
       },
       author: "KES Admin",
       date: "2026-04-10",
-      image: "/images/news/news3.jpg",
+      image: "https://picsum.photos/seed/kesnews3/800/600",
       category: "Announcement",
       tags: ["scholarship", "community", "announcement", "accessibility"],
     },
@@ -281,7 +281,7 @@ export const siteConfig: SiteConfig = {
       },
       author: "KES Media Team",
       date: "2026-03-28",
-      image: "/images/news/news4.jpg",
+      image: "https://picsum.photos/seed/kesnews4/800/600",
       category: "Achievement",
       tags: ["debate", "competition", "achievement", "trophy"],
     },
@@ -305,7 +305,7 @@ export const siteConfig: SiteConfig = {
       },
       author: "KES Media Team",
       date: "2026-03-15",
-      image: "/images/news/news5.jpg",
+      image: "https://picsum.photos/seed/kesnews5/800/600",
       category: "Event",
       tags: ["exchange", "international", "culture", "japan"],
     },
@@ -329,7 +329,7 @@ export const siteConfig: SiteConfig = {
       },
       author: "KES Admin",
       date: "2026-03-01",
-      image: "/images/news/news6.jpg",
+      image: "https://picsum.photos/seed/kesnews6/800/600",
       category: "Announcement",
       tags: ["mental-health", "wellness", "counseling", "student-support"],
     },
@@ -340,7 +340,7 @@ export const siteConfig: SiteConfig = {
       id: 1,
       name: "Sunita Gurung",
       role: "Parent of Grade 8 Student",
-      image: "/images/testimonials/person1.jpg",
+      image: "https://picsum.photos/seed/kestest1/300/300",
       text: {
         en: "KES has transformed my daughter into a confident and curious learner. The teachers genuinely care about each child's development.",
         ne: "केईएसले मेरी छोरीलाई आत्मविश्वासी र जिज्ञासु विद्यार्थीमा रूपान्तरण गरेको छ। शिक्षकहरूले प्रत्येक बच्चाको विकासमा साँच्चै चासो राख्छन्।",
@@ -351,7 +351,7 @@ export const siteConfig: SiteConfig = {
       id: 2,
       name: "Rabin Shrestha",
       role: "Parent of Grade 10 Student",
-      image: "/images/testimonials/person2.jpg",
+      image: "https://picsum.photos/seed/kestest2/300/300",
       text: {
         en: "The academic rigor and extracurricular balance at KES is outstanding. My son looks forward to school every single day.",
         ne: "केईएसमा शैक्षिक कठोरता र अतिरिक्त क्रियाकलापको सन्तुलन उत्कृष्ट छ। मेरो छोरो हरेक दिन विद्यालय जान उत्सुक हुन्छ।",
@@ -362,7 +362,7 @@ export const siteConfig: SiteConfig = {
       id: 3,
       name: "Aayusha Karki",
       role: "Alumna, Class of 2020",
-      image: "/images/testimonials/person3.jpg",
+      image: "https://picsum.photos/seed/kestest3/300/300",
       text: {
         en: "The foundation I received at KES prepared me exceptionally well for higher education. I am forever grateful.",
         ne: "केईएसमा मैले पाएको आधारले मलाई उच्च शिक्षाका लागि असाधारण रूपमा तयार गर्यो। म सधैं आभारी छु।",
@@ -373,7 +373,7 @@ export const siteConfig: SiteConfig = {
       id: 4,
       name: "Prakash Adhikari",
       role: "Parent of Grade 5 Student",
-      image: "/images/testimonials/person4.jpg",
+      image: "https://picsum.photos/seed/kestest4/300/300",
       text: {
         en: "What sets KES apart is its focus on character building alongside academics. Truly a nurturing environment.",
         ne: "केईएसलाई अरूभन्दा फरक बनाउने कुरा भनेको शिक्षासँगै चरित्र निर्माणमा यसको ध्यान हो। साँच्चै पोषणकारी वातावरण।",
@@ -406,7 +406,7 @@ export const siteConfig: SiteConfig = {
       title: "Primary Level",
       grades: "Nursery - Grade 5",
       desc: "Our primary program focuses on building strong foundations in literacy, numeracy, and social skills through play-based and experiential learning methods. We follow a child-centric approach where every child learns at their own pace.",
-      image: "/images/primary.jpg",
+      image: "https://picsum.photos/seed/kesprimary/800/600",
       subjects: ["English", "Nepali", "Mathematics", "Science", "Social Studies", "Computer", "Arts & Crafts", "Physical Education"],
     },
     {
@@ -414,7 +414,7 @@ export const siteConfig: SiteConfig = {
       title: "Secondary Level",
       grades: "Grade 6 - 10",
       desc: "The secondary curriculum deepens conceptual understanding and analytical skills. Students are prepared for the Secondary Education Examination (SEE) with rigorous academics and co-curricular enrichment.",
-      image: "/images/secondary.jpg",
+      image: "https://picsum.photos/seed/kessecond/800/600",
       subjects: ["English", "Nepali", "Mathematics", "Science", "Social Studies", "Computer Science", "Health & Physical Education", "Optional Subjects"],
     },
     {
@@ -422,7 +422,7 @@ export const siteConfig: SiteConfig = {
       title: "Higher Secondary",
       grades: "Grade 11 - 12",
       desc: "Our 10+2 program offers Science and Management streams under NEB affiliation. Students receive advanced preparation for university entrance exams and career counseling.",
-      image: "/images/higher.jpg",
+      image: "https://picsum.photos/seed/keshigher/800/600",
       streams: [
         { name: "Science", subjects: ["Physics", "Chemistry", "Biology", "Mathematics", "English", "Computer Science"] },
         { name: "Management", subjects: ["Accountancy", "Economics", "Business Studies", "Mathematics", "English", "Computer Science"] },

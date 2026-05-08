@@ -15,19 +15,19 @@ const LOCALES: { id: Locale; label: string }[] = [
 ];
 
 const DEF_HERO_EN: HeroSlide[] = [
-  { image: "/images/hero/heroslide1.jpg", title: "Welcome to Kathmandu English School", subtitle: "Shaping Future Leaders Since 1995" },
-  { image: "/images/hero/heroslide2.jpg", title: "Academic Excellence", subtitle: "Nurturing Inquisitive Minds with Modern Pedagogy" },
-  { image: "/images/hero/heroslide3.jpg", title: "Holistic Development", subtitle: "Sports, Arts, and Cultural Programs for All-Round Growth" },
+  { image: "https://picsum.photos/seed/keshero1/1200/600", title: "Welcome to Kathmandu English School", subtitle: "Shaping Future Leaders Since 1995" },
+  { image: "https://picsum.photos/seed/keshero2/1200/600", title: "Academic Excellence", subtitle: "Nurturing Inquisitive Minds with Modern Pedagogy" },
+  { image: "https://picsum.photos/seed/keshero3/1200/600", title: "Holistic Development", subtitle: "Sports, Arts, and Cultural Programs for All-Round Growth" },
 ];
 const DEF_HERO_NE: HeroSlide[] = [
-  { image: "/images/hero/heroslide1.jpg", title: "काठमाडौं इंग्लिश स्कूलमा स्वागत छ", subtitle: "सन् १९९५ देखि भविष्यका नेताहरूको निर्माण" },
-  { image: "/images/hero/heroslide2.jpg", title: "शैक्षिक उत्कृष्टता", subtitle: "आधुनिक शिक्षण विधिद्वारा जिज्ञासु मस्तिष्कहरूको पोषण" },
-  { image: "/images/hero/heroslide3.jpg", title: "समग्र विकास", subtitle: "सर्वाङ्गीण विकासका लागि खेलकुद, कला र सांस्कृतिक कार्यक्रमहरू" },
+  { image: "https://picsum.photos/seed/keshero1/1200/600", title: "काठमाडौं इंग्लिश स्कूलमा स्वागत छ", subtitle: "सन् १९९५ देखि भविष्यका नेताहरूको निर्माण" },
+  { image: "https://picsum.photos/seed/keshero2/1200/600", title: "शैक्षिक उत्कृष्टता", subtitle: "आधुनिक शिक्षण विधिद्वारा जिज्ञासु मस्तिष्कहरूको पोषण" },
+  { image: "https://picsum.photos/seed/keshero3/1200/600", title: "समग्र विकास", subtitle: "सर्वाङ्गीण विकासका लागि खेलकुद, कला र सांस्कृतिक कार्यक्रमहरू" },
 ];
 const DEF_HERO_JA: HeroSlide[] = [
-  { image: "/images/hero/heroslide1.jpg", title: "カトマンズイングリッシュスクールへようこそ", subtitle: "1995年以来、未来のリーダーを育成" },
-  { image: "/images/hero/heroslide2.jpg", title: "学業の卓越性", subtitle: "現代的な教育法で探究心を育む" },
-  { image: "/images/hero/heroslide3.jpg", title: "全人的開発", subtitle: "全面的な成長のためのスポーツ、芸術、文化プログラム" },
+  { image: "https://picsum.photos/seed/keshero1/1200/600", title: "カトマンズイングリッシュスクールへようこそ", subtitle: "1995年以来、未来のリーダーを育成" },
+  { image: "https://picsum.photos/seed/keshero2/1200/600", title: "学業の卓越性", subtitle: "現代的な教育法で探究心を育む" },
+  { image: "https://picsum.photos/seed/keshero3/1200/600", title: "全人的開発", subtitle: "全面的な成長のためのスポーツ、芸術、文化プログラム" },
 ];
 
 const DEF_TEST_EN: Testimonial[] = [
