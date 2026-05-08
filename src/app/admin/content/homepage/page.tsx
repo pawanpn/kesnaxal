@@ -156,7 +156,7 @@ export default function HomepageManagerPage() {
           </button>
         </div>
 
-        {/* Tabs + Lang + Auto */}
+        {/* Tabs + Lang + Sync */}
         <div className="flex items-center justify-between mb-4 max-w-2xl">
           <div className="flex gap-1 bg-white rounded-xl border border-border p-1">
             {[{ id: "hero", label: "Hero Slides" }, { id: "testimonials", label: "Testimonials" }, { id: "faq", label: "FAQs" }].map((s) => (
@@ -261,7 +261,7 @@ export default function HomepageManagerPage() {
             {saving ? "Saving..." : `Save All (${syncing ? "Copies to All Languages" : lang.toUpperCase()})`}
           </button>
           {syncing && (
-            <span className="ml-2 text-[10px] text-blue-600">Auto ON — saves to all locales</span>
+            <span className="ml-2 text-[10px] text-blue-600">Sync ON — saves to all locales</span>
           )}
           {hasDraft("homepage", dataKey, "en") && <span className="ml-2 text-xs text-yellow-600">Draft pending</span>}
         </div>

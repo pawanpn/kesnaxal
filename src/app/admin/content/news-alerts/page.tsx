@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/context/ToastContext";
+import { translateToAll } from "@/lib/autoTranslate";
 
 type Locale = "en" | "ne" | "ja";
 
@@ -16,6 +17,7 @@ export default function NewsAlertsPage() {
   const { toast } = useToast();
   const [lang, setLang] = useState<Locale>("en");
   const [syncing, setSyncing] = useState(false);
+  const [translating, setTranslating] = useState(false);
 
   const [breakingNews, setBreakingNews] = useState<Record<Locale, string>>({ en: "", ne: "", ja: "" });
   const [breakingActive, setBreakingActive] = useState(false);
@@ -118,6 +120,40 @@ export default function NewsAlertsPage() {
     });
   };
 
+  const handleTranslate = async (field: "breaking" | "emergency_title" | "emergency_msg") => {
+    const textMap: Record<string, Record<Locale, string>> = {
+      breaking: breakingNews,
+      emergency_title: emergencyTitle,
+      emergency_msg: emergencyMsg,
+    };
+    const text = textMap[field]?.[lang];
+    if (!text?.trim() || translating) return;
+    setTranslating(true);
+    try {
+      const results = await translateToAll(text, lang);
+      if (field === "breaking") {
+        setBreakingNews((p) => {
+          const next = { ...p };
+          for (const [loc, val] of Object.entries(results)) if (val) next[loc as Locale] = val;
+          return next;
+        });
+      } else if (field === "emergency_title") {
+        setEmergencyTitle((p) => {
+          const next = { ...p };
+          for (const [loc, val] of Object.entries(results)) if (val) next[loc as Locale] = val;
+          return next;
+        });
+      } else {
+        setEmergencyMsg((p) => {
+          const next = { ...p };
+          for (const [loc, val] of Object.entries(results)) if (val) next[loc as Locale] = val;
+          return next;
+        });
+      }
+    } catch {}
+    setTranslating(false);
+  };
+
   return (
     <AdminGuard>
       <div className="p-6">
@@ -174,6 +210,16 @@ export default function NewsAlertsPage() {
                 </div>
               ))}
             </div>
+            <div className="flex items-center gap-2 mb-2">
+              <button type="button" onClick={() => handleTranslate("breaking")} disabled={translating || !breakingNews[lang]?.trim()}
+                className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border border-border hover:bg-primary/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                {translating ? (
+                  <><div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" /> ...</>
+                ) : (
+                  <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg> Translate</>
+                )}
+              </button>
+            </div>
             <button onClick={handleSaveBreaking}
               className="px-4 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark">
               {saving === "breaking_news_text" ? "Saving..." : "Save News"}
@@ -205,6 +251,16 @@ export default function NewsAlertsPage() {
                   </div>
                 ))}
               </div>
+              <div className="flex items-center gap-2 mb-2">
+                <button type="button" onClick={() => handleTranslate("emergency_title")} disabled={translating || !emergencyTitle[lang]?.trim()}
+                  className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border border-border hover:bg-primary/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                  {translating ? (
+                    <><div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" /> ...</>
+                  ) : (
+                    <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg> Translate</>
+                  )}
+                </button>
+              </div>
               <div className="grid grid-cols-3 gap-2">
                 {LOCALES.map(({ id: l }) => (
                   <div key={l} className="relative">
@@ -215,6 +271,16 @@ export default function NewsAlertsPage() {
                       placeholder={`Message (${l.toUpperCase()})`} />
                   </div>
                 ))}
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <button type="button" onClick={() => handleTranslate("emergency_msg")} disabled={translating || !emergencyMsg[lang]?.trim()}
+                  className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border border-border hover:bg-primary/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                  {translating ? (
+                    <><div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" /> ...</>
+                  ) : (
+                    <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg> Translate</>
+                  )}
+                </button>
               </div>
             </div>
             <button onClick={handleSaveEmergency}

@@ -5,6 +5,7 @@ import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/context/ToastContext";
 import { siteConfig } from "@/constants/siteConfig";
+import { translateToAll } from "@/lib/autoTranslate";
 
 type Locale = "en" | "ne" | "ja";
 
@@ -75,6 +76,7 @@ export default function GlobalSettingsPage() {
   const [activeTab, setActiveTab] = useState("schoolInfo");
   const [lang, setLang] = useState<Locale>("en");
   const [syncing, setSyncing] = useState(false);
+  const [translating, setTranslating] = useState(false);
   const [formData, setFormData] = useState<FormDataType>({});
   const [saveStatus, setSaveStatus] = useState<Record<string, "idle" | "saving" | "saved">>({});
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
@@ -197,6 +199,24 @@ export default function GlobalSettingsPage() {
     window.location.reload();
   };
 
+  const handleTranslate = async (key: string) => {
+    const text = formData[key]?.[lang];
+    if (!text?.trim() || translating) return;
+    setTranslating(true);
+    try {
+      const results = await translateToAll(text, lang);
+      setFormData((prev) => {
+        const next = { ...prev };
+        if (!next[key]) next[key] = { en: "", ne: "", ja: "" };
+        for (const [loc, val] of Object.entries(results)) {
+          if (val) next[key] = { ...next[key], [loc]: val };
+        }
+        return next;
+      });
+    } catch {}
+    setTranslating(false);
+  };
+
   return (
     <AdminGuard>
       <div className="p-6">
@@ -271,7 +291,7 @@ export default function GlobalSettingsPage() {
             )}
             {syncing && (
               <div className="mb-4 p-2 rounded-lg bg-blue-50 border border-blue-200 text-[11px] text-blue-700">
-                Auto ON — editing any language copies to all.
+                Sync ON — editing any language copies to all.
               </div>
             )}
             <div className="space-y-5">
@@ -292,10 +312,20 @@ export default function GlobalSettingsPage() {
                       </div>
                     ))}
                   </div>
-                  <button onClick={() => handleSaveField(field.key)} disabled={saveStatus[field.key] === "saving"}
-                    className="mt-2 px-4 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
-                    {saveStatus[field.key] === "saving" ? "Saving..." : saveStatus[field.key] === "saved" ? "✓ Draft Saved" : "Save Draft"}
-                  </button>
+                  <div className="flex items-center gap-2 mt-2">
+                    <button onClick={() => handleSaveField(field.key)} disabled={saveStatus[field.key] === "saving"}
+                      className="px-4 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
+                      {saveStatus[field.key] === "saving" ? "Saving..." : saveStatus[field.key] === "saved" ? "✓ Draft Saved" : "Save Draft"}
+                    </button>
+                    <button type="button" onClick={() => handleTranslate(field.key)} disabled={translating || !formData[field.key]?.[lang]?.trim()}
+                      className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border border-border hover:bg-primary/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                      {translating ? (
+                        <><div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" /> ...</>
+                      ) : (
+                        <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg> Translate</>
+                      )}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

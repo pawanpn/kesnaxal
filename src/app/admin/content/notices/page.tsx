@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/context/ToastContext";
-import { useAutoTranslate } from "@/lib/syncing";
+import { translateToAll } from "@/lib/autoTranslate";
 
 type Locale = "en" | "ne" | "ja";
 
@@ -39,9 +39,9 @@ function emptyNotice(): Notice {
 export default function NoticesPage() {
   const { getJson, saveJson, hasDraft, discardSectionDrafts, loadAllContent } = useAdmin();
   const { toast } = useToast();
-  const { translateAll } = useAutoTranslate();
   const [lang, setLang] = useState<Locale>("en");
   const [syncing, setSyncing] = useState(false);
+  const [translating, setTranslating] = useState(false);
   const [notices, setNotices] = useState<Notice[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<Notice>(emptyNotice());
@@ -85,13 +85,10 @@ export default function NoticesPage() {
 
   const handleLocaleChange = (field: "title" | "content", locale: Locale, value: string) => {
     setForm((prev) => {
-      const nextFC = { ...prev[field], [locale]: value };
-      if (syncing && locale === lang && value.trim()) {
-        translateAll(value, lang, (targetLocale, translated) => {
-          setForm((p) => ({ ...p, [field]: { ...p[field], [targetLocale]: translated } }));
-        });
+      if (syncing) {
+        return { ...prev, [field]: { en: value, ne: value, ja: value } };
       }
-      return { ...prev, [field]: nextFC };
+      return { ...prev, [field]: { ...prev[field], [locale]: value } };
     });
   };
 
@@ -135,6 +132,23 @@ export default function NoticesPage() {
     setShowForm(false);
   };
 
+  const handleTranslate = async (field: "title" | "content") => {
+    const text = form[field][lang];
+    if (!text?.trim() || translating) return;
+    setTranslating(true);
+    try {
+      const results = await translateToAll(text, lang);
+      setForm((prev) => {
+        const updated = { ...prev[field] };
+        for (const [loc, val] of Object.entries(results)) {
+          if (val) updated[loc as Locale] = val;
+        }
+        return { ...prev, [field]: updated };
+      });
+    } catch {}
+    setTranslating(false);
+  };
+
   return (
     <AdminGuard>
       <div className="p-6">
@@ -169,7 +183,7 @@ export default function NoticesPage() {
 
         {syncing && (
           <div className="mb-4 p-2 rounded-lg bg-blue-50 border border-blue-200 text-[11px] text-blue-700 max-w-4xl">
-            Auto-translate ON — editing any locale copies to all. Toggle OFF for per-language editing.
+            Sync ON — editing any locale copies to all. Toggle OFF for per-language editing.
           </div>
         )}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -262,6 +276,16 @@ export default function NoticesPage() {
                         </div>
                       ))}
                     </div>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <button type="button" onClick={() => handleTranslate("title")} disabled={translating || !form.title[lang]?.trim()}
+                        className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border border-border hover:bg-primary/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                        {translating ? (
+                          <><div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" /> ...</>
+                        ) : (
+                          <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg> Translate</>
+                        )}
+                      </button>
+                    </div>
                   </div>
 
                   <div>
@@ -276,6 +300,16 @@ export default function NoticesPage() {
                             placeholder={`Content (${l.id.toUpperCase()})`} />
                         </div>
                       ))}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <button type="button" onClick={() => handleTranslate("content")} disabled={translating || !form.content[lang]?.trim()}
+                        className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border border-border hover:bg-primary/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                        {translating ? (
+                          <><div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" /> ...</>
+                        ) : (
+                          <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg> Translate</>
+                        )}
+                      </button>
                     </div>
                   </div>
 
