@@ -184,6 +184,10 @@ export const en: Translations = {
   calendar: {
     months: "January,February,March,April,May,June,July,August,September,October,November,December",
     days: "Sun,Mon,Tue,Wed,Thu,Fri,Sat",
+    bsMonths: "Baisakh,Jestha,Ashadh,Shrawan,Bhadra,Ashwin,Kartik,Mangsir,Poush,Magh,Falgun,Chaitra",
+    bsDays: "Sun,Mon,Tue,Wed,Thu,Fri,Sat",
+    bsToggle: "BS",
+    adToggle: "AD",
     prevMonth: "Previous month",
     nextMonth: "Next month",
     schoolCalendar: "School Calendar",
@@ -470,6 +474,10 @@ export const ne: Translations = {
   calendar: {
     months: "जनवरी,फेब्रुअरी,मार्च,अप्रिल,मे,जुन,जुलाई,अगस्ट,सेप्टेम्बर,अक्टोबर,नोभेम्बर,डिसेम्बर",
     days: "आइत,सोम,मङ्गल,बुध,बिही,शुक्र,शनि",
+    bsMonths: "बैशाख,जेठ,असार,श्रावण,भदौ,आश्विन,कार्तिक,मंसिर,पौष,माघ,फाल्गुन,चैत्र",
+    bsDays: "आइत,सोम,मङ्गल,बुध,बिही,शुक्र,शनि",
+    bsToggle: "वि.सं.",
+    adToggle: "ई.सं.",
     prevMonth: "अघिल्लो महिना",
     nextMonth: "अर्को महिना",
     schoolCalendar: "स्कूल क्यालेन्डर",
@@ -756,6 +764,10 @@ export const ja: Translations = {
   calendar: {
     months: "1月,2月,3月,4月,5月,6月,7月,8月,9月,10月,11月,12月",
     days: "日,月,火,水,木,金,土",
+    bsMonths: "バイサク,ジェスタ,アサド,シュラワン,バドラ,アシュウィン,カルティック,マンシル,ポウシ,マグ,ファルグン,チャイト",
+    bsDays: "日,月,火,水,木,金,土",
+    bsToggle: "BS",
+    adToggle: "AD",
     prevMonth: "前の月",
     nextMonth: "次の月",
     schoolCalendar: "学校カレンダー",

@@ -1,18 +1,15 @@
-import type { Metadata } from "next";
+"use client";
+
 import PageHero from "@/components/ui/PageHero";
 import SectionHeading from "@/components/ui/SectionHeading";
-import OptimizedImage from "@/components/ui/OptimizedImage";
+import EditableElement from "@/components/admin/EditableElement";
+import EditableImage from "@/components/admin/EditableImage";
 import IconBox from "@/components/ui/IconBox";
 import { siteConfig } from "@/constants/siteConfig";
 
-export const metadata: Metadata = {
-  title: "Academics",
-  description: "Comprehensive academic programs from Primary to Higher Secondary at Kathmandu English School.",
-};
+const { academicLevels, faculty } = siteConfig;
 
 export default function AcademicsPage() {
-  const { academicLevels, faculty } = siteConfig;
-
   return (
     <div className="min-h-screen">
       <PageHero pageKey="academics" />
@@ -23,12 +20,44 @@ export default function AcademicsPage() {
             <div key={level.id} id={level.id} className="scroll-mt-24">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                 <div className="relative h-60 lg:h-80 rounded-2xl overflow-hidden bg-surface">
-                  <OptimizedImage src={level.image} alt={level.title} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" />
+                  <EditableImage
+                    section="academics"
+                    contentKey={`level_${level.id}_image`}
+                    src={level.image}
+                    alt={level.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                  />
                 </div>
                 <div>
-                  <span className="text-primary text-sm font-semibold">{level.grades}</span>
-                  <SectionHeading title={level.title} />
-                  <p className="text-muted leading-relaxed mb-6">{level.desc}</p>
+                  <span className="text-primary text-sm font-semibold">
+                    <EditableElement
+                      section="academics"
+                      contentKey={`level_${level.id}_grades`}
+                      value={{ en: level.grades, ne: level.grades, ja: level.grades }}
+                      as="span"
+                    />
+                  </span>
+                  <SectionHeading
+                    title={
+                      <EditableElement
+                        section="academics"
+                        contentKey={`level_${level.id}_title`}
+                        value={{ en: level.title, ne: level.title, ja: level.title }}
+                        as="span"
+                      />
+                    }
+                  />
+                  <p className="text-muted leading-relaxed mb-6">
+                    <EditableElement
+                      section="academics"
+                      contentKey={`level_${level.id}_desc`}
+                      value={{ en: level.desc, ne: level.desc, ja: level.desc }}
+                      as="span"
+                      rich
+                    />
+                  </p>
 
                   {level.subjects && (
                     <div>
@@ -58,12 +87,33 @@ export default function AcademicsPage() {
         <div className="container-custom">
           <SectionHeading title="Faculty & Staff" align="center" />
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {faculty.map((f) => (
+            {faculty.map((f, idx) => (
               <div key={f.name} className="bg-white rounded-xl p-5 text-center shadow-sm border border-border hover:shadow-md transition-shadow">
                 <IconBox icon={<span className="text-primary font-heading font-bold text-xl">{f.name.split(" ").pop()?.charAt(0)}</span>} />
-                <h4 className="font-semibold text-sm text-foreground">{f.name}</h4>
-                <p className="text-xs text-primary font-medium">{f.role}</p>
-                <p className="text-xs text-muted mt-1">{f.dept}</p>
+                <h4 className="font-semibold text-sm text-foreground">
+                  <EditableElement
+                    section="faculty"
+                    contentKey={`faculty_${idx}_name`}
+                    value={{ en: f.name, ne: f.name, ja: f.name }}
+                    as="span"
+                  />
+                </h4>
+                <p className="text-xs text-primary font-medium">
+                  <EditableElement
+                    section="faculty"
+                    contentKey={`faculty_${idx}_role`}
+                    value={{ en: f.role, ne: f.role, ja: f.role }}
+                    as="span"
+                  />
+                </p>
+                <p className="text-xs text-muted mt-1">
+                  <EditableElement
+                    section="faculty"
+                    contentKey={`faculty_${idx}_dept`}
+                    value={{ en: f.dept, ne: f.dept, ja: f.dept }}
+                    as="span"
+                  />
+                </p>
               </div>
             ))}
           </div>

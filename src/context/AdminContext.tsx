@@ -1,0 +1,443 @@
+"use client";
+
+import { createContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { supabase } from "@/lib/supabase/client";
+
+/* ── Types ── */
+
+export interface EditEntry {
+  section: string;
+  contentKey: string;
+  locale: string;
+  oldValue: string;
+  newValue: string;
+  timestamp: number;
+}
+
+export interface SiteContentRow {
+  id: string;
+  section: string;
+  content_key: string;
+  locale: string;
+  content_text: string | null;
+  content_json: Record<string, unknown>;
+  content_meta: Record<string, unknown>;
+  status: "draft" | "published";
+  updated_at: string;
+  created_at: string;
+}
+
+interface AdminContextValue {
+  isAdmin: boolean;
+  isEditing: boolean;
+  isPreviewMode: boolean;
+  editingLocale: string;
+  recentEdits: EditEntry[];
+  draftCount: number;
+  publishedContent: Map<string, SiteContentRow>;
+  draftContent: Map<string, SiteContentRow>;
+  login: (email: string, password: string) => Promise<{ error?: string }>;
+  logout: () => Promise<void>;
+  toggleEditMode: () => void;
+  togglePreviewMode: () => void;
+  setEditingLocale: (locale: string) => void;
+  addEdit: (edit: EditEntry) => void;
+  saveContent: (section: string, key: string, locale: string, text: string) => Promise<void>;
+  saveJson: (section: string, key: string, locale: string, json: Record<string, unknown>) => Promise<void>;
+  publishAll: () => Promise<{ count: number }>;
+  discardAllDrafts: () => Promise<{ count: number }>;
+  discardSectionDrafts: (section: string) => Promise<{ count: number }>;
+  discardEdit: (section: string, key: string, locale: string) => void;
+  getContent: (section: string, key: string, locale: string) => string;
+  getJson: (section: string, key: string, locale: string) => Record<string, unknown>;
+  getMeta: (section: string, key: string, locale: string) => Record<string, unknown>;
+  getMedia: (section: string, key: string) => string;
+  uploadMedia: (file: File, section: string, key: string) => Promise<string | null>;
+  seedContent: () => Promise<{ count: number; error?: string }>;
+  hasDraft: (section: string, key: string, locale: string) => boolean;
+  loadAllContent: () => Promise<void>;
+}
+
+export const AdminContext = createContext<AdminContextValue | null>(null);
+
+/* ── Helpers ── */
+
+function rowKey(section: string, key: string, locale: string) {
+  return `${section}::${key}::${locale}`;
+}
+
+/* ── Provider ── */
+
+export default function AdminProvider({ children }: { children: ReactNode }) {
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [editingLocale, setEditingLocale] = useState("en");
+  const [recentEdits, setRecentEdits] = useState<EditEntry[]>([]);
+  const [publishedContent, setPublishedContent] = useState<Map<string, SiteContentRow>>(new Map());
+  const [draftContent, setDraftContent] = useState<Map<string, SiteContentRow>>(new Map());
+  const [draftCount, setDraftCount] = useState(0);
+
+  /* ── Check auth on mount ── */
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setIsAdmin(!!data.session);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAdmin(!!session);
+      if (!session) {
+        setIsEditing(false);
+        setIsPreviewMode(false);
+      }
+    });
+    return () => listener?.subscription.unsubscribe();
+  }, []);
+
+  /* ── Read preview cookie on mount ── */
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const hasPreview = document.cookie.includes("kes_preview=1");
+    setIsPreviewMode(hasPreview);
+  }, []);
+
+  /* ── Load content from Supabase on admin login ── */
+  useEffect(() => {
+    if (!isAdmin) return;
+    loadAllContent();
+  }, [isAdmin]);
+
+  /* ── Real-time subscriptions ── */
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const channel = supabase
+      .channel("site_content_changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "site_content" },
+        () => loadAllContent()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isAdmin]);
+
+  const loadAllContent = useCallback(async () => {
+    const { data } = await supabase.from("site_content").select("*");
+    if (!data) return;
+
+    const pub = new Map<string, SiteContentRow>();
+    const draft = new Map<string, SiteContentRow>();
+    let dCount = 0;
+
+    (data as SiteContentRow[]).forEach((row) => {
+      const key = rowKey(row.section, row.content_key, row.locale);
+      if (row.status === "published") {
+        pub.set(key, row);
+      } else {
+        draft.set(key, row);
+        dCount++;
+      }
+    });
+
+    setPublishedContent(pub);
+    setDraftContent(draft);
+    setDraftCount(dCount);
+  }, []);
+
+  /* ── Get content (draft overrides published) ── */
+  const getContent = useCallback(
+    (section: string, key: string, locale: string): string => {
+      const rk = rowKey(section, key, locale);
+      const d = draftContent.get(rk);
+      if (d) return d.content_text || "";
+      const p = publishedContent.get(rk);
+      if (p) return p.content_text || "";
+      return "";
+    },
+    [draftContent, publishedContent]
+  );
+
+  /* ── Get JSON content ── */
+  const getJson = useCallback(
+    (section: string, key: string, locale: string): Record<string, unknown> => {
+      const rk = rowKey(section, key, locale);
+      const d = draftContent.get(rk);
+      if (d?.content_json && Object.keys(d.content_json).length > 0) return d.content_json;
+      const p = publishedContent.get(rk);
+      if (p?.content_json && Object.keys(p.content_json).length > 0) return p.content_json;
+      return {};
+    },
+    [draftContent, publishedContent]
+  );
+
+  /* ── Get meta ── */
+  const getMeta = useCallback(
+    (section: string, key: string, locale: string): Record<string, unknown> => {
+      const rk = rowKey(section, key, locale);
+      const d = draftContent.get(rk);
+      if (d?.content_meta && Object.keys(d.content_meta).length > 0) return d.content_meta;
+      const p = publishedContent.get(rk);
+      if (p?.content_meta && Object.keys(p.content_meta).length > 0) return p.content_meta;
+      return {};
+    },
+    [draftContent, publishedContent]
+  );
+
+  /* ── Check if draft exists ── */
+  const hasDraft = useCallback(
+    (section: string, key: string, locale: string): boolean => {
+      return draftContent.has(rowKey(section, key, locale));
+    },
+    [draftContent]
+  );
+
+  /* ── Save content as draft ── */
+  const saveContent = useCallback(
+    async (section: string, key: string, locale: string, text: string) => {
+      const { data: existing } = await supabase
+        .from("site_content")
+        .select("id")
+        .eq("section", section)
+        .eq("content_key", key)
+        .eq("locale", locale)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from("site_content")
+          .update({ content_text: text, status: "draft", updated_at: new Date().toISOString() })
+          .eq("id", existing.id);
+      } else {
+        await supabase.from("site_content").insert({
+          section,
+          content_key: key,
+          locale,
+          content_text: text,
+          status: "draft",
+        });
+      }
+
+      await supabase.from("edit_log").insert({
+        section,
+        content_key: key,
+        locale,
+        new_value: JSON.parse(JSON.stringify({ text })),
+      });
+    },
+    []
+  );
+
+  /* ── Save JSON content as draft ── */
+  const saveJson = useCallback(
+    async (section: string, key: string, locale: string, json: Record<string, unknown>) => {
+      const { data: existing } = await supabase
+        .from("site_content")
+        .select("id")
+        .eq("section", section)
+        .eq("content_key", key)
+        .eq("locale", locale)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from("site_content")
+          .update({ content_json: json, status: "draft", updated_at: new Date().toISOString() })
+          .eq("id", existing.id);
+      } else {
+        await supabase.from("site_content").insert({
+          section,
+          content_key: key,
+          locale,
+          content_json: json,
+          content_text: JSON.stringify(json),
+          status: "draft",
+        });
+      }
+    },
+    []
+  );
+
+  /* ── Add to recent edits list ── */
+  const addEdit = useCallback((edit: EditEntry) => {
+    setRecentEdits((prev) => [edit, ...prev].slice(0, 50));
+  }, []);
+
+  /* ── Discard a specific edit ── */
+  const discardEdit = useCallback(
+    async (section: string, key: string, locale: string) => {
+      await supabase
+        .from("site_content")
+        .delete()
+        .eq("section", section)
+        .eq("content_key", key)
+        .eq("locale", locale)
+        .eq("status", "draft");
+
+      setRecentEdits((prev) =>
+        prev.filter(
+          (e) => !(e.section === section && e.contentKey === key && e.locale === locale)
+        )
+      );
+      await loadAllContent();
+    },
+    []
+  );
+
+  /* ── Publish all drafts ── */
+  const publishAll = useCallback(async (): Promise<{ count: number }> => {
+    const { data, error } = await supabase.rpc("publish_all_drafts");
+    if (error) return { count: 0 };
+    setRecentEdits([]);
+    await loadAllContent();
+    return { count: (data as number) || 0 };
+  }, []);
+
+  /* ── Discard all drafts ── */
+  const discardAllDrafts = useCallback(async (): Promise<{ count: number }> => {
+    const { data, error } = await supabase.rpc("discard_all_drafts");
+    if (error) return { count: 0 };
+    setRecentEdits([]);
+    await loadAllContent();
+    return { count: (data as number) || 0 };
+  }, []);
+
+  /* ── Discard section drafts ── */
+  const discardSectionDrafts = useCallback(async (section: string): Promise<{ count: number }> => {
+    const { data, error } = await supabase.rpc("discard_section_drafts", { p_section: section });
+    if (error) return { count: 0 };
+    setRecentEdits((prev) => prev.filter((e) => e.section !== section));
+    await loadAllContent();
+    return { count: (data as number) || 0 };
+  }, []);
+
+  /* ── Upload media to Supabase Storage ── */
+  const uploadMedia = useCallback(
+    async (file: File, section: string, key: string): Promise<string | null> => {
+      const fileName = `${section}/${key}/${Date.now()}_${file.name}`;
+      const { data, error } = await supabase.storage.from("media").upload(fileName, file);
+      if (error) {
+        console.error("Upload failed:", error);
+        return null;
+      }
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("media").getPublicUrl(data.path);
+
+      await supabase.from("media").insert({
+        file_name: file.name,
+        storage_path: data.path,
+        public_url: publicUrl,
+        section,
+        content_key: key,
+        mime_type: file.type,
+        size_bytes: file.size,
+      });
+
+      return publicUrl;
+    },
+    []
+  );
+
+  /* ── Get media URL ── */
+  const getMedia = useCallback(
+    (section: string, key: string): string => {
+      const locales = ["en", "ne", "ja"];
+      for (const l of locales) {
+        const rk = rowKey(section, key, l);
+        const d = draftContent.get(rk);
+        if (d?.content_text) return d.content_text;
+        const p = publishedContent.get(rk);
+        if (p?.content_text) return p.content_text;
+      }
+      return "";
+    },
+    [draftContent, publishedContent]
+  );
+
+  /* ── Seed content from siteConfig ── */
+  const seedContent = useCallback(async (): Promise<{ count: number; error?: string }> => {
+    const { seedSupabaseContent } = await import("@/lib/seedContent");
+    const result = await seedSupabaseContent();
+    if (!result.error) await loadAllContent();
+    return result;
+  }, []);
+
+  /* ── Auth ── */
+  const login = useCallback(async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { error: error.message };
+    setIsAdmin(true);
+    return {};
+  }, []);
+
+  const logout = useCallback(async () => {
+    setIsPreviewMode(false);
+    if (typeof document !== "undefined") {
+      document.cookie = "kes_preview=; path=/; max-age=0";
+    }
+    await supabase.auth.signOut();
+    setIsAdmin(false);
+    setIsEditing(false);
+    setRecentEdits([]);
+    setPublishedContent(new Map());
+    setDraftContent(new Map());
+    setDraftCount(0);
+  }, []);
+
+  const toggleEditMode = useCallback(() => {
+    setIsEditing((prev) => !prev);
+  }, []);
+
+  const togglePreviewMode = useCallback(() => {
+    setIsPreviewMode((prev) => {
+      const next = !prev;
+      if (typeof document !== "undefined") {
+        document.cookie = next
+          ? "kes_preview=1; path=/; max-age=86400; SameSite=Lax"
+          : "kes_preview=; path=/; max-age=0";
+      }
+      return next;
+    });
+  }, []);
+
+  return (
+    <AdminContext.Provider
+      value={{
+        isAdmin,
+        isEditing,
+        isPreviewMode,
+        editingLocale,
+        recentEdits,
+        draftCount,
+        publishedContent,
+        draftContent,
+        login,
+        logout,
+        toggleEditMode,
+        togglePreviewMode,
+        setEditingLocale,
+        addEdit,
+        saveContent,
+        saveJson,
+        publishAll,
+        discardAllDrafts,
+        discardSectionDrafts,
+        discardEdit,
+        getContent,
+        getJson,
+        getMeta,
+        getMedia,
+        uploadMedia,
+        seedContent,
+        hasDraft,
+        loadAllContent,
+      }}
+    >
+      {children}
+    </AdminContext.Provider>
+  );
+}

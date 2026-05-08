@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Inter, Merriweather } from "next/font/google";
 import LocaleProvider from "@/context/LocaleContext";
+import AdminProvider from "@/context/AdminContext";
+import AdminToolbar from "@/components/admin/AdminToolbar";
+import EditModeBanner from "@/components/admin/EditModeBanner";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { siteConfig } from "@/constants/siteConfig";
@@ -20,9 +23,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${inter.variable} ${merriweather.variable} h-full`}>
       <body className="min-h-full flex flex-col">
         <LocaleProvider>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
+          <AdminProvider>
+            <EditModeBanner />
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+            <AdminToolbar />
+          </AdminProvider>
         </LocaleProvider>
       </body>
     </html>

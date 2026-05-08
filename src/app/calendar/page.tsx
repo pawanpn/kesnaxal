@@ -1,18 +1,15 @@
-import type { Metadata } from "next";
+"use client";
+
 import PageHero from "@/components/ui/PageHero";
 import CalendarSection from "@/components/sections/CalendarSection";
-import { siteConfig } from "@/constants/siteConfig";
-
-export const metadata: Metadata = {
-  title: "School Calendar",
-  description: "View the academic calendar for Kathmandu English School — holidays, exams, events, and vacations.",
-};
+import { useDynamicContent } from "@/hooks/useDynamicContent";
 
 export default function CalendarPage() {
+  const { calendarEvents } = useDynamicContent();
   return (
     <div className="min-h-screen">
       <PageHero pageKey="calendar" />
-      <CalendarSection events={siteConfig.calendarEvents} />
+      <CalendarSection events={calendarEvents} />
     </div>
   );
 }

@@ -4,11 +4,14 @@ import { useState, useMemo } from "react";
 import type { CalendarEvent } from "@/types";
 import { useLocale } from "@/hooks/useLocale";
 import { resolveCalendarEvent } from "@/lib/translate";
+import { adToBs, daysInBsMonth, firstDayOfBsMonth } from "@/lib/bsCal";
 import SectionHeading from "@/components/ui/SectionHeading";
 
 interface CalendarSectionProps {
   events: CalendarEvent[];
 }
+
+type CalendarMode = "AD" | "BS";
 
 const typeStyles: Record<CalendarEvent["type"], string> = {
   holiday: "bg-accent text-white",
@@ -31,58 +34,150 @@ function formatDateLocale(
 }
 
 export default function CalendarSection({ events }: CalendarSectionProps) {
-  const [month, setMonth] = useState(0);
+  const [mode, setMode] = useState<CalendarMode>("AD");
+  const [month, setMonth] = useState(mode === "BS" ? 0 : 0);
   const { locale, t } = useLocale();
 
-  const MONTHS = useMemo(() => t.calendar.months.split(","), [t.calendar.months]);
-  const DAYS = useMemo(() => t.calendar.days.split(","), [t.calendar.days]);
+  const AD_MONTHS = useMemo(() => t.calendar.months.split(","), [t.calendar.months]);
+  const AD_DAYS = useMemo(() => t.calendar.days.split(","), [t.calendar.days]);
+  const BS_MONTHS = useMemo(() => t.calendar.bsMonths.split(","), [t.calendar.bsMonths]);
+  const BS_DAYS = useMemo(() => t.calendar.bsDays.split(","), [t.calendar.bsDays]);
 
-  const year = 2026;
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstDayOfMonth = new Date(year, month, 1).getDay();
+  /* ── AD mode ── */
+  const adYear = 2026;
+  const adDaysInMonth = new Date(adYear, month + 1, 0).getDate();
+  const adFirstDay = new Date(adYear, month, 1).getDay();
 
-  const monthEvents = useMemo(() => {
-    return events.filter((e) => {
-      const d = new Date(e.date);
-      return d.getFullYear() === year && d.getMonth() === month;
-    });
-  }, [events, month, year]);
+  /* ── BS mode ── */
+  const bsYear = 2083;
+  const bsDaysCount = daysInBsMonth(bsYear, month);
+  const bsFirstDay = firstDayOfBsMonth(bsYear, month);
 
+  /* ── Common ── */
+  const currentMonths = mode === "AD" ? AD_MONTHS : BS_MONTHS;
+  const currentDays = mode === "AD" ? AD_DAYS : BS_DAYS;
+  const currentYear = mode === "AD" ? adYear : bsYear;
+  const daysInMonth = mode === "AD" ? adDaysInMonth : bsDaysCount;
+  const firstDay = mode === "AD" ? adFirstDay : bsFirstDay;
+
+  const allMonths = currentMonths.length;
+  const monthCount = mode === "AD" ? 12 : allMonths;
+
+  /* ── Build day grid ── */
+  const days: (number | null)[] = [];
+  for (let i = 0; i < firstDay; i++) days.push(null);
+  for (let d = 1; d <= daysInMonth; d++) days.push(d);
+
+  /* ── Build event map ── */
   const eventMap = useMemo(() => {
     const map: Record<number, CalendarEvent[]> = {};
-    monthEvents.forEach((e) => {
-      const day = new Date(e.date).getDate();
-      if (!map[day]) map[day] = [];
-      map[day].push(e);
+    events.forEach((e) => {
+      const adDate = new Date(e.date);
+      if (mode === "AD") {
+        if (adDate.getFullYear() === adYear && adDate.getMonth() === month) {
+          const day = adDate.getDate();
+          if (!map[day]) map[day] = [];
+          map[day].push(e);
+        }
+      } else {
+        const bs = adToBs(e.date);
+        if (bs.year === bsYear && bs.month === month) {
+          if (!map[bs.date]) map[bs.date] = [];
+          map[bs.date].push(e);
+        }
+      }
     });
     return map;
-  }, [monthEvents]);
+  }, [events, month, mode, adYear, bsYear]);
 
-  const goNext = () => setMonth((m) => (m + 1) % 12);
-  const goPrev = () => setMonth((m) => (m - 1 + 12) % 12);
+  /* ── Event list ── */
+  const monthEvents = useMemo(() => {
+    return events.filter((e) => {
+      const adDate = new Date(e.date);
+      if (mode === "AD") {
+        return adDate.getFullYear() === adYear && adDate.getMonth() === month;
+      }
+      const bs = adToBs(e.date);
+      return bs.year === bsYear && bs.month === month;
+    });
+  }, [events, month, mode, adYear, bsYear]);
 
-  const days: (number | null)[] = [];
-  for (let i = 0; i < firstDayOfMonth; i++) days.push(null);
-  for (let d = 1; d <= daysInMonth; d++) days.push(d);
+  const goNext = () => setMonth((m) => (m + 1) % monthCount);
+  const goPrev = () => setMonth((m) => (m - 1 + monthCount) % monthCount);
+
+  const switchMode = (newMode: CalendarMode) => {
+    setMode(newMode);
+    setMonth(0);
+  };
+
+  /* ── Event date display (AD or BS) ── */
+  const getEventDay = (e: CalendarEvent) => {
+    if (mode === "AD") return new Date(e.date).getDate();
+    return adToBs(e.date).date;
+  };
+  const getEventMonthLabel = (e: CalendarEvent) => {
+    if (mode === "AD") {
+      return formatDateLocale(new Date(e.date), locale, { month: "short" });
+    }
+    const bs = adToBs(e.date);
+    return BS_MONTHS[bs.month]?.slice(0, 3) || "";
+  };
+  const getEventWeekday = (e: CalendarEvent) => {
+    if (mode === "AD") {
+      return formatDateLocale(new Date(e.date), locale, { weekday: "long" });
+    }
+    const bs = adToBs(e.date);
+    return BS_DAYS[bs.day] || "";
+  };
+  const getEventDateStr = (e: CalendarEvent) => {
+    if (mode === "AD") {
+      return formatDateLocale(new Date(e.date), locale, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    }
+    const bs = adToBs(e.date);
+    return `${BS_MONTHS[bs.month]} ${bs.date}, ${bs.year}`;
+  };
 
   return (
     <section className="py-12 lg:py-16 bg-surface">
       <div className="container-custom">
-        <SectionHeading
-          title={t.calendar.schoolCalendar}
-          subtitle={t.calendar.stayUpdated}
-          align="center"
-        />
+        <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+          <SectionHeading
+            title={t.calendar.schoolCalendar}
+            subtitle={t.calendar.stayUpdated}
+            align="left"
+          />
+
+          {/* AD/BS Toggle */}
+          <div className="flex rounded-xl bg-white border border-border p-1 shadow-sm">
+            {(["AD", "BS"] as CalendarMode[]).map((m) => (
+              <button
+                key={m}
+                onClick={() => switchMode(m)}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  mode === m
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                {m === "AD" ? t.calendar.adToggle : t.calendar.bsToggle}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar: Month Selector */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl shadow-sm border border-border p-4 lg:sticky lg:top-24">
               <h3 className="font-heading font-bold text-primary text-sm uppercase tracking-wider mb-4">
-                {year}
+                {currentYear}
               </h3>
               <div className="space-y-1">
-                {MONTHS.map((name, idx) => (
+                {currentMonths.map((name, idx) => (
                   <button
                     key={name}
                     onClick={() => setMonth(idx)}
@@ -120,7 +215,7 @@ export default function CalendarSection({ events }: CalendarSectionProps) {
                 </svg>
               </button>
               <h3 className="text-2xl font-heading font-bold text-primary">
-                {MONTHS[month]} {year}
+                {currentMonths[month]} {currentYear}
               </h3>
               <button
                 onClick={goNext}
@@ -135,7 +230,7 @@ export default function CalendarSection({ events }: CalendarSectionProps) {
 
             {/* Day Headers */}
             <div className="grid grid-cols-7 mb-2">
-              {DAYS.map((day) => (
+              {currentDays.map((day) => (
                 <div key={day} className="text-center text-xs font-semibold text-muted uppercase tracking-wider py-2">
                   {day}
                 </div>
@@ -153,6 +248,7 @@ export default function CalendarSection({ events }: CalendarSectionProps) {
                 return (
                   <div
                     key={day}
+                    title={dayEvents.length > 0 ? dayEvents.map((e) => resolveCalendarEvent(e, locale).title).join(", ") : undefined}
                     className={`aspect-square rounded-lg border transition-all duration-200 flex flex-col items-center justify-center relative ${
                       hasEvent
                         ? "border-primary/30 bg-primary/5 cursor-pointer hover:shadow-md hover:border-primary"
@@ -191,7 +287,7 @@ export default function CalendarSection({ events }: CalendarSectionProps) {
               ))}
             </div>
 
-            {/* Event List for Selected Month */}
+            {/* Event List */}
             {monthEvents.length > 0 ? (
               <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {monthEvents
@@ -209,23 +305,18 @@ export default function CalendarSection({ events }: CalendarSectionProps) {
                           }`}
                         >
                           <span className="text-lg font-bold leading-none">
-                            {new Date(event.date).getDate()}
+                            {getEventDay(event)}
                           </span>
                           <span className="text-[10px] uppercase font-medium">
-                            {formatDateLocale(new Date(event.date), locale, {
-                              month: "short",
-                            })}
+                            {getEventMonthLabel(event)}
                           </span>
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs text-muted mb-0.5">
-                            {formatDateLocale(new Date(event.date), locale, {
-                              weekday: "long",
-                            })}
-                          </p>
+                          <p className="text-xs text-muted mb-0.5">{getEventWeekday(event)}</p>
                           <p className="text-sm font-semibold text-foreground leading-snug">
                             {resolved.title}
                           </p>
+                          <p className="text-[11px] text-muted mt-0.5">{getEventDateStr(event)}</p>
                           {resolved.description && (
                             <p className="text-xs text-muted mt-1 line-clamp-2">
                               {resolved.description}
@@ -239,10 +330,10 @@ export default function CalendarSection({ events }: CalendarSectionProps) {
             ) : (
               <div className="text-center py-12 mt-8">
                 <svg className="w-12 h-12 text-muted mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
                 <p className="text-muted text-sm">
-                  {t.calendar.noEvents.replace("{month}", MONTHS[month])}
+                  {t.calendar.noEvents.replace("{month}", currentMonths[month])}
                 </p>
               </div>
             )}

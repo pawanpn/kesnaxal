@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import OptimizedImage from "@/components/ui/OptimizedImage";
+import EditableImage from "@/components/admin/EditableImage";
+import EditableElement from "@/components/admin/EditableElement";
 import Badge from "@/components/ui/Badge";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { useLocale } from "@/hooks/useLocale";
@@ -29,9 +30,18 @@ export default function FeaturedNews({ article }: FeaturedNewsProps) {
       <div className="container-custom py-8 lg:py-12">
         <SectionHeading title="Featured Story" />
 
-        <Link href={`/news/${article.slug}`} className="group grid grid-cols-1 lg:grid-cols-5 gap-6 bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all border border-border hover:border-primary/30">
+        <div className="group grid grid-cols-1 lg:grid-cols-5 gap-6 bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all border border-border hover:border-primary/30">
           <div className="lg:col-span-3 relative h-64 sm:h-80 lg:h-full min-h-[320px] overflow-hidden">
-            <OptimizedImage src={article.image} alt={resolved.title} fill priority className="object-cover group-hover:scale-105 transition-transform duration-700" sizes="(max-width: 1024px) 100vw, 60vw" />
+            <EditableImage
+              section="news"
+              contentKey={`article_${article.id}_image`}
+              src={article.image}
+              alt={resolved.title}
+              fill
+              priority
+              className="object-cover group-hover:scale-105 transition-transform duration-700"
+              sizes="(max-width: 1024px) 100vw, 60vw"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
             <div className="absolute top-4 left-4">
               <Badge variant={categoryVariant[article.category] || "primary"}>{article.category}</Badge>
@@ -51,19 +61,35 @@ export default function FeaturedNews({ article }: FeaturedNewsProps) {
               </span>
             </div>
 
-            <h2 className="font-heading font-bold text-xl lg:text-2xl text-foreground mb-3 group-hover:text-primary transition-colors leading-snug">{resolved.title}</h2>
-            <p className="text-sm text-muted leading-relaxed mb-5 line-clamp-3">{resolved.excerpt}</p>
+            <Link href={`/news/${article.slug}`} className="block mb-3">
+              <h2 className="font-heading font-bold text-xl lg:text-2xl text-foreground group-hover:text-primary transition-colors leading-snug">
+                <EditableElement
+                  section="news"
+                  contentKey={`article_${article.id}_title`}
+                  value={article.title}
+                  as="span"
+                />
+              </h2>
+            </Link>
+            <p className="text-sm text-muted leading-relaxed mb-5 line-clamp-3">
+              <EditableElement
+                section="news"
+                contentKey={`article_${article.id}_excerpt`}
+                value={article.excerpt}
+                as="span"
+              />
+            </p>
 
-            <div className="flex items-center gap-2">
+            <Link href={`/news/${article.slug}`} className="flex items-center gap-2">
               <span className="text-primary text-sm font-semibold group-hover:underline">Read Full Story</span>
               <svg className="w-4 h-4 text-primary group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-            </div>
+            </Link>
 
             <div className="flex flex-wrap gap-1.5 mt-6 pt-4 border-t border-border">
               {article.tags.map((tag) => <span key={tag} className="bg-surface text-xs px-2.5 py-1 rounded-full text-muted">#{tag}</span>)}
             </div>
           </div>
-        </Link>
+        </div>
       </div>
     </section>
   );

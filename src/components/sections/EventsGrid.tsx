@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import OptimizedImage from "@/components/ui/OptimizedImage";
+import EditableImage from "@/components/admin/EditableImage";
+import EditableElement from "@/components/admin/EditableElement";
 import Badge from "@/components/ui/Badge";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { useLocale } from "@/hooks/useLocale";
@@ -33,14 +35,36 @@ export default function EventsGrid({ events }: EventsGridProps) {
             return (
               <div key={event.id} className="group bg-surface rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-border">
                 <div className="relative h-44 overflow-hidden">
-                  <OptimizedImage src={event.image} alt={title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" />
+                  <EditableImage
+                    section="events"
+                    contentKey={`event_${event.id}_image`}
+                    src={event.image}
+                    alt={title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                  />
                   <div className="absolute top-3 left-3">
                     <Badge>{new Date(event.date).toLocaleDateString(dateLocale, { month: "short", day: "numeric" })}</Badge>
                   </div>
                 </div>
                 <div className="p-4">
-                  <h3 className="font-semibold text-sm text-foreground line-clamp-2 mb-2 group-hover:text-primary transition-colors">{title}</h3>
-                  <p className="text-xs text-muted line-clamp-2 mb-3">{description}</p>
+                  <h3 className="font-semibold text-sm text-foreground line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+                    <EditableElement
+                      section="events"
+                      contentKey={`event_${event.id}_title`}
+                      value={event.title}
+                      as="span"
+                    />
+                  </h3>
+                  <p className="text-xs text-muted line-clamp-2 mb-3">
+                    <EditableElement
+                      section="events"
+                      contentKey={`event_${event.id}_description`}
+                      value={event.description}
+                      as="span"
+                    />
+                  </p>
                   <div className="flex items-center gap-3 text-xs text-muted">
                     <span className="flex items-center gap-1">
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
