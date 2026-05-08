@@ -56,6 +56,8 @@ interface AdminContextValue {
   seedContent: () => Promise<{ count: number; error?: string }>;
   hasDraft: (section: string, key: string, locale: string) => boolean;
   loadAllContent: () => Promise<void>;
+  deleteItem: (section: string, key: string) => Promise<void>;
+  listSectionItems: (section: string) => SiteContentRow[];
 }
 
 export const AdminContext = createContext<AdminContextValue | null>(null);
@@ -388,6 +390,34 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     setDraftCount(0);
   }, []);
 
+  /* ── Delete a content row entirely (all locales) ── */
+  const deleteItem = useCallback(
+    async (section: string, key: string) => {
+      await supabase.from("site_content").delete()
+        .eq("section", section)
+        .eq("content_key", key);
+      await loadAllContent();
+    },
+    []
+  );
+
+  /* ── List all rows in a section ── */
+  const listSectionItems = useCallback(
+    (section: string): SiteContentRow[] => {
+      const all = new Map([...publishedContent, ...draftContent]);
+      const rows: SiteContentRow[] = [];
+      const seen = new Set<string>();
+      all.forEach((row) => {
+        if (row.section === section && !seen.has(row.content_key)) {
+          seen.add(row.content_key);
+          rows.push(row);
+        }
+      });
+      return rows;
+    },
+    [publishedContent, draftContent]
+  );
+
   const toggleEditMode = useCallback(() => {
     setIsEditing((prev) => !prev);
   }, []);
@@ -435,6 +465,8 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
         seedContent,
         hasDraft,
         loadAllContent,
+        deleteItem,
+        listSectionItems,
       }}
     >
       {children}
