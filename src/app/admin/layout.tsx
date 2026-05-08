@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAdmin } from "@/hooks/useAdmin";
+import { ToastProvider } from "@/context/ToastContext";
+import ToastContainer from "@/components/ui/ToastContainer";
 
 const navSections = [
   {
@@ -47,10 +49,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   if (!isAdmin) {
-    return <div className="min-h-screen">{children}</div>;
+    return (
+      <ToastProvider>
+        <ToastContainer />
+        <div className="min-h-screen">{children}</div>
+      </ToastProvider>
+    );
   }
 
   return (
+    <ToastProvider>
+      <ToastContainer />
     <div className="min-h-screen bg-surface flex">
       {/* Sidebar */}
       <aside
@@ -144,5 +153,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {children}
       </div>
     </div>
+    </ToastProvider>
   );
 }

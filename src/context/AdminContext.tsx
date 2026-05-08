@@ -44,6 +44,8 @@ interface AdminContextValue {
   addEdit: (edit: EditEntry) => void;
   saveContent: (section: string, key: string, locale: string, text: string) => Promise<void>;
   saveJson: (section: string, key: string, locale: string, json: Record<string, unknown>) => Promise<void>;
+  savePublishedContent: (section: string, key: string, locale: string, text: string) => Promise<void>;
+  savePublishedJson: (section: string, key: string, locale: string, json: Record<string, unknown>) => Promise<void>;
   publishAll: () => Promise<{ count: number }>;
   discardAllDrafts: () => Promise<{ count: number }>;
   discardSectionDrafts: (section: string) => Promise<{ count: number }>;
@@ -260,6 +262,64 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  /* ── Save content as published (for global settings visible to all visitors) ── */
+  const savePublishedContent = useCallback(
+    async (section: string, key: string, locale: string, text: string) => {
+      const { data: existing } = await supabase
+        .from("site_content")
+        .select("id")
+        .eq("section", section)
+        .eq("content_key", key)
+        .eq("locale", locale)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from("site_content")
+          .update({ content_text: text, status: "published", updated_at: new Date().toISOString() })
+          .eq("id", existing.id);
+      } else {
+        await supabase.from("site_content").insert({
+          section,
+          content_key: key,
+          locale,
+          content_text: text,
+          status: "published",
+        });
+      }
+    },
+    []
+  );
+
+  const savePublishedJson = useCallback(
+    async (section: string, key: string, locale: string, json: Record<string, unknown>) => {
+      const { data: existing } = await supabase
+        .from("site_content")
+        .select("id")
+        .eq("section", section)
+        .eq("content_key", key)
+        .eq("locale", locale)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from("site_content")
+          .update({ content_json: json, content_text: JSON.stringify(json), status: "published", updated_at: new Date().toISOString() })
+          .eq("id", existing.id);
+      } else {
+        await supabase.from("site_content").insert({
+          section,
+          content_key: key,
+          locale,
+          content_json: json,
+          content_text: JSON.stringify(json),
+          status: "published",
+        });
+      }
+    },
+    []
+  );
+
   /* ── Add to recent edits list ── */
   const addEdit = useCallback((edit: EditEntry) => {
     setRecentEdits((prev) => [edit, ...prev].slice(0, 50));
@@ -423,6 +483,8 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
         addEdit,
         saveContent,
         saveJson,
+        savePublishedContent,
+        savePublishedJson,
         publishAll,
         discardAllDrafts,
         discardSectionDrafts,
