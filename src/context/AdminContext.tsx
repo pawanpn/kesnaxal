@@ -297,7 +297,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
       if (existing) {
         const res = await supabase
           .from("site_content")
-          .update({ content_json: json, status: "draft", updated_at: new Date().toISOString(), updated_by: uid })
+          .update({ content_json: json, content_text: JSON.stringify(json), status: "draft", updated_at: new Date().toISOString(), updated_by: uid })
           .eq("id", existing.id);
         error = res.error;
       } else {

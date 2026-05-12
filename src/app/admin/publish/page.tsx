@@ -228,6 +228,32 @@ export default function PublishReviewPage() {
           </div>
         )}
 
+        {/* Database Overview */}
+        {publishedContent.size > 0 && (
+          <details className="mb-4 bg-white rounded-xl border border-border overflow-hidden max-w-4xl">
+            <summary className="px-5 py-3 cursor-pointer hover:bg-surface/50 text-xs font-semibold text-foreground select-none">
+              Database Content Overview ({publishedContent.size} published rows)
+            </summary>
+            <div className="px-5 py-3 border-t border-border grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-xs">
+              {(() => {
+                const counts: Record<string, number> = {};
+                publishedContent.forEach((row) => {
+                  const label = SECTION_LABELS[row.section] || row.section;
+                  counts[label] = (counts[label] || 0) + 1;
+                });
+                return Object.entries(counts)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([label, count]) => (
+                    <div key={label} className="flex items-center justify-between px-2 py-1.5 rounded bg-surface/50">
+                      <span className="text-muted">{label}</span>
+                      <span className="font-semibold text-foreground">{count}</span>
+                    </div>
+                  ));
+              })()}
+            </div>
+          </details>
+        )}
+
         {draftCount === 0 ? (
           <div className="bg-white rounded-xl border border-border p-12 text-center">
             <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
