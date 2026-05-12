@@ -184,12 +184,7 @@ export function useDynamicContent() {
       } catch { /* fall through */ }
     }
 
-    if (!supabaseHasContent) return siteConfig.gallery.images;
-    return siteConfig.gallery.images.map((img, i) => ({
-      ...img,
-      src: resolveSimple("gallery", `image_${i}_src`, img.src),
-      alt: resolveSimple("gallery", `image_${i}_alt`, img.alt),
-    }));
+    return siteConfig.gallery.images;
   }, [contentReady, supabaseHasContent, getContent, locale]);
 
   // ── Academic Levels ──
