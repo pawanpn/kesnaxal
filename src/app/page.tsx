@@ -9,7 +9,7 @@ import Testimonials from "@/components/sections/Testimonials";
 import { useDynamicContent } from "@/hooks/useDynamicContent";
 
 export default function Home() {
-  const { heroSlides, events, galleryImages, testimonials, school } = useDynamicContent();
+  const { heroSlides, events, galleryImages, gallerySubtitle, testimonials, school } = useDynamicContent();
 
   return (
     <>
@@ -17,7 +17,7 @@ export default function Home() {
       <BreakingNews />
       <NoticeBoard />
       <EventsGrid events={events} />
-      <GalleryGrid images={galleryImages} />
+      <GalleryGrid images={galleryImages} subtitle={gallerySubtitle} />
       <Testimonials testimonials={testimonials} />
     </>
   );

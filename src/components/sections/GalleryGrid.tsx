@@ -56,7 +56,7 @@ export default function GalleryGrid({ images, subtitle }: GalleryGridProps) {
     <section className="py-12 lg:py-16">
       <div className="container-custom">
         <div className="text-center mb-10">
-          <SectionHeading title={t.sections.SchoolGallery} subtitle={t.pages.gallery.subtitle} align="center" />
+          <SectionHeading title={t.sections.SchoolGallery} subtitle={subtitle || t.pages.gallery.subtitle} align="center" />
         </div>
 
         <div className="flex justify-center gap-2 flex-wrap mb-10">
