@@ -14,9 +14,13 @@ export default function GalleryGrid({ images }: GalleryGridProps) {
   const t = useT();
   const [activeCategory, setActiveCategory] = useState(t.sections.All);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   const categories = [t.sections.All, ...Array.from(new Set(images.map((img) => img.category)))];
   const filtered = activeCategory === t.sections.All ? images : images.filter((img) => img.category === activeCategory);
+  const SHOWN_COUNT = 8;
+  const visible = showAll ? filtered : filtered.slice(0, SHOWN_COUNT);
+  const hasMore = filtered.length > SHOWN_COUNT;
 
   const openLightbox = useCallback((index: number) => {
     setLightboxIndex(index);
@@ -69,8 +73,8 @@ export default function GalleryGrid({ images }: GalleryGridProps) {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filtered.map((img, idx) => {
-            const originalIndex = images.indexOf(img);
+          {visible.map((img, idx) => {
+            const originalIndex = filtered.indexOf(img);
             return (
               <div
                 key={`${img.src}-${idx}`}
@@ -94,6 +98,17 @@ export default function GalleryGrid({ images }: GalleryGridProps) {
             );
           })}
         </div>
+
+        {hasMore && (
+          <div className="text-center mt-8">
+            <button
+              onClick={() => setShowAll(true)}
+              className="px-6 py-2.5 rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary-dark transition-colors shadow-sm"
+            >
+              {t.sections.All} ({filtered.length - SHOWN_COUNT} more)
+            </button>
+          </div>
+        )}
 
         {filtered.length === 0 && (
           <div className="text-center py-16">

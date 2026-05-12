@@ -165,6 +165,16 @@ export function useDynamicContent() {
 
   // ── Gallery ──
   const galleryImages: GalleryImage[] = useMemo(() => {
+    const jsonStr = getContent("gallery", "gallery_images", "en");
+    if (jsonStr) {
+      try {
+        const parsed = JSON.parse(jsonStr);
+        if (parsed.images && Array.isArray(parsed.images) && parsed.images.length > 0) {
+          return parsed.images as GalleryImage[];
+        }
+      } catch { /* fall through */ }
+    }
+
     if (!supabaseHasContent) return siteConfig.gallery.images;
     return siteConfig.gallery.images.map((img, i) => ({
       ...img,
