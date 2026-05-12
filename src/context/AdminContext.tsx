@@ -60,6 +60,7 @@ interface AdminContextValue {
   seedContent: () => Promise<{ count: number; error?: string }>;
   hasDraft: (section: string, key: string, locale: string) => boolean;
   loadAllContent: () => Promise<void>;
+  contentReady: boolean;
   deleteItem: (section: string, key: string) => Promise<void>;
   listSectionItems: (section: string) => SiteContentRow[];
 }
@@ -84,6 +85,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
   const [publishedContent, setPublishedContent] = useState<Map<string, SiteContentRow>>(new Map());
   const [draftContent, setDraftContent] = useState<Map<string, SiteContentRow>>(new Map());
   const [draftCount, setDraftCount] = useState(0);
+  const [contentReady, setContentReady] = useState(false);
 
   /* ── Check auth on mount ── */
   useEffect(() => {
@@ -164,7 +166,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
   const loadAllContent = useCallback(async () => {
     try {
       const { data } = await supabase.from("site_content").select("*");
-      if (!data) return;
+      if (!data) { setContentReady(true); return; }
 
       const pub = new Map<string, SiteContentRow>();
       const draft = new Map<string, SiteContentRow>();
@@ -183,8 +185,9 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
       setPublishedContent(pub);
       setDraftContent(draft);
       setDraftCount(dCount);
+      setContentReady(true);
     } catch {
-      // Silently fail for non-admin users or connection issues
+      setContentReady(true);
     }
   }, []);
 
@@ -614,6 +617,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
         seedContent,
         hasDraft,
         loadAllContent,
+        contentReady,
         deleteItem,
         listSectionItems,
       }}

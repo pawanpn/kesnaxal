@@ -5,6 +5,7 @@ import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/context/ToastContext";
 import { siteConfig } from "@/constants/siteConfig";
+import { supabase } from "@/lib/supabase/client";
 import type { GalleryImage } from "@/types";
 
 function convertDriveUrl(url: string): string {
@@ -128,12 +129,19 @@ export default function GalleryAdminPage() {
   const handleReplaceUpload = async (file: File, idx: number) => {
     setUploadingIdx(idx);
     const key = `gallery_${Date.now()}`;
+    const oldUrl = images[idx]?.src || "";
     const url = await uploadMedia(file, "gallery", key);
     if (url) {
       const updated = images.map((img, i) =>
         i === idx ? { ...img, src: url } : img
       );
       await handleSave(updated);
+      if (oldUrl && oldUrl.includes("supabase.co")) {
+        try {
+          const path = oldUrl.split("/storage/v1/object/public/media/")[1];
+          if (path) await supabase.storage.from("media").remove([decodeURIComponent(path)]);
+        } catch { /* best effort */ }
+      }
     } else {
       toast("error", "Replace failed");
     }

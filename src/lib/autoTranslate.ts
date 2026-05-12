@@ -27,11 +27,14 @@ export async function translateText(text: string, from: Locale, to: Locale): Pro
     const url = `${API}?q=${encodeURIComponent(text)}&langpair=${from}|${to}`;
     const res = await fetch(url);
     const data = await res.json();
-    const translated = data?.responseData?.translatedText || text;
-    cache.set(key, translated);
-    return translated;
+    const translated = data?.responseData?.translatedText;
+    if (translated && translated !== text) {
+      cache.set(key, translated);
+      return translated;
+    }
+    return "";
   } catch {
-    return text;
+    return "";
   }
 }
 
@@ -42,6 +45,7 @@ export async function translateToAll(text: string, from: Locale): Promise<Partia
   const results: Partial<Record<Locale, string>> = {};
   for (const to of targets) {
     results[to] = await translateText(text, from, to);
+    await new Promise((r) => setTimeout(r, 300));
   }
   return results;
 }

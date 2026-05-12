@@ -26,7 +26,7 @@ import type {
  * Hook that resolves content from Supabase (via AdminContext) with fallback to siteConfig.
  */
 export function useDynamicContent() {
-  const { getContent } = useAdmin();
+  const { getContent, contentReady } = useAdmin();
   const { locale, t } = useLocale();
 
   const supabaseHasContent = useMemo(() => {
@@ -166,12 +166,14 @@ export function useDynamicContent() {
 
   // ── Gallery ──
   const gallerySubtitle = useMemo(() => {
+    if (!contentReady) return "";
     const fromDb = getContent("gallery", "gallery_subtitle", locale);
     if (fromDb) return fromDb;
     return t.pages.gallery.subtitle || "A glimpse into our vibrant campus life";
-  }, [getContent, locale]);
+  }, [contentReady, getContent, locale]);
 
   const galleryImages: GalleryImage[] = useMemo(() => {
+    if (!contentReady) return [];
     const jsonStr = getContent("gallery", "gallery_images", "en");
     if (jsonStr) {
       try {
@@ -188,7 +190,7 @@ export function useDynamicContent() {
       src: resolveSimple("gallery", `image_${i}_src`, img.src),
       alt: resolveSimple("gallery", `image_${i}_alt`, img.alt),
     }));
-  }, [supabaseHasContent, getContent, locale]);
+  }, [contentReady, supabaseHasContent, getContent, locale]);
 
   // ── Academic Levels ──
   const academicLevels: AcademicLevel[] = useMemo(() => {
@@ -246,6 +248,7 @@ export function useDynamicContent() {
 
   // ── Jobs ──
   const jobVacancies: JobVacancy[] = useMemo(() => {
+    if (!contentReady) return [];
     const jsonStr = getContent("careers", "job_vacancies", "en");
     if (jsonStr) {
       try {
@@ -273,10 +276,11 @@ export function useDynamicContent() {
         isActive:    resolveSimple("careers", `${id}_isActive`,  String(job.isActive)) === "true",
       };
     });
-  }, [supabaseHasContent, getContent, locale]);
+  }, [contentReady, supabaseHasContent, getContent, locale]);
 
   // ── Notices ──
   const notices: Notice[] = useMemo(() => {
+    if (!contentReady) return [];
     const jsonStr = getContent("notices", "notices_list", "en");
     if (jsonStr) {
       try {
@@ -288,7 +292,7 @@ export function useDynamicContent() {
     }
 
     return siteConfig.notices || [];
-  }, [supabaseHasContent, getContent]);
+  }, [contentReady, supabaseHasContent, getContent]);
 
   // ── Calendar ──
   const calendarEvents: CalendarEvent[] = useMemo(() => {
