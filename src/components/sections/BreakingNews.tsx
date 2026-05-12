@@ -1,11 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useT } from "@/hooks/useLocale";
-
-interface BreakingNewsProps {
-  messages?: string[];
-}
+import { useT, useLocale } from "@/hooks/useLocale";
+import { useDynamicContent } from "@/hooks/useDynamicContent";
 
 const defaultMessages = [
   "Admissions open for Academic Year 2083! Apply online or visit our campus. Early bird discounts available.",
@@ -13,9 +10,17 @@ const defaultMessages = [
   "Annual Sports Meet 2083: Registration closes on Baisakh 25. Contact class teacher for details.",
 ];
 
-export default function BreakingNews({ messages = defaultMessages }: BreakingNewsProps) {
+export default function BreakingNews() {
   const t = useT();
+  const { locale } = useLocale();
+  const { breakingNews: bn } = useDynamicContent();
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  const messages = bn.active && bn.messages[locale]
+    ? [bn.messages[locale]]
+    : bn.active && bn.messages.en
+      ? [bn.messages.en]
+      : defaultMessages;
 
   useEffect(() => {
     if (messages.length <= 1) return;

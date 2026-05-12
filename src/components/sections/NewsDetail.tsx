@@ -72,21 +72,25 @@ export default function NewsDetail({ article, recentPosts }: NewsDetailProps) {
             </div>
 
             <div className="prose-custom text-sm lg:text-base">
-              {resolved.content.split("\n\n").map((para, i) => {
-                const trimmed = para.trim();
-                if (!trimmed) return null;
-                if (trimmed.startsWith("**") && trimmed.includes(":**")) {
-                  return <p key={i} className="font-heading font-bold text-primary text-lg">{trimmed.replace(/\*\*/g, "")}</p>;
-                }
-                if (trimmed.startsWith("- **")) {
-                  return <div key={i} className="flex gap-2 py-1"><span className="text-primary mt-1.5 shrink-0">&bull;</span><p className="text-foreground leading-relaxed">{trimmed.replace(/^- /, "")}</p></div>;
-                }
-                return (
-                  <p key={i} className="text-foreground leading-relaxed">
-                    {trimmed.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>')}
-                  </p>
-                );
-              })}
+              {resolved.content.includes("<") ? (
+                <div dangerouslySetInnerHTML={{ __html: resolved.content }} />
+              ) : (
+                resolved.content.split("\n\n").map((para, i) => {
+                  const trimmed = para.trim();
+                  if (!trimmed) return null;
+                  if (trimmed.startsWith("**") && trimmed.includes(":**")) {
+                    return <p key={i} className="font-heading font-bold text-primary text-lg">{trimmed.replace(/\*\*/g, "")}</p>;
+                  }
+                  if (trimmed.startsWith("- **")) {
+                    return <div key={i} className="flex gap-2 py-1"><span className="text-primary mt-1.5 shrink-0">&bull;</span><p className="text-foreground leading-relaxed">{trimmed.replace(/^- /, "")}</p></div>;
+                  }
+                  return (
+                    <p key={i} className="text-foreground leading-relaxed">
+                      {trimmed.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>')}
+                    </p>
+                  );
+                })
+              )}
             </div>
 
             <div className="mt-10 pt-6 border-t border-border">

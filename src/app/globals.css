@@ -27,6 +27,7 @@
 
   --animate-fadein: fadein 0.3s ease-out;
   --animate-slidein: slidein 0.4s ease-out;
+  --animate-scalein: scalein 0.3s ease-out;
 }
 
 @keyframes fadein {
@@ -37,6 +38,11 @@
 @keyframes slidein {
   from { opacity: 0; transform: translateX(100%); }
   to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scalein {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 @layer base {
@@ -57,5 +63,41 @@
   }
   .prose-custom p {
     @apply mb-4;
+  }
+  .prose-custom h2 {
+    @apply font-heading font-bold text-xl text-primary mt-6 mb-3;
+  }
+  .prose-custom h3 {
+    @apply font-heading font-bold text-lg text-primary-dark mt-5 mb-2;
+  }
+  .prose-custom ul, .prose-custom ol {
+    @apply pl-5 mb-4 space-y-1;
+  }
+  .prose-custom ul {
+    @apply list-disc;
+  }
+  .prose-custom ol {
+    @apply list-decimal;
+  }
+  .prose-custom li {
+    @apply text-foreground leading-relaxed;
+  }
+  .prose-custom a {
+    @apply text-primary underline hover:text-primary-light transition-colors;
+  }
+  .prose-custom strong, .prose-custom b {
+    @apply font-semibold text-foreground;
+  }
+  .prose-custom em, .prose-custom i {
+    @apply italic;
+  }
+  .prose-custom u {
+    @apply underline;
+  }
+  .prose-custom img {
+    @apply rounded-xl max-w-full h-auto my-4;
+  }
+  .prose-custom blockquote {
+    @apply border-l-4 border-primary pl-4 italic text-muted my-4;
   }
 }

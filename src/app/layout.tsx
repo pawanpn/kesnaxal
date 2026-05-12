@@ -8,6 +8,7 @@ import ToastContainer from "@/components/admin/Toast";
 import { ToastProvider } from "@/context/ToastContext";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import EmergencyPopup from "@/components/sections/EmergencyPopup";
 import { siteConfig } from "@/constants/siteConfig";
 import "./globals.css";
 
@@ -64,6 +65,7 @@ export default function RootLayout({
             <ToastProvider>
               <EditModeBanner />
               <Navbar />
+              <EmergencyPopup />
               <main className="flex-1">{children}</main>
               <Footer />
               <AdminToolbar />

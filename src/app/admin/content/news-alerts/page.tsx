@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/context/ToastContext";
@@ -16,6 +16,13 @@ const LOCALES: { id: Locale; label: string }[] = [
 ];
 
 const CATEGORIES = ["Achievement", "Event", "Announcement", "Infrastructure", "Result"];
+
+const COLORS = [
+  "#000000", "#1a1a2e", "#e94560", "#0f3460", "#16213e",
+  "#e23e57", "#533483", "#6a2c70", "#b83b5e", "#f08a5d",
+  "#ff5722", "#4caf50", "#2196f3", "#9c27b0", "#ff9800",
+  "#795548", "#607d8b", "#ffffff", "#cccccc", "#666666",
+];
 
 function emptyArticle(): NewsArticle {
   const now = new Date().toISOString().split("T")[0];
@@ -33,12 +40,106 @@ function emptyArticle(): NewsArticle {
   };
 }
 
+function execCmd(cmd: string, val?: string) {
+  document.execCommand(cmd, false, val);
+}
+
+function RichTextEditor({
+  value,
+  onChange,
+  placeholder,
+  rows = 8,
+}: {
+  value: string;
+  onChange: (html: string) => void;
+  placeholder?: string;
+  rows?: number;
+}) {
+  const editorRef = useRef<HTMLDivElement>(null);
+  const [htmlMode, setHtmlMode] = useState(false);
+  const [rawHtml, setRawHtml] = useState(value);
+
+  useEffect(() => {
+    if (!htmlMode && editorRef.current && editorRef.current.innerHTML !== value) {
+      editorRef.current.innerHTML = value;
+    }
+  }, [value, htmlMode]);
+
+  const handleInput = () => {
+    if (editorRef.current) {
+      onChange(editorRef.current.innerHTML);
+    }
+  };
+
+  const toggleHtml = () => {
+    if (htmlMode) {
+      onChange(rawHtml);
+    } else {
+      setRawHtml(editorRef.current?.innerHTML || "");
+    }
+    setHtmlMode(!htmlMode);
+  };
+
+  return (
+    <div className="rounded-lg border border-border overflow-hidden">
+      {!htmlMode && (
+        <div className="flex flex-wrap items-center gap-0.5 p-1.5 bg-surface border-b border-border">
+          <button type="button" onClick={() => execCmd("bold")} title="Bold (Ctrl+B)" className="w-7 h-7 flex items-center justify-center rounded hover:bg-white text-xs font-bold">B</button>
+          <button type="button" onClick={() => execCmd("italic")} title="Italic (Ctrl+I)" className="w-7 h-7 flex items-center justify-center rounded hover:bg-white text-xs italic">I</button>
+          <button type="button" onClick={() => execCmd("underline")} title="Underline (Ctrl+U)" className="w-7 h-7 flex items-center justify-center rounded hover:bg-white text-xs underline">U</button>
+          <span className="w-px h-5 bg-border mx-0.5" />
+          <button type="button" onClick={() => execCmd("formatBlock", "h2")} title="Heading 2" className="w-7 h-7 flex items-center justify-center rounded hover:bg-white text-[10px] font-bold">H2</button>
+          <button type="button" onClick={() => execCmd("formatBlock", "h3")} title="Heading 3" className="w-7 h-7 flex items-center justify-center rounded hover:bg-white text-[10px] font-bold">H3</button>
+          <button type="button" onClick={() => execCmd("formatBlock", "p")} title="Paragraph" className="w-7 h-7 flex items-center justify-center rounded hover:bg-white text-[9px]">P</button>
+          <span className="w-px h-5 bg-border mx-0.5" />
+          <button type="button" onClick={() => execCmd("insertUnorderedList")} title="Bullet List" className="w-7 h-7 flex items-center justify-center rounded hover:bg-white text-[10px]">•≡</button>
+          <button type="button" onClick={() => execCmd("insertOrderedList")} title="Numbered List" className="w-7 h-7 flex items-center justify-center rounded hover:bg-white text-[10px]">1≡</button>
+          <span className="w-px h-5 bg-border mx-0.5" />
+          <button type="button" onClick={() => { const u = prompt("URL:"); if (u) execCmd("createLink", u); }} title="Insert Link" className="w-7 h-7 flex items-center justify-center rounded hover:bg-white text-[10px]">🔗</button>
+          <button type="button" onClick={() => { const u = prompt("Image URL:"); if (u) execCmd("insertImage", u); }} title="Insert Image" className="w-7 h-7 flex items-center justify-center rounded hover:bg-white text-[10px]">🖼</button>
+          <span className="w-px h-5 bg-border mx-0.5" />
+          <div className="relative" title="Text Color">
+            <input type="color" onChange={(e) => execCmd("foreColor", e.target.value)}
+              className="w-6 h-6 rounded cursor-pointer border-0 p-0 bg-transparent" />
+          </div>
+          <div className="flex items-center gap-0.5 ml-auto">
+            {COLORS.slice(0, 8).map((c) => (
+              <button key={c} type="button" onClick={() => execCmd("foreColor", c)} title={c}
+                className="w-4 h-4 rounded-full border border-gray-300" style={{ backgroundColor: c }} />
+            ))}
+          </div>
+          <span className="w-px h-5 bg-border mx-0.5" />
+          <button type="button" onClick={toggleHtml} title="HTML Source" className="w-7 h-7 flex items-center justify-center rounded hover:bg-white text-[9px] font-mono">&lt;/&gt;</button>
+        </div>
+      )}
+      {htmlMode ? (
+        <textarea value={rawHtml} onChange={(e) => setRawHtml(e.target.value)}
+          rows={rows}
+          className="w-full px-3 py-2 text-xs font-mono bg-yellow-50 outline-none resize-y"
+          placeholder={placeholder}
+          style={{ minHeight: `${rows * 24}px` }} />
+      ) : (
+        <div
+          ref={editorRef}
+          contentEditable
+          suppressContentEditableWarning
+          onInput={handleInput}
+          className="w-full px-3 py-2 text-sm outline-none min-h-[120px] prose-custom"
+          style={{ minHeight: `${rows * 24}px` }}
+          data-placeholder={placeholder}
+        />
+      )}
+    </div>
+  );
+}
+
 export default function NewsAlertsPage() {
   const { getContent, getJson, saveContent, saveJson, uploadMedia, hasDraft, discardSectionDrafts, loadAllContent } = useAdmin();
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState<"articles" | "breaking">("articles");
   const [lang, setLang] = useState<Locale>("en");
+  const [contentLang, setContentLang] = useState<Locale>("en");
   const [syncing, setSyncing] = useState(false);
   const [translating, setTranslating] = useState(false);
   const [discarding, setDiscarding] = useState(false);
@@ -353,23 +454,29 @@ export default function NewsAlertsPage() {
                     </div>
                   </div>
 
-                  {/* Content */}
+                  {/* Content — Rich Text Editor per locale */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="block text-[11px] font-semibold text-foreground">Content</label>
+                      <div className="flex items-center gap-2">
+                        <label className="block text-[11px] font-semibold text-foreground">Content</label>
+                        <div className="flex gap-0.5">
+                          {LOCALES.map((l) => (
+                            <button key={l.id} type="button" onClick={() => setContentLang(l.id)}
+                              className={`px-2 py-0.5 rounded text-[9px] font-bold transition-all ${contentLang === l.id ? "bg-primary text-white" : "bg-gray-100 text-muted hover:bg-gray-200"}`}>
+                              {l.id.toUpperCase()}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                       <button onClick={() => handleTranslate("content")} disabled={translating || !(editing.content as LocaleContent)[lang]?.trim()}
                         className="text-[9px] text-primary hover:underline disabled:opacity-30">{translating ? "..." : "Translate"}</button>
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {LOCALES.map((l) => (
-                        <div key={l.id} className="relative">
-                          <span className="absolute -top-2 left-2 text-[9px] font-bold text-muted bg-white px-1">{l.id.toUpperCase()}</span>
-                          <textarea value={(editing.content as LocaleContent)[l.id] || ""}
-                            onChange={(e) => updateLocaleField("content", l.id, e.target.value)} rows={5}
-                            className="w-full px-2 py-1.5 pt-3 rounded border border-border text-[11px] focus:border-primary outline-none resize-y" placeholder={`Content (${l.id.toUpperCase()})`} />
-                        </div>
-                      ))}
-                    </div>
+                    <RichTextEditor
+                      value={(editing.content as LocaleContent)[contentLang] || ""}
+                      onChange={(html) => updateLocaleField("content", contentLang, html)}
+                      placeholder={`Write article content in ${contentLang.toUpperCase()}...`}
+                      rows={8}
+                    />
                   </div>
 
                   {/* Meta fields */}
