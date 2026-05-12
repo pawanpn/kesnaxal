@@ -54,9 +54,10 @@ export function resolveArticle(
     title: LocaleContent;
     excerpt: LocaleContent;
     content: LocaleContent;
-  },
+  } | null | undefined,
   locale: Locale
 ): { title: string; excerpt: string; content: string } {
+  if (!article) return { title: "", excerpt: "", content: "" };
   return {
     title: resolveContent(article.title, locale),
     excerpt: resolveContent(article.excerpt, locale),
