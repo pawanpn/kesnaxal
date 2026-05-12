@@ -122,7 +122,14 @@ export function useDynamicContent() {
   // ── News ──
   const newsArticles: NewsArticle[] = useMemo(() => {
     if (!contentReady) return [];
-    const jsonStr = getContent("news", "news_articles", locale);
+    let jsonStr = getContent("news", "news_articles", locale);
+    if (!jsonStr) {
+      for (const loc of ["en", "ne", "ja"] as Locale[]) {
+        if (loc === locale) continue;
+        const s = getContent("news", "news_articles", loc);
+        if (s) { jsonStr = s; break; }
+      }
+    }
     if (jsonStr) {
       try {
         const parsed = JSON.parse(jsonStr);

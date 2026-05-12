@@ -148,12 +148,8 @@ export default function NewsAdminPage() {
   const saveArticles = async (updated: NewsArticle[]) => {
     setSaving(true);
     try {
-      if (syncing) {
-        for (const { id: l } of LOCALES) {
-          await saveJson("news", "news_articles", l, { articles: updated });
-        }
-      } else {
-        await saveJson("news", "news_articles", lang, { articles: updated });
+      for (const { id: l } of LOCALES) {
+        await saveJson("news", "news_articles", l, { articles: updated });
       }
       setArticles(updated);
       toast("success", "Saved as draft - publish from Review page");
