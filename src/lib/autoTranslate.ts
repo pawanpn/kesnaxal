@@ -7,6 +7,7 @@ type Locale = "en" | "ne" | "ja";
 const LOCALES: Locale[] = ["en", "ne", "ja"];
 
 const API = "https://api.mymemory.translated.net/get";
+const MAX_CHUNK_LEN = 500;
 
 // In-memory cache for translations
 const cache = new Map<string, string>();
@@ -23,6 +24,38 @@ export async function translateText(text: string, from: Locale, to: Locale): Pro
   const cached = cache.get(key);
   if (cached) return cached;
 
+  if (text.length <= MAX_CHUNK_LEN) {
+    return translateSingle(text, from, to);
+  }
+
+  // Split long text into sentences and translate in chunks
+  const sentences = text.match(/[^.!?\n]+[.!?\n]*/g) || [text];
+  const chunks: string[] = [];
+  let current = "";
+  for (const s of sentences) {
+    if ((current + s).length > MAX_CHUNK_LEN && current) {
+      chunks.push(current.trim());
+      current = s;
+    } else {
+      current += s;
+    }
+  }
+  if (current.trim()) chunks.push(current.trim());
+
+  const translated: string[] = [];
+  for (const chunk of chunks) {
+    const result = await translateSingle(chunk, from, to);
+    translated.push(result);
+  }
+
+  const full = translated.join(" ");
+  cache.set(key, full);
+  return full;
+}
+
+async function translateSingle(text: string, from: Locale, to: Locale): Promise<string> {
+  if (!text.trim()) return "";
+  const key = cacheKey(text, from, to);
   try {
     const url = `${API}?q=${encodeURIComponent(text)}&langpair=${from}|${to}`;
     const res = await fetch(url);
