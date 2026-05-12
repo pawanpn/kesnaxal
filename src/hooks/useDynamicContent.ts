@@ -187,6 +187,20 @@ export function useDynamicContent() {
     return siteConfig.gallery.images;
   }, [contentReady, supabaseHasContent, getContent, locale]);
 
+  const galleryCategories: string[] = useMemo(() => {
+    if (!contentReady) return [];
+    const jsonStr = getContent("gallery", "gallery_images", "en");
+    if (jsonStr) {
+      try {
+        const parsed = JSON.parse(jsonStr);
+        if (parsed.categories && Array.isArray(parsed.categories) && parsed.categories.length > 0) {
+          return parsed.categories as string[];
+        }
+      } catch { /* fall through */ }
+    }
+    return siteConfig.gallery.categories;
+  }, [contentReady, getContent]);
+
   // ── Academic Levels ──
   const academicLevels: AcademicLevel[] = useMemo(() => {
     if (!supabaseHasContent) return siteConfig.academicLevels;
@@ -318,6 +332,7 @@ export function useDynamicContent() {
     testimonials,
     galleryImages,
     gallerySubtitle,
+    galleryCategories,
     academicLevels,
     faculty,
     staff,

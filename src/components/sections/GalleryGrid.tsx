@@ -9,15 +9,18 @@ import type { GalleryImage } from "@/types";
 interface GalleryGridProps {
   images: GalleryImage[];
   subtitle?: string;
+  categories?: string[];
 }
 
-export default function GalleryGrid({ images, subtitle }: GalleryGridProps) {
+export default function GalleryGrid({ images, subtitle, categories: storedCats }: GalleryGridProps) {
   const t = useT();
   const [activeCategory, setActiveCategory] = useState(t.sections.All);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [showAll, setShowAll] = useState(false);
 
-  const categories = [t.sections.All, ...Array.from(new Set(images.map((img) => img.category)))];
+  const categories = storedCats?.length
+    ? [t.sections.All, ...storedCats]
+    : [t.sections.All, ...Array.from(new Set(images.map((img) => img.category)))];
   const filtered = activeCategory === t.sections.All ? images : images.filter((img) => img.category === activeCategory);
   const SHOWN_COUNT = 8;
   const visible = showAll ? filtered : filtered.slice(0, SHOWN_COUNT);

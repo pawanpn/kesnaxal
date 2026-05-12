@@ -6,11 +6,11 @@ import Testimonials from "@/components/sections/Testimonials";
 import { useDynamicContent } from "@/hooks/useDynamicContent";
 
 export default function GalleryPage() {
-  const { galleryImages, gallerySubtitle, testimonials } = useDynamicContent();
+  const { galleryImages, gallerySubtitle, galleryCategories, testimonials } = useDynamicContent();
   return (
     <div className="min-h-screen">
       <PageHero pageKey="gallery" />
-      <GalleryGrid images={galleryImages} subtitle={gallerySubtitle} />
+      <GalleryGrid images={galleryImages} subtitle={gallerySubtitle} categories={galleryCategories} />
       <Testimonials testimonials={testimonials} />
     </div>
   );
