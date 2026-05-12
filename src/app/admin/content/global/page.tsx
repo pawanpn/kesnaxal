@@ -70,7 +70,7 @@ const DEF_HOURS: HourEntry[] = [
 type FormDataType = Record<string, Record<Locale, string>>;
 
 export default function GlobalSettingsPage() {
-  const { getContent, saveContent, getJson, saveJson, discardSectionDrafts, hasDraft, loadAllContent, uploadMedia } = useAdmin();
+  const { getContent, saveContent, savePublishedContent, getJson, saveJson, discardSectionDrafts, hasDraft, loadAllContent, uploadMedia } = useAdmin();
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState("schoolInfo");
@@ -128,10 +128,12 @@ export default function GlobalSettingsPage() {
     setSaveStatus((p) => ({ ...p, [key]: "saving" }));
     try {
       const data = formData[key] || { en: "", ne: "", ja: "" };
+      const saveFn = key === "mapEmbedUrl" ? savePublishedContent : saveContent;
       for (const { id: l } of LOCALES) {
-        await saveContent("global", key, l, data[l] || "");
+        await saveFn("global", key, l, data[l] || "");
       }
-      toast("success", `${key} saved as draft`);
+      await loadAllContent();
+      toast("success", key === "mapEmbedUrl" ? "Map URL saved & published" : `${key} saved as draft`);
     } catch { toast("error", "Failed to save"); }
     setSaveStatus((p) => ({ ...p, [key]: "saved" }));
     setTimeout(() => setSaveStatus((p) => ({ ...p, [key]: "idle" })), 1500);
@@ -166,13 +168,14 @@ export default function GlobalSettingsPage() {
     if (!file) return;
     setLogoUploading(true);
     try {
-      const url = await uploadMedia(file, "global", "logo");
+      const url = await uploadMedia(file, "global", "logo_url");
       if (url) {
         setLogoUrl(url);
-        await saveContent("global", "logo_url", "en", url);
-        await saveContent("global", "logo_url", "ne", url);
-        await saveContent("global", "logo_url", "ja", url);
-        toast("success", "Logo saved as draft - publish from Review page");
+        await savePublishedContent("global", "logo_url", "en", url);
+        await savePublishedContent("global", "logo_url", "ne", url);
+        await savePublishedContent("global", "logo_url", "ja", url);
+        await loadAllContent();
+        toast("success", "Logo published successfully");
       }
     } catch { toast("error", "Logo upload failed"); }
     setLogoUploading(false);
@@ -182,10 +185,11 @@ export default function GlobalSettingsPage() {
   const handleResetLogo = async () => {
     try {
       setLogoUrl("/data/logo.jpg");
-      await saveContent("global", "logo_url", "en", "/data/logo.jpg");
-      await saveContent("global", "logo_url", "ne", "/data/logo.jpg");
-      await saveContent("global", "logo_url", "ja", "/data/logo.jpg");
-      toast("success", "Logo reset to default (draft)");
+      await savePublishedContent("global", "logo_url", "en", "/data/logo.jpg");
+      await savePublishedContent("global", "logo_url", "ne", "/data/logo.jpg");
+      await savePublishedContent("global", "logo_url", "ja", "/data/logo.jpg");
+      await loadAllContent();
+      toast("success", "Logo reset to default");
     } catch { toast("error", "Failed to reset logo"); }
   };
 
@@ -326,6 +330,14 @@ export default function GlobalSettingsPage() {
                       )}
                     </button>
                   </div>
+                  {field.key === "mapEmbedUrl" && formData["mapEmbedUrl"]?.["en"] && (
+                    <div className="mt-3">
+                      <label className="block text-[10px] font-semibold text-muted mb-1.5">Map Preview</label>
+                      <div className="rounded-lg overflow-hidden border border-border h-[200px]">
+                        <iframe src={formData["mapEmbedUrl"]["en"]} width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="Map Preview" />
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

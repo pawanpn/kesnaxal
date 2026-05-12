@@ -32,7 +32,9 @@ export function useDynamicContent() {
     return !!(
       getContent("hero", "slide_0_title", locale) ||
       getContent("events", "event_1_title", locale) ||
-      getContent("school", "name", locale)
+      getContent("school", "name", locale) ||
+      getContent("global", "mapEmbedUrl", locale) ||
+      getContent("global", "logo_url", "en")
     );
   }, [getContent, locale]);
 
@@ -68,12 +70,12 @@ export function useDynamicContent() {
   const contact: ContactInfo = useMemo(() => {
     if (!supabaseHasContent) return siteConfig.contact;
     return {
-      address: resolveSimple("contact", "address", siteConfig.contact.address),
-      phone: resolveSimple("contact", "phone", siteConfig.contact.phone),
-      phone2: resolveSimple("contact", "phone2", siteConfig.contact.phone2),
-      email: resolveSimple("contact", "email", siteConfig.contact.email),
-      admissionsEmail: resolveSimple("contact", "admissionsEmail", siteConfig.contact.admissionsEmail),
-      mapEmbedUrl: resolveSimple("contact", "mapEmbedUrl", siteConfig.contact.mapEmbedUrl),
+      address: resolveSimple("global", "address", siteConfig.contact.address),
+      phone: resolveSimple("global", "phone", siteConfig.contact.phone),
+      phone2: resolveSimple("global", "phone2", siteConfig.contact.phone2),
+      email: resolveSimple("global", "email", siteConfig.contact.email),
+      admissionsEmail: resolveSimple("global", "admissionsEmail", siteConfig.contact.admissionsEmail),
+      mapEmbedUrl: resolveSimple("global", "mapEmbedUrl", siteConfig.contact.mapEmbedUrl),
     };
   }, [supabaseHasContent, getContent, locale]);
 
@@ -227,21 +229,31 @@ export function useDynamicContent() {
 
   // ── Jobs ──
   const jobVacancies: JobVacancy[] = useMemo(() => {
+    const jsonStr = getContent("careers", "job_vacancies", "en");
+    if (jsonStr) {
+      try {
+        const parsed = JSON.parse(jsonStr);
+        if (parsed.vacancies && Array.isArray(parsed.vacancies) && parsed.vacancies.length > 0) {
+          return parsed.vacancies as JobVacancy[];
+        }
+      } catch { /* fall through */ }
+    }
+
     if (!supabaseHasContent) return siteConfig.jobVacancies;
     return siteConfig.jobVacancies.map((job) => {
       const id = `job_${job.id}`;
       return {
         ...job,
-        title: { ...job.title, [locale]: resolveText("careers", `${id}_title`, job.title) },
-        category: { ...job.category, [locale]: resolveText("careers", `${id}_category`, job.category) },
-        level: { ...job.level, [locale]: resolveText("careers", `${id}_level`, job.level) },
-        experience: { ...job.experience, [locale]: resolveText("careers", `${id}_experience`, job.experience) },
-        salary: { ...job.salary, [locale]: resolveText("careers", `${id}_salary`, job.salary) },
+        title:       { ...job.title,       [locale]: resolveText("careers", `${id}_title`,       job.title) },
+        category:    { ...job.category,    [locale]: resolveText("careers", `${id}_category`,    job.category) },
+        level:       { ...job.level,       [locale]: resolveText("careers", `${id}_level`,       job.level) },
+        experience:  { ...job.experience,  [locale]: resolveText("careers", `${id}_experience`,  job.experience) },
+        salary:      { ...job.salary,      [locale]: resolveText("careers", `${id}_salary`,      job.salary) },
         workstation: { ...job.workstation, [locale]: resolveText("careers", `${id}_workstation`, job.workstation) },
-        vacancies: Number(resolveSimple("careers", `${id}_vacancies`, String(job.vacancies))) || job.vacancies,
-        addedOn: resolveSimple("careers", `${id}_addedOn`, job.addedOn),
-        expiresOn: resolveSimple("careers", `${id}_expiresOn`, job.expiresOn),
-        isActive: resolveSimple("careers", `${id}_isActive`, String(job.isActive)) === "true",
+        vacancies:   Number(resolveSimple("careers", `${id}_vacancies`, String(job.vacancies))) || job.vacancies,
+        addedOn:     resolveSimple("careers", `${id}_addedOn`,   job.addedOn),
+        expiresOn:   resolveSimple("careers", `${id}_expiresOn`, job.expiresOn),
+        isActive:    resolveSimple("careers", `${id}_isActive`,  String(job.isActive)) === "true",
       };
     });
   }, [supabaseHasContent, getContent, locale]);

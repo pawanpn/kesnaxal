@@ -5,8 +5,16 @@ import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/context/ToastContext";
 import { supabase } from "@/lib/supabase/client";
+import type { JobVacancy } from "@/types";
 
 type Locale = "en" | "ne" | "ja";
+type LocaleContent = Record<Locale, string>;
+
+const LOCALES: { id: Locale; label: string }[] = [
+  { id: "en", label: "EN" }, { id: "ne", label: "NE" }, { id: "ja", label: "JA" },
+];
+
+const JOB_CATEGORIES = ["Teaching", "Administration", "Support Staff"];
 
 interface Application {
   id: string; job_id: string; job_title: string; full_name: string;
@@ -15,38 +23,49 @@ interface Application {
   cv_url: string | null; photo_url: string | null;
 }
 
-interface JobItem {
-  id: string; title: string; category: string; type: string; description: string;
-}
-
-const LOCALES: { id: Locale; label: string }[] = [
-  { id: "en", label: "EN" }, { id: "ne", label: "NE" }, { id: "ja", label: "JA" },
-];
-const jobCategories = ["Teaching", "Administration", "Support Staff"];
 const statusColors: Record<string, string> = {
   pending: "bg-blue-100 text-blue-700", reviewed: "bg-yellow-100 text-yellow-700",
   shortlisted: "bg-purple-100 text-purple-700", rejected: "bg-red-100 text-red-700",
   hired: "bg-green-100 text-green-700",
 };
 
+function emptyLocale(): LocaleContent {
+  return { en: "", ne: "", ja: "" };
+}
+
+function newJob(): JobVacancy {
+  return {
+    id: Date.now(),
+    title: emptyLocale(),
+    category: { en: "Teaching", ne: "शिक्षण", ja: "教育" },
+    level: emptyLocale(),
+    experience: emptyLocale(),
+    salary: emptyLocale(),
+    vacancies: 1,
+    workstation: emptyLocale(),
+    responsibilities: [],
+    addedOn: new Date().toISOString().split("T")[0],
+    expiresOn: "",
+    isActive: true,
+  };
+}
+
 export default function CareerManagerPage() {
-  const { getJson, saveJson, hasDraft, discardSectionDrafts, loadAllContent } = useAdmin();
+  const { getContent, savePublishedContent, loadAllContent } = useAdmin();
   const { toast } = useToast();
+
+  const [activeTab, setActiveTab] = useState<"jobs" | "applications">("jobs");
+  const [lang, setLang] = useState<Locale>("en");
+  const [jobs, setJobs] = useState<JobVacancy[]>([]);
+  const [editingJob, setEditingJob] = useState<JobVacancy | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [newResp, setNewResp] = useState("");
+
   const [applications, setApplications] = useState<Application[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("All");
+  const [appLoading, setAppLoading] = useState(true);
+  const [appFilter, setAppFilter] = useState("All");
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
-
-  const [lang, setLang] = useState<Locale>("en");
-  const [syncing, setSyncing] = useState(false);
-  const [jobsByLocale, setJobsByLocale] = useState<Record<Locale, JobItem[]>>({ en: [], ne: [], ja: [] });
-  const [jobTitle, setJobTitle] = useState("");
-  const [jobCategory, setJobCategory] = useState("Teaching");
-  const [jobType, setJobType] = useState("Full-time");
-  const [jobDesc, setJobDesc] = useState("");
-  const [editingJobId, setEditingJobId] = useState<string | null>(null);
-  const [savingJobs, setSavingJobs] = useState(false);
 
   useEffect(() => {
     loadAllContent();
@@ -54,17 +73,84 @@ export default function CareerManagerPage() {
   }, []);
 
   useEffect(() => {
-    LOCALES.forEach(({ id: l }) => {
-      const json = getJson("careers", "job_listings", l);
-      const arr = json?.jobs as JobItem[] | undefined;
-      if (arr?.length) setJobsByLocale((p) => ({ ...p, [l]: arr }));
-    });
-  }, [getJson]);
+    const jsonStr = getContent("careers", "job_vacancies", "en");
+    if (jsonStr) {
+      try {
+        const parsed = JSON.parse(jsonStr);
+        if (parsed.vacancies && Array.isArray(parsed.vacancies)) {
+          setJobs(parsed.vacancies);
+        }
+      } catch { /* ignore */ }
+    }
+  }, [getContent]);
 
   const fetchApplications = async () => {
     const { data } = await supabase.from("career_applications").select("*").order("created_at", { ascending: false });
     setApplications((data as Application[]) || []);
-    setLoading(false);
+    setAppLoading(false);
+  };
+
+  const saveJobs = async (updatedJobs: JobVacancy[]) => {
+    setSaving(true);
+    try {
+      const payload = JSON.stringify({ vacancies: updatedJobs });
+      for (const { id: l } of LOCALES) {
+        await savePublishedContent("careers", "job_vacancies", l, payload);
+      }
+      await loadAllContent();
+      setJobs(updatedJobs);
+      toast("success", "Jobs saved & published");
+    } catch { toast("error", "Failed to save jobs"); }
+    setSaving(false);
+  };
+
+  const handleSaveJob = async () => {
+    if (!editingJob) return;
+    const exists = jobs.find((j) => j.id === editingJob.id);
+    const updated = exists ? jobs.map((j) => j.id === editingJob.id ? editingJob : j) : [...jobs, editingJob];
+    await saveJobs(updated);
+    setEditingJob(null);
+  };
+
+  const handleDeleteJob = async (id: number) => {
+    const updated = jobs.filter((j) => j.id !== id);
+    await saveJobs(updated);
+  };
+
+  const handleToggleActive = async (id: number) => {
+    const updated = jobs.map((j) => j.id === id ? { ...j, isActive: !j.isActive } : j);
+    await saveJobs(updated);
+  };
+
+  const updateField = (field: keyof JobVacancy, value: string) => {
+    if (!editingJob) return;
+    const localeFields = ["title", "category", "level", "experience", "salary", "workstation"];
+    if (localeFields.includes(field)) {
+      setEditingJob({ ...editingJob, [field]: { ...(editingJob[field] as LocaleContent), [lang]: value } });
+    } else {
+      setEditingJob({ ...editingJob, [field]: value });
+    }
+  };
+
+  const addResponsibility = () => {
+    if (!editingJob || !newResp.trim()) return;
+    const resp: LocaleContent = { en: "", ne: "", ja: "" };
+    resp[lang] = newResp.trim();
+    setEditingJob({ ...editingJob, responsibilities: [...editingJob.responsibilities, resp] });
+    setNewResp("");
+  };
+
+  const updateResponsibility = (idx: number, value: string) => {
+    if (!editingJob) return;
+    const updated = editingJob.responsibilities.map((r, i) =>
+      i === idx ? { ...r, [lang]: value } : r
+    );
+    setEditingJob({ ...editingJob, responsibilities: updated });
+  };
+
+  const removeResponsibility = (idx: number) => {
+    if (!editingJob) return;
+    setEditingJob({ ...editingJob, responsibilities: editingJob.responsibilities.filter((_, i) => i !== idx) });
   };
 
   const updateStatus = async (id: string, status: string) => {
@@ -74,56 +160,11 @@ export default function CareerManagerPage() {
       await fetchApplications();
       if (selectedApp?.id === id) setSelectedApp((prev) => prev ? { ...prev, status } : null);
       toast("success", "Status updated");
-    } catch {
-      toast("error", "Status update failed");
-    }
+    } catch { toast("error", "Status update failed"); }
     setUpdatingStatus(null);
   };
 
-  const handleSaveJobs = async () => {
-    setSavingJobs(true);
-    try {
-      if (syncing) {
-        for (const { id: l } of LOCALES) {
-          await saveJson("careers", "job_listings", l, { jobs: jobsByLocale[lang] });
-        }
-      } else {
-        await saveJson("careers", "job_listings", lang, { jobs: jobsByLocale[lang] });
-      }
-      toast("success", "Saved successfully");
-    } catch {
-      toast("error", "Save failed");
-    }
-    setSavingJobs(false);
-  };
-
-  const handleAddOrUpdate = () => {
-    const job: JobItem = { id: editingJobId || `job_${Date.now()}`, title: jobTitle, category: jobCategory, type: jobType, description: jobDesc };
-    if (editingJobId) {
-      setJobsByLocale((p) => ({ ...p, [lang]: p[lang].map((j) => j.id === editingJobId ? job : j) }));
-    } else {
-      setJobsByLocale((p) => ({ ...p, [lang]: [...p[lang], job] }));
-    }
-    setEditingJobId(null);
-    setJobTitle(""); setJobDesc(""); setJobCategory("Teaching"); setJobType("Full-time");
-  };
-
-  const handleEditJob = (job: JobItem) => {
-    setEditingJobId(job.id);
-    setJobTitle(job.title);
-    setJobCategory(job.category);
-    setJobType(job.type);
-    setJobDesc(job.description);
-  };
-
-  const handleDeleteJob = (id: string) => {
-    setJobsByLocale((p) => ({ ...p, [lang]: p[lang].filter((j) => j.id !== id) }));
-    if (editingJobId === id) {
-      setEditingJobId(null); setJobTitle(""); setJobDesc(""); setJobCategory("Teaching"); setJobType("Full-time");
-    }
-  };
-
-  const filtered = filter === "All" ? applications : applications.filter((a) => a.status === filter.toLowerCase());
+  const filtered = appFilter === "All" ? applications : applications.filter((a) => a.status === appFilter.toLowerCase());
 
   return (
     <AdminGuard>
@@ -131,103 +172,76 @@ export default function CareerManagerPage() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-xl font-heading font-bold text-foreground">Career Manager</h1>
-            <p className="text-xs text-muted mt-1">Post jobs and manage applications</p>
+            <p className="text-xs text-muted mt-1">Manage job vacancies and applications</p>
           </div>
-          <button onClick={async () => { await discardSectionDrafts("careers"); toast("success", "Drafts discarded"); window.location.reload(); }}
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5">
-            Discard Drafts
-          </button>
         </div>
 
         <div className="flex items-center gap-3 mb-4">
-          <div className="flex gap-1 bg-white rounded-lg border border-border p-0.5">
-            {LOCALES.map((l) => (
-              <button key={l.id} onClick={() => setLang(l.id)}
-                className={`px-3 py-1 rounded-md text-[11px] font-bold transition-all ${lang === l.id ? "bg-primary text-white" : "text-muted hover:text-foreground"}`}>
-                {l.label}
-              </button>
-            ))}
-          </div>
-          <label className="flex items-center gap-1.5 text-[11px] text-muted cursor-pointer select-none">
-            <button type="button" onClick={() => setSyncing(!syncing)}
-              className={`w-7 h-4 rounded-full transition-colors relative shrink-0 ${syncing ? "bg-green-500" : "bg-gray-300"}`}>
-              <span className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${syncing ? "translate-x-3" : "translate-x-0"}`} />
+          <div className="flex gap-1 bg-white rounded-xl border border-border p-1">
+            <button onClick={() => setActiveTab("jobs")}
+              className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${activeTab === "jobs" ? "bg-primary text-white shadow-sm" : "text-muted hover:text-foreground hover:bg-surface"}`}>
+              Jobs
             </button>
-            Sync
-          </label>
+            <button onClick={() => setActiveTab("applications")}
+              className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${activeTab === "applications" ? "bg-primary text-white shadow-sm" : "text-muted hover:text-foreground hover:bg-surface"}`}>
+              Applications ({applications.length})
+            </button>
+          </div>
+          {activeTab === "jobs" && (
+            <div className="flex gap-1 bg-white rounded-lg border border-border p-0.5">
+              {LOCALES.map((l) => (
+                <button key={l.id} onClick={() => setLang(l.id)}
+                  className={`px-3 py-1 rounded-md text-[11px] font-bold transition-all ${lang === l.id ? "bg-primary text-white" : "text-muted hover:text-foreground"}`}>
+                  {l.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Job Postings List + Form */}
-          <div className="lg:col-span-1 space-y-4">
-            <div className="bg-white rounded-xl border border-border p-5">
-              <h2 className="font-heading font-bold text-sm text-foreground mb-3">
-                {editingJobId ? `Edit Job (${lang.toUpperCase()})` : `Post New Job (${lang.toUpperCase()})`}
-              </h2>
-              <div className="space-y-3">
-                <input value={jobTitle} onChange={(e) => setJobTitle(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none"
-                  placeholder={`Job Title (${lang.toUpperCase()})`} />
-                <select value={jobCategory} onChange={(e) => setJobCategory(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none">
-                  {jobCategories.map((c) => <option key={c}>{c}</option>)}
-                </select>
-                <select value={jobType} onChange={(e) => setJobType(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none">
-                  <option>Full-time</option><option>Part-time</option><option>Contract</option>
-                </select>
-                <textarea value={jobDesc} onChange={(e) => setJobDesc(e.target.value)} rows={3}
-                  className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none resize-y"
-                  placeholder={`Description (${lang.toUpperCase()})`} />
-                <div className="flex gap-2">
-                  <button onClick={handleAddOrUpdate} disabled={!jobTitle}
-                    className="flex-1 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
-                    {editingJobId ? "Update Job" : "Add Job"}
-                  </button>
-                  {editingJobId && (
-                    <button onClick={() => { setEditingJobId(null); setJobTitle(""); setJobDesc(""); }}
-                      className="py-2 px-3 rounded-lg text-xs font-semibold border border-border text-muted hover:bg-surface">
-                      Cancel
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Existing Jobs */}
-            <div className="bg-white rounded-xl border border-border p-5">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="font-heading font-bold text-sm text-foreground">
-                  Jobs ({jobsByLocale[lang].length})
-                </h2>
-                <button onClick={handleSaveJobs} disabled={savingJobs}
-                  className="px-3 py-1 rounded-lg text-[10px] font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
-                  {savingJobs ? "Saving..." : "Save All"}
+        {activeTab === "jobs" && (
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            {/* Job List */}
+            <div className="lg:col-span-2 space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="font-heading font-bold text-sm text-foreground">All Jobs ({jobs.length})</h2>
+                <button onClick={() => setEditingJob(newJob())}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700">
+                  + Add Job
                 </button>
               </div>
-              {jobsByLocale[lang].length === 0 ? (
-                <p className="text-xs text-muted italic">No job listings yet.</p>
+              {jobs.length === 0 ? (
+                <p className="text-xs text-muted italic py-8 text-center">No jobs yet. Click &quot;+ Add Job&quot; to create one.</p>
               ) : (
-                <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                  {jobsByLocale[lang].map((job) => (
-                    <div key={job.id} className="p-3 rounded-lg bg-surface/50 border border-border/50">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0 mr-2">
-                          <p className="text-xs font-semibold text-foreground truncate">{job.title}</p>
-                          <div className="flex gap-1 mt-0.5">
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600">{job.category}</span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-muted">{job.type}</span>
+                <div className="space-y-2 max-h-[600px] overflow-y-auto">
+                  {jobs.map((job) => (
+                    <div key={job.id} className={`p-3 rounded-xl border transition-all ${editingJob?.id === job.id ? "border-primary bg-primary/5" : "border-border bg-white"}`}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-foreground truncate">{job.title[lang] || job.title.en || "Untitled"}</p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600">{job.category[lang] || job.category.en}</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-muted">{job.vacancies} vacancy</span>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded ${job.isActive ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"}`}>
+                              {job.isActive ? "Active" : "Inactive"}
+                            </span>
                           </div>
                         </div>
                         <div className="flex gap-1 shrink-0">
-                          <button onClick={() => handleEditJob(job)}
-                            className="w-6 h-6 flex items-center justify-center rounded bg-blue-50 text-blue-600 hover:bg-blue-100" title="Edit">
+                          <button onClick={() => handleToggleActive(job.id)} title={job.isActive ? "Deactivate" : "Activate"}
+                            className={`w-6 h-6 flex items-center justify-center rounded ${job.isActive ? "bg-green-50 text-green-600 hover:bg-green-100" : "bg-gray-100 text-gray-400 hover:bg-gray-200"}`}>
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              {job.isActive ? <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /> : <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />}
+                            </svg>
+                          </button>
+                          <button onClick={() => setEditingJob({ ...job })} title="Edit"
+                            className="w-6 h-6 flex items-center justify-center rounded bg-blue-50 text-blue-600 hover:bg-blue-100">
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
                           </button>
-                          <button onClick={() => handleDeleteJob(job.id)}
-                            className="w-6 h-6 flex items-center justify-center rounded bg-red-50 text-red-600 hover:bg-red-100" title="Delete">
+                          <button onClick={() => handleDeleteJob(job.id)} title="Delete"
+                            className="w-6 h-6 flex items-center justify-center rounded bg-red-50 text-red-600 hover:bg-red-100">
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
@@ -238,26 +252,155 @@ export default function CareerManagerPage() {
                   ))}
                 </div>
               )}
-              {hasDraft("careers", "job_listings", "en") && <p className="text-[10px] text-yellow-600 mt-2">Draft pending</p>}
+            </div>
+
+            {/* Edit/Add Form */}
+            <div className="lg:col-span-3">
+              {editingJob ? (
+                <div className="bg-white rounded-xl border border-border p-5 lg:sticky lg:top-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="font-heading font-bold text-sm text-foreground">
+                      {jobs.find((j) => j.id === editingJob.id) ? "Edit Job" : "Add New Job"} ({lang.toUpperCase()})
+                    </h2>
+                    <button onClick={() => setEditingJob(null)} className="text-muted hover:text-foreground text-xs">Cancel</button>
+                  </div>
+                  <div className="space-y-4 max-h-[550px] overflow-y-auto pr-1">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-foreground mb-1">Job Title *</label>
+                      <input value={(editingJob.title as LocaleContent)[lang] || ""} onChange={(e) => updateField("title", e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none" placeholder="e.g. Mathematics Teacher" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-foreground mb-1">Category *</label>
+                        {lang === "en" ? (
+                          <select value={(editingJob.category as LocaleContent).en}
+                            onChange={(e) => setEditingJob({ ...editingJob, category: { ...editingJob.category as LocaleContent, en: e.target.value } })}
+                            className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none">
+                            {JOB_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                          </select>
+                        ) : (
+                          <input value={(editingJob.category as LocaleContent)[lang] || ""} onChange={(e) => updateField("category", e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none" placeholder="Category translation" />
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-foreground mb-1">Vacancies *</label>
+                        <input type="number" min={1} value={editingJob.vacancies}
+                          onChange={(e) => setEditingJob({ ...editingJob, vacancies: parseInt(e.target.value) || 1 })}
+                          className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-foreground mb-1">Level</label>
+                      <input value={(editingJob.level as LocaleContent)[lang] || ""} onChange={(e) => updateField("level", e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none" placeholder="e.g. Secondary (Grade 6-10)" />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-foreground mb-1">Experience Required</label>
+                      <input value={(editingJob.experience as LocaleContent)[lang] || ""} onChange={(e) => updateField("experience", e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none" placeholder="e.g. Minimum 3 years" />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-foreground mb-1">Salary</label>
+                      <input value={(editingJob.salary as LocaleContent)[lang] || ""} onChange={(e) => updateField("salary", e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none" placeholder="e.g. Negotiable" />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-foreground mb-1">Workstation</label>
+                      <input value={(editingJob.workstation as LocaleContent)[lang] || ""} onChange={(e) => updateField("workstation", e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none" placeholder="e.g. Naxal, Kathmandu" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-foreground mb-1">Posted Date</label>
+                        <input type="date" value={editingJob.addedOn}
+                          onChange={(e) => setEditingJob({ ...editingJob, addedOn: e.target.value })}
+                          className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-foreground mb-1">Expires On</label>
+                        <input type="date" value={editingJob.expiresOn}
+                          onChange={(e) => setEditingJob({ ...editingJob, expiresOn: e.target.value })}
+                          className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none" />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-[11px] font-semibold text-foreground">Active:</label>
+                      <button type="button" onClick={() => setEditingJob({ ...editingJob, isActive: !editingJob.isActive })}
+                        className={`w-8 h-4.5 rounded-full transition-colors relative shrink-0 ${editingJob.isActive ? "bg-green-500" : "bg-gray-300"}`}>
+                        <span className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-white rounded-full shadow transition-transform ${editingJob.isActive ? "translate-x-3.5" : "translate-x-0"}`} />
+                      </button>
+                      <span className="text-[10px] text-muted">{editingJob.isActive ? "Visible to public" : "Hidden from public"}</span>
+                    </div>
+
+                    {/* Responsibilities */}
+                    <div>
+                      <label className="block text-[11px] font-semibold text-foreground mb-1">Responsibilities ({lang.toUpperCase()})</label>
+                      <div className="space-y-1.5 mb-2">
+                        {editingJob.responsibilities.map((r, i) => (
+                          <div key={i} className="flex gap-1.5 items-start">
+                            <span className="text-[10px] text-muted mt-2 shrink-0 w-4">{i + 1}.</span>
+                            <input value={(r as LocaleContent)[lang] || ""} onChange={(e) => updateResponsibility(i, e.target.value)}
+                              className="flex-1 px-2 py-1.5 rounded border border-border text-[11px] focus:border-primary outline-none" />
+                            <button onClick={() => removeResponsibility(i)}
+                              className="w-6 h-6 flex items-center justify-center rounded text-red-500 hover:bg-red-50 shrink-0 mt-0.5">
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-1.5">
+                        <input value={newResp} onChange={(e) => setNewResp(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addResponsibility(); } }}
+                          className="flex-1 px-2 py-1.5 rounded border border-border text-[11px] focus:border-primary outline-none" placeholder="Add responsibility..." />
+                        <button onClick={addResponsibility} disabled={!newResp.trim()}
+                          className="px-2 py-1.5 rounded text-[10px] font-bold bg-primary text-white disabled:opacity-40">Add</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 mt-4 pt-4 border-t border-border">
+                    <button onClick={handleSaveJob} disabled={saving || !(editingJob.title as LocaleContent).en?.trim()}
+                      className="flex-1 py-2.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
+                      {saving ? "Saving..." : jobs.find((j) => j.id === editingJob.id) ? "Update & Publish" : "Add & Publish"}
+                    </button>
+                    <button onClick={() => setEditingJob(null)}
+                      className="py-2.5 px-4 rounded-lg text-xs font-semibold border border-border text-muted hover:bg-surface">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-surface rounded-xl border border-border p-8 text-center">
+                  <svg className="w-12 h-12 text-muted mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <p className="text-xs text-muted">Select a job to edit or click &quot;+ Add Job&quot;</p>
+                </div>
+              )}
             </div>
           </div>
+        )}
 
-          {/* Applications */}
-          <div className="lg:col-span-2">
+        {activeTab === "applications" && (
+          <div>
             <div className="flex items-center gap-1 bg-white rounded-xl border border-border p-1 mb-4 max-w-lg">
               {["All", "pending", "reviewed", "shortlisted", "hired"].map((f) => (
-                <button key={f} onClick={() => setFilter(f)}
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${filter === f ? "bg-primary text-white" : "text-muted hover:text-foreground hover:bg-surface"}`}>
+                <button key={f} onClick={() => setAppFilter(f)}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${appFilter === f ? "bg-primary text-white" : "text-muted hover:text-foreground hover:bg-surface"}`}>
                   {f}
                 </button>
               ))}
             </div>
-            {loading ? (
+            {appLoading ? (
               <p className="text-xs text-muted">Loading applications...</p>
             ) : filtered.length === 0 ? (
               <p className="text-xs text-muted">No applications found.</p>
             ) : (
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 {filtered.map((app) => (
                   <div key={app.id} onClick={() => setSelectedApp(app)}
                     className="bg-white rounded-xl border border-border p-4 cursor-pointer hover:border-primary/30 hover:shadow-sm transition-all">
@@ -275,9 +418,8 @@ export default function CareerManagerPage() {
               </div>
             )}
           </div>
-        </div>
+        )}
 
-        {/* Detail Modal */}
         {selectedApp && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setSelectedApp(null)}>
             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
