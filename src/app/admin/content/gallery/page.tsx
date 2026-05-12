@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/context/ToastContext";
@@ -19,20 +19,20 @@ function convertDriveUrl(url: string): string {
 }
 
 export default function GalleryAdminPage() {
-  const { getJson, savePublishedJson, uploadMedia, loadAllContent } = useAdmin();
+  const { getJson, saveJson, uploadMedia, loadAllContent, hasDraft, discardSectionDrafts } = useAdmin();
   const { toast } = useToast();
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [filter, setFilter] = useState("All");
   const [saving, setSaving] = useState(false);
   const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
-  const [discarding, setDiscarding] = useState(false);
   const [newUrl, setNewUrl] = useState("");
   const [newDriveLink, setNewDriveLink] = useState("");
   const [newAlt, setNewAlt] = useState("");
   const [newCategory, setNewCategory] = useState("");
   const [newSource, setNewSource] = useState<"url" | "upload" | "drive">("url");
-  const uploadRef = useRef<HTMLInputElement>(null);
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
   useEffect(() => {
     loadAllContent();
@@ -59,14 +59,12 @@ export default function GalleryAdminPage() {
     setSaving(true);
     try {
       const cats = updatedCategories ?? dedupCategories(updatedImages);
-      const payload = JSON.stringify({ images: updatedImages, categories: cats });
-      await savePublishedJson("gallery", "gallery_images", "en", { images: updatedImages, categories: cats });
-      await savePublishedJson("gallery", "gallery_images", "ne", { images: updatedImages, categories: cats });
-      await savePublishedJson("gallery", "gallery_images", "ja", { images: updatedImages, categories: cats });
-      await loadAllContent();
+      await saveJson("gallery", "gallery_images", "en", { images: updatedImages, categories: cats });
+      await saveJson("gallery", "gallery_images", "ne", { images: updatedImages, categories: cats });
+      await saveJson("gallery", "gallery_images", "ja", { images: updatedImages, categories: cats });
       setImages(updatedImages);
       setCategories(cats);
-      toast("success", "Gallery saved & published");
+      toast("success", "Gallery saved as draft — publish from Review page");
     } catch {
       toast("error", "Failed to save gallery");
     }
@@ -83,7 +81,7 @@ export default function GalleryAdminPage() {
       width: 800,
       height: 600,
     };
-    const updated = [...images, img];
+    const updated = [img, ...images];
     const cats = categories.includes(img.category) ? categories : [...categories, img.category];
     handleSave(updated, cats);
     setNewUrl("");
@@ -111,12 +109,12 @@ export default function GalleryAdminPage() {
         width: 800,
         height: 600,
       };
-      const updated = [...images, img];
+      const updated = [img, ...images];
       const cats = categories.includes(img.category) ? categories : [...categories, img.category];
       await handleSave(updated, cats);
       setNewUrl("");
       setNewCategory("");
-      toast("success", "Image uploaded & published");
+      toast("success", "Image uploaded as draft");
     } else {
       toast("error", "Upload failed");
     }
@@ -148,6 +146,55 @@ export default function GalleryAdminPage() {
     handleSave(updated, cats);
   };
 
+  // Drag & Drop
+  const handleDragStart = (e: React.DragEvent, idx: number) => {
+    setDragIdx(idx);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(idx));
+  };
+
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverIdx(idx);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIdx(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    const dragIndex = Number(e.dataTransfer.getData("text/plain"));
+    if (isNaN(dragIndex) || dragIndex === dropIndex) {
+      setDragIdx(null);
+      setDragOverIdx(null);
+      return;
+    }
+    const reordered = [...images];
+    const [moved] = reordered.splice(dragIndex, 1);
+    reordered.splice(dropIndex, 0, moved);
+    setImages(reordered);
+    setDragIdx(null);
+    setDragOverIdx(null);
+    handleSave(reordered);
+  };
+
+  const handleDragEnd = () => {
+    setDragIdx(null);
+    setDragOverIdx(null);
+  };
+
+  const moveImage = (fromIdx: number, direction: "up" | "down") => {
+    const toIdx = direction === "up" ? fromIdx - 1 : fromIdx + 1;
+    if (toIdx < 0 || toIdx >= images.length) return;
+    const reordered = [...images];
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+    setImages(reordered);
+    handleSave(reordered);
+  };
+
   const filtered = filter === "All" ? images : images.filter((img) => img.category === filter);
   const allCategories = ["All", ...categories];
 
@@ -157,19 +204,32 @@ export default function GalleryAdminPage() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-xl font-heading font-bold text-foreground">Gallery Management</h1>
-            <p className="text-xs text-muted mt-1">{images.length} images across {categories.length} categories</p>
+            <p className="text-xs text-muted mt-1">{images.length} images across {categories.length} categories — drag to reorder</p>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => handleSave(images)} disabled={saving}
               className="px-4 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
-              {saving ? "Publishing..." : "Save & Publish"}
+              {saving ? "Saving..." : "Save Draft"}
+            </button>
+            <button onClick={async () => {
+              await discardSectionDrafts("gallery");
+              toast("success", "Drafts discarded");
+            }}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5">
+              Discard
             </button>
           </div>
         </div>
 
+        {hasDraft("gallery", "gallery_images", "en") && (
+          <div className="mb-4 p-2 rounded-lg bg-yellow-50 border border-yellow-200 text-xs text-yellow-700 max-w-4xl">
+            Draft pending — go to Review &amp; Publish to make gallery changes visible on the site.
+          </div>
+        )}
+
         {/* Add New Image */}
         <div className="bg-white rounded-xl border border-border p-4 mb-4 max-w-4xl">
-          <h2 className="text-xs font-semibold text-foreground mb-3">Add New Image</h2>
+          <h2 className="text-xs font-semibold text-foreground mb-3">Add New Image (appears at top)</h2>
           <div className="flex gap-2 mb-3">
             <button onClick={() => setNewSource("url")}
               className={`px-3 py-1 rounded-lg text-[10px] font-semibold ${newSource === "url" ? "bg-primary text-white" : "bg-surface text-muted"}`}>Paste URL</button>
@@ -266,19 +326,48 @@ export default function GalleryAdminPage() {
           ))}
         </div>
 
-        {/* Image Grid */}
+        {/* Image Grid with Drag & Drop */}
         {filtered.length === 0 ? (
           <div className="bg-white rounded-xl border border-border p-12 text-center max-w-4xl">
             <p className="text-xs text-muted">No images in this category.</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-w-4xl">
-            {filtered.map((img, i) => {
+            {filtered.map((img, fi) => {
               const realIndex = images.indexOf(img);
+              const isDragging = dragIdx === realIndex;
               return (
-                <div key={`${img.src}-${realIndex}`} className="bg-white rounded-xl border border-border overflow-hidden group">
+                <div
+                  key={`${img.src}-${realIndex}`}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, realIndex)}
+                  onDragOver={(e) => handleDragOver(e, realIndex)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, realIndex)}
+                  onDragEnd={handleDragEnd}
+                  className={`bg-white rounded-xl border overflow-hidden group cursor-grab active:cursor-grabbing transition-all ${
+                    isDragging ? "opacity-30 scale-95" : ""
+                  } ${dragOverIdx === realIndex && dragIdx !== realIndex ? "border-primary border-2 ring-1 ring-primary/20 scale-[1.02]" : "border-border"}`}
+                >
                   <div className="aspect-[4/3] bg-surface overflow-hidden relative">
-                    <img src={img.src} alt={img.alt} className="w-full h-full object-cover" />
+                    <img src={img.src} alt={img.alt} className="w-full h-full object-cover pointer-events-none" />
+                    <div className="absolute top-1 left-1 flex gap-0.5">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); moveImage(realIndex, "up"); }}
+                        disabled={realIndex === 0}
+                        className="w-5 h-5 flex items-center justify-center rounded bg-black/50 text-white text-[10px] hover:bg-black/70 disabled:opacity-30"
+                        title="Move up">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); moveImage(realIndex, "down"); }}
+                        disabled={realIndex === images.length - 1}
+                        className="w-5 h-5 flex items-center justify-center rounded bg-black/50 text-white text-[10px] hover:bg-black/70 disabled:opacity-30"
+                        title="Move down">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                      </button>
+                    </div>
+                    <span className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded bg-black/60 text-white text-[9px] font-bold">{realIndex + 1}</span>
                     <label className="absolute bottom-1 right-1 px-2 py-0.5 rounded bg-black/60 text-white text-[9px] cursor-pointer hover:bg-black/80">
                       {uploadingIdx === realIndex ? "..." : "Replace"}
                       <input type="file" accept="image/*" className="hidden"
@@ -289,12 +378,14 @@ export default function GalleryAdminPage() {
                         }} />
                     </label>
                   </div>
-                  <div className="p-2">
+                  <div className="p-2" draggable={false}>
                     <input type="text" value={img.alt}
                       onChange={(e) => handleChange(realIndex, "alt", e.target.value)}
+                      onDragOver={(e) => e.stopPropagation()}
                       className="w-full px-1.5 py-1 rounded border border-border text-[10px] focus:border-primary outline-none mb-1" placeholder="Alt text" />
                     <input type="text" value={img.category}
                       onChange={(e) => handleChange(realIndex, "category", e.target.value)} list={`cat-${realIndex}`}
+                      onDragOver={(e) => e.stopPropagation()}
                       className="w-full px-1.5 py-1 rounded border border-border text-[10px] focus:border-primary outline-none mb-1.5" placeholder="Category" />
                     <datalist id={`cat-${realIndex}`}>
                       {categories.map((cat) => <option key={cat} value={cat} />)}
