@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import PageHero from "@/components/ui/PageHero";
 import Badge from "@/components/ui/Badge";
 import { useLocale } from "@/hooks/useLocale";
+import { useDynamicContent } from "@/hooks/useDynamicContent";
 import { resolveContent } from "@/lib/translate";
-import type { Notice } from "@/types";
 
 function formatDate(dateStr: string, locale: string): string {
   const localeMap: Record<string, string> = {
@@ -37,30 +37,17 @@ function priorityBorder(priority: string): string {
 
 export default function NoticesPage() {
   const { locale, t } = useLocale();
-  const [notices, setNotices] = useState<Notice[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { notices } = useDynamicContent();
   const [filter, setFilter] = useState<"all" | "high" | "normal" | "low">("all");
 
-  useEffect(() => {
-    fetch("/data/notices.json")
-      .then((res) => res.json())
-      .then((data: Notice[]) => {
-        const sorted = data.sort(
-          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-        );
-        setNotices(sorted);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
-
-  const filtered = filter === "all" ? notices : notices.filter((n) => n.priority === filter);
+  const sorted = [...notices].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const filtered = filter === "all" ? sorted : sorted.filter((n) => n.priority === filter);
 
   const filterOptions: { value: "all" | "high" | "normal" | "low"; label: string; color: string }[] = [
-    { value: "all", label: (t.sections.All) || "All", color: "bg-primary" },
+    { value: "all", label: t.sections.All || "All", color: "bg-primary" },
     { value: "high", label: t.badges.important || "Important", color: "bg-accent" },
-    { value: "normal", label: (t.sections.NoticeBoard) || "Normal", color: "bg-secondary" },
-    { value: "low", label: t.common.viewAll || "General", color: "bg-muted" },
+    { value: "normal", label: t.sections.NoticeBoard || "Normal", color: "bg-secondary" },
+    { value: "low", label: "General", color: "bg-muted" },
   ];
 
   return (
@@ -69,7 +56,6 @@ export default function NoticesPage() {
 
       <section className="py-12 lg:py-16">
         <div className="container-custom max-w-4xl mx-auto">
-          {/* Filter Bar */}
           <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
             <div className="flex items-center gap-3">
               <span className="w-1 h-6 bg-primary rounded-full" />
@@ -92,14 +78,7 @@ export default function NoticesPage() {
             </div>
           </div>
 
-          {/* Content */}
-          {loading ? (
-            <div className="space-y-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="animate-pulse bg-white rounded-xl p-6 border border-border h-28" />
-              ))}
-            </div>
-          ) : filtered.length === 0 ? (
+          {filtered.length === 0 ? (
             <div className="text-center py-20 bg-white rounded-2xl border border-border">
               <svg className="w-16 h-16 text-muted mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -129,11 +108,6 @@ export default function NoticesPage() {
                             {t.badges.important}
                           </Badge>
                         )}
-                        {notice.priority === "normal" && (
-                          <span className="text-[10px] text-secondary font-bold uppercase tracking-wider bg-secondary/10 px-2 py-0.5 rounded-full">
-                            {t.sections.NoticeBoard}
-                          </span>
-                        )}
                       </div>
                       <p className="text-sm text-muted leading-relaxed">
                         {resolveContent(notice.content, locale)}
@@ -151,8 +125,7 @@ export default function NoticesPage() {
             </div>
           )}
 
-          {/* Footer count */}
-          {!loading && filtered.length > 0 && (
+          {filtered.length > 0 && (
             <p className="text-center text-xs text-muted mt-8">
               {filtered.length} {filtered.length === 1 ? "notice" : "notices"} {filter !== "all" ? `(${filter})` : ""}
             </p>

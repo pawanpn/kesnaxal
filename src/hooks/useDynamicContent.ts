@@ -19,6 +19,7 @@ import type {
   FacultyMember,
   ContactInfo,
   SchoolInfo,
+  Notice,
 } from "@/types";
 
 /**
@@ -26,7 +27,7 @@ import type {
  */
 export function useDynamicContent() {
   const { getContent } = useAdmin();
-  const { locale } = useLocale();
+  const { locale, t } = useLocale();
 
   const supabaseHasContent = useMemo(() => {
     return !!(
@@ -164,6 +165,12 @@ export function useDynamicContent() {
   }, [supabaseHasContent, getContent, locale]);
 
   // ── Gallery ──
+  const gallerySubtitle = useMemo(() => {
+    const fromDb = getContent("gallery", "gallery_subtitle", locale);
+    if (fromDb) return fromDb;
+    return t.pages.gallery.subtitle || "A glimpse into our vibrant campus life";
+  }, [getContent, locale]);
+
   const galleryImages: GalleryImage[] = useMemo(() => {
     const jsonStr = getContent("gallery", "gallery_images", "en");
     if (jsonStr) {
@@ -268,6 +275,21 @@ export function useDynamicContent() {
     });
   }, [supabaseHasContent, getContent, locale]);
 
+  // ── Notices ──
+  const notices: Notice[] = useMemo(() => {
+    const jsonStr = getContent("notices", "notices_list", "en");
+    if (jsonStr) {
+      try {
+        const parsed = JSON.parse(jsonStr);
+        if (parsed.notices && Array.isArray(parsed.notices) && parsed.notices.length > 0) {
+          return parsed.notices as Notice[];
+        }
+      } catch { /* fall through */ }
+    }
+
+    return siteConfig.notices || [];
+  }, [supabaseHasContent, getContent]);
+
   // ── Calendar ──
   const calendarEvents: CalendarEvent[] = useMemo(() => {
     if (!supabaseHasContent) return siteConfig.calendarEvents;
@@ -296,10 +318,12 @@ export function useDynamicContent() {
     newsArticles,
     testimonials,
     galleryImages,
+    gallerySubtitle,
     academicLevels,
     faculty,
     staff,
     jobVacancies,
     calendarEvents,
+    notices,
   };
 }

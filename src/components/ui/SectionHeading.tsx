@@ -24,7 +24,7 @@ export default function SectionHeading({
         </h2>
       </div>
       {subtitle && (
-        <p className="text-muted text-sm mt-2 max-w-lg">{subtitle}</p>
+        <p className={`text-muted text-sm mt-2 max-w-lg ${align === "center" ? "mx-auto" : ""}`}>{subtitle}</p>
       )}
     </div>
   );

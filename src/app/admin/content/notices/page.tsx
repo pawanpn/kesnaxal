@@ -4,17 +4,11 @@ import { useState, useEffect } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/context/ToastContext";
+import { siteConfig } from "@/constants/siteConfig";
 import { translateToAll } from "@/lib/autoTranslate";
+import type { Notice } from "@/types";
 
 type Locale = "en" | "ne" | "ja";
-
-interface Notice {
-  id: number;
-  title: Record<Locale, string>;
-  date: string;
-  content: Record<Locale, string>;
-  priority: "high" | "normal" | "low";
-}
 
 const LOCALES: { id: Locale; label: string }[] = [
   { id: "en", label: "EN" }, { id: "ne", label: "NE" }, { id: "ja", label: "JA" },
@@ -28,7 +22,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 
 function emptyNotice(): Notice {
   return {
-    id: 0,
+    id: Date.now(),
     title: { en: "", ne: "", ja: "" },
     date: new Date().toISOString().split("T")[0],
     content: { en: "", ne: "", ja: "" },
@@ -59,22 +53,24 @@ export default function NoticesPage() {
       const data = json?.notices as Notice[] | undefined;
       return data?.length ? data : acc;
     }, [] as Notice[]);
-    setNotices(arr);
-  }, [getJson]);
 
-  const sortedNotices = [...notices].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    if (arr.length) {
+      setNotices(arr);
+    } else {
+      setNotices([...(siteConfig.notices || [])]);
+    }
+  }, [getJson]);
 
   const handleSave = async (updated: Notice[]) => {
     setSaving(true);
     try {
-    const locales = syncing ? LOCALES : [{ id: lang }];
-    for (const { id: l } of locales) {
-      await saveJson("notices", "notices_list", l, { notices: updated });
-    }
-      toast("success", "Notices saved!");
-    } catch (e) {
+      for (const { id: l } of LOCALES) {
+        await saveJson("notices", "notices_list", l, { notices: updated });
+      }
+      setNotices(updated);
+      toast("success", "Notices saved as draft — publish from Review page");
+    } catch {
       toast("error", "Failed to save notices");
-      console.error("Save failed:", e);
     }
     setSaving(false);
   };
@@ -99,9 +95,8 @@ export default function NoticesPage() {
       updated = notices.map((n) => (n.id === editingId ? { ...form, id: editingId } : n));
     } else {
       const maxId = notices.reduce((max, n) => Math.max(max, n.id), 0);
-      updated = [...notices, { ...form, id: maxId + 1 }];
+      updated = [form, ...notices];
     }
-    setNotices(updated);
     handleSave(updated);
     setForm(emptyNotice());
     setEditingId(null);
@@ -117,7 +112,6 @@ export default function NoticesPage() {
   const handleDelete = (id: number) => {
     if (!confirm("Delete this notice?")) return;
     const updated = notices.filter((n) => n.id !== id);
-    setNotices(updated);
     handleSave(updated);
     if (editingId === id) {
       setForm(emptyNotice());
@@ -149,13 +143,15 @@ export default function NoticesPage() {
     setTranslating(false);
   };
 
+  const sortedNotices = [...notices].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
   return (
     <AdminGuard>
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-xl font-heading font-bold text-foreground">Notices</h1>
-            <p className="text-xs text-muted mt-1">Manage notice board announcements</p>
+            <h1 className="text-xl font-heading font-bold text-foreground">Notice Board</h1>
+            <p className="text-xs text-muted mt-1">Manage notices, circulars, and announcements</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex gap-1 bg-white rounded-lg border border-border p-0.5">
@@ -176,16 +172,23 @@ export default function NoticesPage() {
             <button onClick={async () => { setDiscarding(true); await discardSectionDrafts("notices"); toast("success", "Drafts discarded"); setDiscarding(false); window.location.reload(); }}
               disabled={discarding}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5 disabled:opacity-50">
-              Discard Drafts
+              Discard
             </button>
           </div>
         </div>
+
+        {hasDraft("notices", "notices_list", "en") && (
+          <div className="mb-4 p-2 rounded-lg bg-yellow-50 border border-yellow-200 text-xs text-yellow-700 max-w-4xl">
+            Draft pending — publish from Review page to make notices visible on the site.
+          </div>
+        )}
 
         {syncing && (
           <div className="mb-4 p-2 rounded-lg bg-blue-50 border border-blue-200 text-[11px] text-blue-700 max-w-4xl">
             Sync ON — editing any locale copies to all. Toggle OFF for per-language editing.
           </div>
         )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1 space-y-4">
             <div className="bg-white rounded-xl border border-border p-5">
@@ -234,9 +237,9 @@ export default function NoticesPage() {
                   ))}
                 </div>
               )}
-              {hasDraft("notices", "notices_list", "en") && <p className="text-[10px] text-yellow-600 mt-2">Draft pending</p>}
             </div>
           </div>
+
           <div className="lg:col-span-2">
             {showForm ? (
               <div className="bg-white rounded-xl border border-border p-5">
@@ -251,8 +254,8 @@ export default function NoticesPage() {
                         onChange={(e) => handleFormChange("priority", e.target.value)}
                         className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none bg-white">
                         <option value="normal">Normal</option>
-                        <option value="high">High</option>
-                        <option value="low">Low</option>
+                        <option value="high">High (Important)</option>
+                        <option value="low">Low (General)</option>
                       </select>
                     </div>
                     <div>
@@ -316,7 +319,7 @@ export default function NoticesPage() {
                   <div className="flex gap-2 pt-2">
                     <button onClick={handleAddOrUpdate}
                       className="flex-1 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
-                      {saving ? "Saving..." : editingId !== null ? "Update Notice" : "Add Notice"}
+                      {saving ? "Saving..." : editingId !== null ? "Update & Save Draft" : "Add & Save Draft"}
                     </button>
                     <button onClick={handleCancel}
                       className="py-2 px-4 rounded-lg text-xs font-semibold border border-border text-muted hover:bg-surface">
@@ -326,7 +329,7 @@ export default function NoticesPage() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-xl border border-border p-8 flex items-center justify-center">
+              <div className="bg-white rounded-xl border border-border p-8 flex items-center justify-center min-h-[300px]">
                 <p className="text-xs text-muted">Select a notice to edit or click &quot;+ New&quot; to add one</p>
               </div>
             )}

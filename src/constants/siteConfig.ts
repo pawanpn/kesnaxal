@@ -50,6 +50,7 @@ export const siteConfig: SiteConfig = {
       { label: "Results", href: "/results" },
       { label: "Gallery", href: "/gallery" },
       { label: "News", href: "/news" },
+      { label: "Notices", href: "/notices" },
       { label: "Staff", href: "/staff" },
       { label: "Careers", href: "/careers" },
       { label: "Calendar", href: "/calendar" },

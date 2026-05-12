@@ -32,6 +32,8 @@ export default function OptimizedImage({
       ? "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
       : undefined);
 
+  const isExternal = src.startsWith("http") && !src.includes("supabase.co");
+
   if (fill) {
     return (
       <Image
@@ -41,6 +43,7 @@ export default function OptimizedImage({
         priority={priority}
         className={className}
         sizes={computedSizes}
+        unoptimized={isExternal}
         {...(onClick ? { onClick } : {})}
         {...(style ? { style } : {})}
       />
@@ -56,6 +59,7 @@ export default function OptimizedImage({
       priority={priority}
       className={className}
       sizes={computedSizes}
+      unoptimized={isExternal}
       {...(onClick ? { onClick } : {})}
       {...(style ? { style } : {})}
     />

@@ -1,27 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { useLocale } from "@/hooks/useLocale";
+import { useDynamicContent } from "@/hooks/useDynamicContent";
 import { resolveContent } from "@/lib/translate";
-import type { Notice } from "@/types";
 
 export default function NoticeBoard() {
   const { locale, t } = useLocale();
-  const [notices, setNotices] = useState<Notice[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { notices: allNotices } = useDynamicContent();
 
-  useEffect(() => {
-    fetch("/data/notices.json")
-      .then((res) => res.json())
-      .then((data: Notice[]) => {
-        const sorted = data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        setNotices(sorted.slice(0, 5));
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+  const sorted = [...allNotices].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const notices = sorted.slice(0, 5);
 
   const isNew = (dateStr: string) => {
     const noticeDate = new Date(dateStr);
@@ -49,8 +39,8 @@ export default function NoticeBoard() {
           </Link>
         </div>
 
-        {loading ? (
-          <div className="animate-pulse space-y-4">{[1, 2, 3].map((i) => <div key={i} className="bg-white rounded-lg p-4 h-20" />)}</div>
+        {notices.length === 0 ? (
+          <p className="text-center text-sm text-muted py-8">No notices at this time.</p>
         ) : (
           <div className="space-y-3">
             {notices.map((notice) => (

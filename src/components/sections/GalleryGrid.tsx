@@ -8,9 +8,10 @@ import type { GalleryImage } from "@/types";
 
 interface GalleryGridProps {
   images: GalleryImage[];
+  subtitle?: string;
 }
 
-export default function GalleryGrid({ images }: GalleryGridProps) {
+export default function GalleryGrid({ images, subtitle }: GalleryGridProps) {
   const t = useT();
   const [activeCategory, setActiveCategory] = useState(t.sections.All);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);

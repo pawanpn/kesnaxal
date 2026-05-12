@@ -241,15 +241,19 @@ export function generateSeedData(): SeedRow[] {
     });
   }
 
-  // ── Gallery ──
-  addSimple("gallery", "categories", JSON.stringify(siteConfig.gallery.categories));
-  siteConfig.gallery.images.forEach((img, i) => {
-    addSimple("gallery", `image_${i}_src`, img.src);
-    addSimple("gallery", `image_${i}_alt`, img.alt);
-    addSimple("gallery", `image_${i}_category`, img.category);
-    addSimple("gallery", `image_${i}_width`, String(img.width));
-    addSimple("gallery", `image_${i}_height`, String(img.height));
-  });
+  // ── Gallery (JSON format for admin panel) ──
+  if (siteConfig.gallery?.images) {
+    locales.forEach((locale) => {
+      rows.push({ section: "gallery", content_key: "gallery_images", locale, content_text: JSON.stringify({ images: siteConfig.gallery.images, categories: siteConfig.gallery.categories }), content_json: { images: siteConfig.gallery.images, categories: siteConfig.gallery.categories }, status: "published" });
+    });
+  }
+
+  // ── Notices (JSON format for admin panel) ──
+  if (siteConfig.notices) {
+    locales.forEach((locale) => {
+      rows.push({ section: "notices", content_key: "notices_list", locale, content_text: JSON.stringify({ notices: siteConfig.notices }), content_json: { notices: siteConfig.notices }, status: "published" });
+    });
+  }
 
   return flatSeed(rows);
 }

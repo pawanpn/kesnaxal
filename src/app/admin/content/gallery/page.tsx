@@ -20,10 +20,11 @@ function convertDriveUrl(url: string): string {
 }
 
 export default function GalleryAdminPage() {
-  const { getJson, saveJson, uploadMedia, loadAllContent, hasDraft, discardSectionDrafts } = useAdmin();
+  const { getJson, getContent, saveJson, saveContent, uploadMedia, loadAllContent, hasDraft, discardSectionDrafts } = useAdmin();
   const { toast } = useToast();
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+  const [gallerySubtitle, setGallerySubtitle] = useState("");
   const [filter, setFilter] = useState("All");
   const [saving, setSaving] = useState(false);
   const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
@@ -51,7 +52,10 @@ export default function GalleryAdminPage() {
       setImages([...siteConfig.gallery.images]);
       setCategories([...siteConfig.gallery.categories]);
     }
-  }, [getJson]);
+
+    const sub = getContent("gallery", "gallery_subtitle", "en");
+    setGallerySubtitle(sub || "");
+  }, [getJson, getContent]);
 
   const dedupCategories = (imgs: GalleryImage[]) =>
     [...new Set(imgs.map((img) => img.category))];
@@ -186,6 +190,14 @@ export default function GalleryAdminPage() {
     setDragOverIdx(null);
   };
 
+  const handleSaveSubtitle = async () => {
+    if (!gallerySubtitle.trim()) return;
+    await saveContent("gallery", "gallery_subtitle", "en", gallerySubtitle.trim());
+    await saveContent("gallery", "gallery_subtitle", "ne", gallerySubtitle.trim());
+    await saveContent("gallery", "gallery_subtitle", "ja", gallerySubtitle.trim());
+    toast("success", "Subtitle saved as draft");
+  };
+
   const moveImage = (fromIdx: number, direction: "up" | "down") => {
     const toIdx = direction === "up" ? fromIdx - 1 : fromIdx + 1;
     if (toIdx < 0 || toIdx >= images.length) return;
@@ -227,6 +239,20 @@ export default function GalleryAdminPage() {
             Draft pending — go to Review &amp; Publish to make gallery changes visible on the site.
           </div>
         )}
+
+        {/* Gallery Subtitle */}
+        <div className="bg-white rounded-xl border border-border p-4 mb-4 max-w-4xl">
+          <h2 className="text-xs font-semibold text-foreground mb-2">Gallery Page Subtitle</h2>
+          <div className="flex gap-2 items-end">
+            <input type="text" value={gallerySubtitle} onChange={(e) => setGallerySubtitle(e.target.value)}
+              className="flex-1 px-3 py-2 rounded-lg border border-border text-xs focus:border-primary outline-none"
+              placeholder="A glimpse into our vibrant campus life" />
+            <button onClick={handleSaveSubtitle}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark">
+              Save
+            </button>
+          </div>
+        </div>
 
         {/* Add New Image */}
         <div className="bg-white rounded-xl border border-border p-4 mb-4 max-w-4xl">

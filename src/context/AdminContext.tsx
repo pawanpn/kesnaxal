@@ -132,6 +132,17 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     loadAllContent();
   }, [isAdmin]);
 
+  /* ── Refresh content when tab becomes visible (public gets fresh data after admin publishes) ── */
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        loadAllContent();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, []);
+
   /* ── Real-time subscriptions ── */
   useEffect(() => {
     if (!isAdmin) return;
