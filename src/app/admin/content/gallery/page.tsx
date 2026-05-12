@@ -9,12 +9,13 @@ import type { GalleryImage } from "@/types";
 
 function convertDriveUrl(url: string): string {
   if (!url) return url;
+  if (!url.includes("drive.google.com")) return url;
   const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  if (match) return `https://lh3.googleusercontent.com/d/${match[1]}=w800`;
+  if (match) return `https://drive.google.com/uc?export=view&id=${match[1]}`;
   const idMatch = url.match(/[-\w]{25,}/);
-  if (idMatch && url.includes("drive.google.com")) return `https://lh3.googleusercontent.com/d/${idMatch[0]}=w800`;
-  const openMatch = url.match(/\bid=([a-zA-Z0-9_-]+)/);
-  if (openMatch) return `https://lh3.googleusercontent.com/d/${openMatch[1]}=w800`;
+  if (idMatch) return `https://drive.google.com/uc?export=view&id=${idMatch[0]}`;
+  const openMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (openMatch) return `https://drive.google.com/uc?export=view&id=${openMatch[1]}`;
   return url;
 }
 
