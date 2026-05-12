@@ -19,7 +19,7 @@ const SECTION_LABELS: Record<string, string> = {
   testimonials: "Testimonials",
   footer: "Footer",
   calendar: "Calendar",
-  notices: "Notices",
+  notices: "Notice Board",
   contact: "Contact",
 };
 
@@ -37,53 +37,81 @@ const KEY_LABELS: Record<string, string> = {
   mapEmbedUrl: "Google Maps Embed URL",
   social_links: "Social Media Links",
   opening_hours: "Operating Hours",
-  gallery_images: "Gallery Images",
+  gallery_images: "Gallery Images & Categories",
+  gallery_subtitle: "Gallery Subtitle",
   job_vacancies: "Job Vacancies",
   news_articles: "News Articles",
   staff_members: "Staff Members",
+  notices_list: "Notice Board",
 };
 
-function formatContentValue(key: string, text: string | null): string {
+function summarizeJson(key: string, text: string | null): string {
   if (!text) return "—";
   try {
     const parsed = JSON.parse(text);
-    if (key === "gallery_images" && parsed.images) {
-      const cats = parsed.categories?.length ? `${parsed.categories.length} categories` : "";
-      return `${parsed.images.length} images${cats ? `, ${cats}` : ""}`;
+    if (key === "gallery_images") {
+      const imgCount = parsed.images?.length || 0;
+      const catCount = parsed.categories?.length || 0;
+      const catNames = parsed.categories?.length ? parsed.categories.slice(0, 4).join(", ") + (parsed.categories.length > 4 ? "..." : "") : "";
+      return `${imgCount} images, ${catCount} categories${catNames ? ` (${catNames})` : ""}`;
     }
-    if (key === "job_vacancies" && parsed.vacancies) {
-      return `${parsed.vacancies.length} job listing${parsed.vacancies.length !== 1 ? "s" : ""}`;
+    if (key === "job_vacancies") {
+      const count = parsed.vacancies?.length || 0;
+      return `${count} job listing${count !== 1 ? "s" : ""}`;
     }
-    if (key === "social_links" && parsed.links) {
-      return `${parsed.links.length} social link${parsed.links.length !== 1 ? "s" : ""}`;
+    if (key === "social_links") {
+      const count = parsed.links?.length || 0;
+      return `${count} social link${count !== 1 ? "s" : ""}`;
     }
-    if (key === "staff_members" && parsed.members) {
-      return `${parsed.members.length} staff member${parsed.members.length !== 1 ? "s" : ""}`;
+    if (key === "staff_members") {
+      const count = parsed.members?.length || 0;
+      return `${count} staff member${count !== 1 ? "s" : ""}`;
     }
-    if (key === "opening_hours" && parsed.hours) {
-      return `${parsed.hours.length} hour entr${parsed.hours.length !== 1 ? "ies" : "y"}`;
+    if (key === "opening_hours") {
+      const count = parsed.hours?.length || 0;
+      return `${count} hour entr${count !== 1 ? "ies" : "y"}`;
     }
-    if (key === "news_articles" && parsed.articles) {
-      return `${parsed.articles.length} article${parsed.articles.length !== 1 ? "s" : ""}`;
+    if (key === "news_articles") {
+      const count = parsed.articles?.length || 0;
+      return `${count} article${count !== 1 ? "s" : ""}`;
+    }
+    if (key === "notices_list") {
+      const count = parsed.notices?.length || 0;
+      return `${count} notice${count !== 1 ? "s" : ""}`;
     }
     return "(updated)";
   } catch {
-    if (text.startsWith("http")) {
-      if (text.includes("google.com/maps/embed")) return "Map embed link (updated)";
-      if (text.includes("lh3.googleusercontent.com") || text.includes("supabase")) return "Image file (updated)";
-      return "Link (updated)";
-    }
-    if (text.length > 60) return text.slice(0, 60) + "...";
-    return text;
+    return text.length > 80 ? text.slice(0, 80) + "..." : text;
   }
 }
 
-function hasMeaningfulChange(key: string, oldVal: string | null, newVal: string | null): boolean {
-  if (oldVal === newVal) return false;
-  if (oldVal === null && newVal !== null) return true;
-  if (oldVal !== null && newVal === null) return true;
-  return true;
+function formatSimple(text: string | null): string {
+  if (!text) return "—";
+  if (text.startsWith("http")) {
+    if (text.includes("google.com/maps/embed")) return "Map embed link (updated)";
+    if (text.includes("drive.google.com") || text.includes("googleusercontent.com")) return "Image file (updated)";
+    if (text.includes("supabase.co")) return "Logo / Image file (updated)";
+    return "Link (updated)";
+  }
+  if (text.length > 80) return text.slice(0, 80) + "...";
+  return text;
 }
+
+function describeChange(key: string, oldText: string | null, newText: string | null): string {
+  if (!newText) return "—";
+  const isJson = key === "gallery_images" || key === "job_vacancies" || key === "social_links" ||
+    key === "staff_members" || key === "opening_hours" || key === "news_articles" || key === "notices_list";
+  if (isJson) {
+    const newSum = summarizeJson(key, newText);
+    if (!oldText) return newSum;
+    const oldSum = summarizeJson(key, oldText);
+    if (oldSum !== newSum) return `${oldSum} → ${newSum}`;
+    return newSum + " (no changes)";
+  }
+  return formatSimple(newText);
+}
+
+const LOCALE_LABELS: Record<string, string> = { en: "English", ne: "नेपाली", ja: "日本語" };
 
 export default function PublishReviewPage() {
   const { draftContent, publishedContent, publishAll, publishSelectedDrafts, discardAllDrafts, discardSectionDrafts, loadAllContent, draftCount } = useAdmin();
@@ -93,18 +121,12 @@ export default function PublishReviewPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [result, setResult] = useState<{ type: "publish" | "discard"; count: number } | null>(null);
 
-  useEffect(() => {
-    loadAllContent();
-  }, []);
+  useEffect(() => { loadAllContent(); }, []);
 
   const drafts: SiteContentRow[] = useMemo(() => {
     const arr: SiteContentRow[] = [];
     draftContent.forEach((row) => arr.push(row));
-    arr.sort((a, b) => {
-      const sec = (a.section + a.content_key).localeCompare(b.section + b.content_key);
-      if (sec !== 0) return sec;
-      return a.locale.localeCompare(b.locale);
-    });
+    arr.sort((a, b) => (a.section + a.content_key).localeCompare(b.section + b.content_key) || a.locale.localeCompare(b.locale));
     return arr;
   }, [draftContent]);
 
@@ -116,36 +138,24 @@ export default function PublishReviewPage() {
     }, {});
   }, [drafts]);
 
-  const getPublishedText = (section: string, key: string, locale: string): string | null => {
+  const getPublishedText = (sec: string, key: string, loc: string): string | null => {
     for (const [, row] of publishedContent) {
-      if (row.section === section && row.content_key === key && row.locale === locale) {
-        return row.content_text;
-      }
+      if (row.section === sec && row.content_key === key && row.locale === loc) return row.content_text;
     }
     return null;
   };
 
-  const toggleSelect = (id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
+  const toggleSelect = (id: string) => setSelectedIds((prev) => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
 
-  const toggleSection = (items: SiteContentRow[]) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      const allSelected = items.every((i) => next.has(i.id));
-      if (allSelected) {
-        items.forEach((i) => next.delete(i.id));
-      } else {
-        items.forEach((i) => next.add(i.id));
-      }
-      return next;
-    });
-  };
+  const toggleSection = (items: SiteContentRow[]) => setSelectedIds((prev) => {
+    const next = new Set(prev);
+    items.every((i) => next.has(i.id)) ? items.forEach((i) => next.delete(i.id)) : items.forEach((i) => next.add(i.id));
+    return next;
+  });
 
   const handlePublishSelected = async () => {
     if (selectedIds.size === 0) return;
@@ -155,9 +165,7 @@ export default function PublishReviewPage() {
       setSelectedIds(new Set());
       setResult({ type: "publish", count });
       toast("success", `Published ${count} change${count !== 1 ? "s" : ""}`);
-    } catch {
-      toast("error", "Failed to publish");
-    }
+    } catch { toast("error", "Failed to publish"); }
     setPublishing(false);
   };
 
@@ -168,9 +176,7 @@ export default function PublishReviewPage() {
       setSelectedIds(new Set());
       setResult({ type: "publish", count });
       toast("success", `Published ${count} changes`);
-    } catch {
-      toast("error", "Failed to publish");
-    }
+    } catch { toast("error", "Failed to publish"); }
     setPublishing(false);
   };
 
@@ -182,9 +188,7 @@ export default function PublishReviewPage() {
       setSelectedIds(new Set());
       setResult({ type: "discard", count });
       toast("success", "Drafts discarded");
-    } catch {
-      toast("error", "Failed to discard");
-    }
+    } catch { toast("error", "Failed to discard"); }
     setDiscarding(false);
   };
 
@@ -195,8 +199,6 @@ export default function PublishReviewPage() {
     setResult({ type: "discard", count: 0 });
     toast("success", "Section drafts discarded");
   };
-
-  const LOCALE_LABELS: Record<string, string> = { en: "English", ne: "नेपाली", ja: "日本語" };
 
   return (
     <AdminGuard>
@@ -219,9 +221,7 @@ export default function PublishReviewPage() {
         </div>
 
         {result && (
-          <div className={`mb-4 px-4 py-3 rounded-xl text-sm font-medium ${
-            result.type === "publish" ? "bg-green-50 border border-green-200 text-green-700" : "bg-accent/10 border border-accent/20 text-accent"
-          }`}>
+          <div className={`mb-4 px-4 py-3 rounded-xl text-sm font-medium ${result.type === "publish" ? "bg-green-50 border border-green-200 text-green-700" : "bg-accent/10 border border-accent/20 text-accent"}`}>
             {result.type === "publish"
               ? `Published ${result.count} change${result.count !== 1 ? "s" : ""} to live site.`
               : `${result.count > 0 ? result.count : ""} drafts discarded.`}
@@ -241,14 +241,12 @@ export default function PublishReviewPage() {
                   const label = SECTION_LABELS[row.section] || row.section;
                   counts[label] = (counts[label] || 0) + 1;
                 });
-                return Object.entries(counts)
-                  .sort(([, a], [, b]) => b - a)
-                  .map(([label, count]) => (
-                    <div key={label} className="flex items-center justify-between px-2 py-1.5 rounded bg-surface/50">
-                      <span className="text-muted">{label}</span>
-                      <span className="font-semibold text-foreground">{count}</span>
-                    </div>
-                  ));
+                return Object.entries(counts).sort(([, a], [, b]) => b - a).map(([label, count]) => (
+                  <div key={label} className="flex items-center justify-between px-2 py-1.5 rounded bg-surface/50">
+                    <span className="text-muted">{label}</span>
+                    <span className="font-semibold text-foreground">{count}</span>
+                  </div>
+                ));
               })()}
             </div>
           </details>
@@ -282,65 +280,42 @@ export default function PublishReviewPage() {
                 <div key={section} className="bg-white rounded-xl border border-border overflow-hidden">
                   <div className="flex items-center justify-between px-5 py-3 bg-surface/50 border-b border-border">
                     <label className="flex items-center gap-2.5 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={items.every((i) => selectedIds.has(i.id))}
-                        onChange={() => toggleSection(items)}
-                        className="w-3.5 h-3.5 rounded border-gray-300 text-primary focus:ring-primary"
-                      />
+                      <input type="checkbox" checked={items.every((i) => selectedIds.has(i.id))} onChange={() => toggleSection(items)}
+                        className="w-3.5 h-3.5 rounded border-gray-300 text-primary focus:ring-primary" />
                       <span className="w-2 h-2 rounded-full bg-yellow-500" />
                       <h3 className="font-heading font-bold text-sm text-foreground">{sectionLabel}</h3>
                       <span className="text-xs text-muted">({items.length})</span>
                     </label>
-                    <button onClick={() => handleDiscardSection(section)}
-                      className="text-xs text-accent hover:underline font-medium">Discard</button>
+                    <button onClick={() => handleDiscardSection(section)} className="text-xs text-accent hover:underline font-medium">Discard</button>
                   </div>
                   <div className="divide-y divide-border">
                     {items.map((item) => {
                       const oldVal = getPublishedText(item.section, item.content_key, item.locale);
                       const isNew = oldVal === null;
-                      const keyLabel = KEY_LABELS[item.content_key] || item.content_key;
+                      const keyLabel = KEY_LABELS[item.content_key] || item.content_key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
                       const localeLabel = LOCALE_LABELS[item.locale] || item.locale;
-                      const summary = formatContentValue(item.content_key, item.content_text);
-                      const oldSummary = oldVal ? formatContentValue(item.content_key, oldVal) : null;
+                      const desc = describeChange(item.content_key, oldVal, item.content_text);
 
                       return (
                         <div key={item.id} onClick={() => toggleSelect(item.id)}
-                          className={`px-5 py-3 transition-colors cursor-pointer ${
-                            selectedIds.has(item.id) ? "bg-green-50/30" : "hover:bg-surface/50"
-                          }`}>
+                          className={`px-5 py-3 transition-colors cursor-pointer ${selectedIds.has(item.id) ? "bg-green-50/30" : "hover:bg-surface/50"}`}>
                           <div className="flex items-start gap-3">
-                            <input
-                              type="checkbox"
-                              checked={selectedIds.has(item.id)}
-                              onChange={() => toggleSelect(item.id)}
-                              className="w-3.5 h-3.5 mt-1 rounded border-gray-300 text-primary focus:ring-primary shrink-0"
-                            />
+                            <input type="checkbox" checked={selectedIds.has(item.id)} onChange={() => toggleSelect(item.id)}
+                              className="w-3.5 h-3.5 mt-1 rounded border-gray-300 text-primary focus:ring-primary shrink-0" />
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap mb-2">
-                                <span className="text-sm font-semibold text-foreground">{keyLabel}</span>
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface text-muted">{localeLabel}</span>
+                              <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                                <span className="text-xs font-semibold text-foreground">{keyLabel}</span>
+                                <span className="text-[9px] px-1 py-0.5 rounded bg-surface text-muted">{localeLabel}</span>
                                 {isNew ? (
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold">NEW</span>
+                                  <span className="text-[9px] px-1 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold">NEW</span>
                                 ) : (
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700 font-semibold">UPDATED</span>
+                                  <span className="text-[9px] px-1 py-0.5 rounded bg-yellow-100 text-yellow-700 font-semibold">UPDATED</span>
                                 )}
                               </div>
-
-                              <div className="text-xs space-y-1.5">
-                                {oldSummary && (
-                                  <div className="flex items-start gap-1.5">
-                                    <span className="text-[10px] font-semibold text-red-500 bg-red-50 px-1 rounded shrink-0 mt-0.5">Old</span>
-                                    <span className="text-muted line-through">{oldSummary}</span>
-                                  </div>
-                                )}
-                                <div className="flex items-start gap-1.5">
-                                  <span className="text-[10px] font-semibold text-green-600 bg-green-50 px-1 rounded shrink-0 mt-0.5">New</span>
-                                  <span className="text-foreground font-medium">{summary}</span>
-                                </div>
-                              </div>
-
-                              <p className="text-[10px] text-muted mt-2">
+                              <p className={`text-xs ${isNew ? "text-green-700 font-medium" : oldVal ? "text-foreground" : "text-muted"}`}>
+                                {desc}
+                              </p>
+                              <p className="text-[9px] text-muted mt-1.5">
                                 {new Date(item.updated_at as string).toLocaleString()}
                               </p>
                             </div>
