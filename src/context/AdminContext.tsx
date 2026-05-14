@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { createContext, useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase/client";
 
 /* ── Types ── */
@@ -150,6 +151,44 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const queryClient = useQueryClient();
+
+  /* ── React Query: fetch content with caching ── */
+  const {
+    data: contentData,
+    isLoading: contentLoading,
+  } = useQuery({
+    queryKey: ["site_content", isAdmin],
+    queryFn: async () => {
+      const { data } = await supabase.from("site_content").select("*");
+      return (data as SiteContentRow[]) || [];
+    },
+    staleTime: isAdmin ? 30 * 1000 : 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
+  const loadAllContent = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["site_content"] });
+  }, [queryClient]);
+
+  /* ── Sync React Query data into content Maps ── */
+  useEffect(() => {
+    if (contentLoading) return;
+    setContentReady(true);
+    if (!contentData) return;
+    const pub = new Map<string, SiteContentRow>();
+    const draft = new Map<string, SiteContentRow>();
+    let dCount = 0;
+    contentData.forEach((row) => {
+      const key = rowKey(row.section, row.content_key, row.locale);
+      if (row.status === "published") pub.set(key, row);
+      else { draft.set(key, row); dCount++; }
+    });
+    setPublishedContent(pub);
+    setDraftContent(draft);
+    setDraftCount(dCount);
+  }, [contentData, contentLoading]);
+
   /* ── Read preview cookie on mount ── */
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -157,67 +196,30 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     setIsPreviewMode(hasPreview);
   }, []);
 
-  /* ── Load content from Supabase (RLS filters: published for public, all for admins) ── */
-  useEffect(() => {
-    loadAllContent();
-  }, [isAdmin]);
-
-  /* ── Refresh content when tab becomes visible (public gets fresh data after admin publishes) ── */
+  /* ── Refresh content when tab becomes visible ── */
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
-        loadAllContent();
+        queryClient.invalidateQueries({ queryKey: ["site_content"] });
       }
     };
     document.addEventListener("visibilitychange", handleVisibility);
     return () => document.removeEventListener("visibilitychange", handleVisibility);
-  }, []);
+  }, [queryClient]);
 
   /* ── Real-time subscriptions ── */
   useEffect(() => {
     if (!isAdmin) return;
-
     const channel = supabase
       .channel("site_content_changes")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "site_content" },
-        () => loadAllContent()
+        () => { queryClient.invalidateQueries({ queryKey: ["site_content"] }); }
       )
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [isAdmin]);
-
-  const loadAllContent = useCallback(async () => {
-    try {
-      const { data } = await supabase.from("site_content").select("*");
-      if (!data) { setContentReady(true); return; }
-
-      const pub = new Map<string, SiteContentRow>();
-      const draft = new Map<string, SiteContentRow>();
-      let dCount = 0;
-
-      (data as SiteContentRow[]).forEach((row) => {
-        const key = rowKey(row.section, row.content_key, row.locale);
-        if (row.status === "published") {
-          pub.set(key, row);
-        } else {
-          draft.set(key, row);
-          dCount++;
-        }
-      });
-
-      setPublishedContent(pub);
-      setDraftContent(draft);
-      setDraftCount(dCount);
-      setContentReady(true);
-    } catch {
-      setContentReady(true);
-    }
-  }, []);
+    return () => { supabase.removeChannel(channel); };
+  }, [isAdmin, queryClient]);
 
   /* ── Get content (draft overrides published) ── */
   const getContent = useCallback(
@@ -303,7 +305,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
           locale,
           new_value: JSON.parse(JSON.stringify({ text })),
         });
-        await loadAllContent();
+        queryClient.invalidateQueries({ queryKey: ["site_content"] });
       }
     },
     []
@@ -342,7 +344,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
       }
 
       if (error) throw error;
-      await loadAllContent();
+      queryClient.invalidateQueries({ queryKey: ["site_content"] });
     },
     []
   );
@@ -426,7 +428,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
           (e) => !(e.section === section && e.contentKey === key && e.locale === locale)
         )
       );
-      await loadAllContent();
+      queryClient.invalidateQueries({ queryKey: ["site_content"] });
     },
     []
   );
@@ -436,7 +438,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.rpc("publish_all_drafts");
     if (error) return { count: 0 };
     setRecentEdits([]);
-    await loadAllContent();
+    queryClient.invalidateQueries({ queryKey: ["site_content"] });
     return { count: (data as number) || 0 };
   }, []);
 
@@ -449,7 +451,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
       .in("id", ids);
     if (error) return { count: 0 };
     setRecentEdits([]);
-    await loadAllContent();
+    queryClient.invalidateQueries({ queryKey: ["site_content"] });
     return { count: ids.length };
   }, []);
 
@@ -458,7 +460,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.rpc("discard_all_drafts");
     if (error) return { count: 0 };
     setRecentEdits([]);
-    await loadAllContent();
+    queryClient.invalidateQueries({ queryKey: ["site_content"] });
     return { count: (data as number) || 0 };
   }, []);
 
@@ -467,7 +469,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.rpc("discard_section_drafts", { p_section: section });
     if (error) return { count: 0 };
     setRecentEdits((prev) => prev.filter((e) => e.section !== section));
-    await loadAllContent();
+    queryClient.invalidateQueries({ queryKey: ["site_content"] });
     return { count: (data as number) || 0 };
   }, []);
 
@@ -537,14 +539,14 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
   const seedContent = useCallback(async (): Promise<{ count: number; error?: string }> => {
     const { seedAllContent } = await import("@/lib/seedContent");
     const result = await seedAllContent();
-    if (!result.error) await loadAllContent();
+    if (!result.error) queryClient.invalidateQueries({ queryKey: ["site_content"] });
     return result;
   }, []);
 
   const seedSection = useCallback(async (section: string): Promise<{ count: number; error?: string }> => {
     const { seedSectionContent } = await import("@/lib/seedContent");
     const result = await seedSectionContent(section);
-    if (!result.error) await loadAllContent();
+    if (!result.error) queryClient.invalidateQueries({ queryKey: ["site_content"] });
     return result;
   }, []);
 
@@ -580,7 +582,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
       await supabase.from("site_content").delete()
         .eq("section", section)
         .eq("content_key", key);
-      await loadAllContent();
+      queryClient.invalidateQueries({ queryKey: ["site_content"] });
     },
     []
   );

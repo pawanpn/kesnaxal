@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Merriweather } from "next/font/google";
+import Providers from "@/components/Providers";
 import LocaleProvider from "@/context/LocaleContext";
 import AdminProvider from "@/context/AdminContext";
 import AdminToolbar from "@/components/admin/AdminToolbar";
@@ -68,8 +69,9 @@ export default function RootLayout({
       className={`${inter.variable} ${merriweather.variable} h-full`}
     >
       <body className="min-h-full flex flex-col">
-        <LocaleProvider>
-          <AdminProvider>
+        <Providers>
+          <LocaleProvider>
+            <AdminProvider>
             <ToastProvider>
               <EditModeBanner />
               <Navbar />
@@ -79,8 +81,9 @@ export default function RootLayout({
               <AdminToolbar />
               <ToastContainer />
             </ToastProvider>
-          </AdminProvider>
-        </LocaleProvider>
+            </AdminProvider>
+          </LocaleProvider>
+        </Providers>
       </body>
     </html>
   );
