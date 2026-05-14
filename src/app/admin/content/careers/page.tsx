@@ -18,9 +18,17 @@ const JOB_CATEGORIES = ["Teaching", "Administration", "Support Staff"];
 
 interface Application {
   id: string; job_id: string; job_title: string; full_name: string;
-  email: string; phone: string | null; degree: string | null;
-  experience_years: number; status: string; created_at: string;
+  email: string; phone: string | null; address: string | null;
+  nationality: string | null; place_of_birth: string | null;
+  gender: string | null; marital_status: string | null;
+  dependents: string | null; degree: string | null; major_subject: string | null;
+  experience_years: number; current_position: string | null;
+  subjects: string | null; grades: string | null;
+  status: string; created_at: string;
   cv_url: string | null; photo_url: string | null;
+  documents_url: unknown; cover_letter: string | null;
+  form_data: Record<string, unknown> | null;
+  notes: string | null;
 }
 
 const statusColors: Record<string, string> = {
@@ -60,6 +68,7 @@ export default function CareerManagerPage() {
   const [editingJob, setEditingJob] = useState<JobVacancy | null>(null);
   const [saving, setSaving] = useState(false);
   const [newResp, setNewResp] = useState("");
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   const [applications, setApplications] = useState<Application[]>([]);
   const [appLoading, setAppLoading] = useState(true);
@@ -115,6 +124,7 @@ export default function CareerManagerPage() {
   const handleDeleteJob = async (id: number) => {
     const updated = jobs.filter((j) => j.id !== id);
     await saveJobs(updated);
+    setDeleteConfirmId(null);
   };
 
   const handleToggleActive = async (id: number) => {
@@ -240,7 +250,7 @@ export default function CareerManagerPage() {
                               <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
                           </button>
-                          <button onClick={() => handleDeleteJob(job.id)} title="Delete"
+                          <button onClick={() => setDeleteConfirmId(job.id)} title="Delete"
                             className="w-6 h-6 flex items-center justify-center rounded bg-red-50 text-red-600 hover:bg-red-100">
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -420,6 +430,32 @@ export default function CareerManagerPage() {
           </div>
         )}
 
+        {deleteConfirmId !== null && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setDeleteConfirmId(null)}>
+            <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-heading font-bold text-foreground mb-2">Delete Job?</h3>
+                <p className="text-xs text-muted mb-6">This will permanently remove this job vacancy. This action cannot be undone.</p>
+                <div className="flex gap-2 justify-center">
+                  <button onClick={() => setDeleteConfirmId(null)}
+                    className="px-4 py-2 rounded-lg text-xs font-semibold border border-border text-muted hover:bg-surface">
+                    Cancel
+                  </button>
+                  <button onClick={() => handleDeleteJob(deleteConfirmId)}
+                    className="px-4 py-2 rounded-lg text-xs font-semibold bg-red-600 text-white hover:bg-red-700">
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {selectedApp && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setSelectedApp(null)}>
             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
@@ -435,8 +471,52 @@ export default function CareerManagerPage() {
                 <p><strong className="text-xs text-muted uppercase tracking-wider">Job:</strong> {selectedApp.job_title}</p>
                 <p><strong className="text-xs text-muted uppercase tracking-wider">Email:</strong> {selectedApp.email}</p>
                 {selectedApp.phone && <p><strong className="text-xs text-muted uppercase tracking-wider">Phone:</strong> {selectedApp.phone}</p>}
+                {selectedApp.address && <p><strong className="text-xs text-muted uppercase tracking-wider">Address:</strong> {selectedApp.address}</p>}
+                {selectedApp.dob && <p><strong className="text-xs text-muted uppercase tracking-wider">DOB:</strong> {selectedApp.dob}</p>}
+                {selectedApp.nationality && <p><strong className="text-xs text-muted uppercase tracking-wider">Nationality:</strong> {selectedApp.nationality}</p>}
+                {selectedApp.gender && <p><strong className="text-xs text-muted uppercase tracking-wider">Gender:</strong> {selectedApp.gender}</p>}
+                {selectedApp.marital_status && <p><strong className="text-xs text-muted uppercase tracking-wider">Marital Status:</strong> {selectedApp.marital_status}</p>}
                 <p><strong className="text-xs text-muted uppercase tracking-wider">Experience:</strong> {selectedApp.experience_years} years</p>
                 {selectedApp.degree && <p><strong className="text-xs text-muted uppercase tracking-wider">Degree:</strong> {selectedApp.degree}</p>}
+                {selectedApp.major_subject && <p><strong className="text-xs text-muted uppercase tracking-wider">Major:</strong> {selectedApp.major_subject}</p>}
+                {selectedApp.subjects && <p><strong className="text-xs text-muted uppercase tracking-wider">Subjects:</strong> {selectedApp.subjects}</p>}
+                {selectedApp.grades && <p><strong className="text-xs text-muted uppercase tracking-wider">Grades:</strong> {selectedApp.grades}</p>}
+                {selectedApp.cover_letter && (
+                  <div>
+                    <strong className="text-xs text-muted uppercase tracking-wider">Cover Letter:</strong>
+                    <p className="text-xs mt-1 bg-surface p-2 rounded">{selectedApp.cover_letter}</p>
+                  </div>
+                )}
+                {selectedApp.form_data && Object.keys(selectedApp.form_data).length > 0 && (
+                  <details className="mt-2">
+                    <summary className="text-xs text-primary font-semibold cursor-pointer hover:underline">
+                      View Full Form Data
+                    </summary>
+                    <pre className="text-[10px] bg-surface p-2 rounded mt-1 max-h-40 overflow-y-auto whitespace-pre-wrap">
+                      {JSON.stringify(selectedApp.form_data, null, 2)}
+                    </pre>
+                  </details>
+                )}
+              </div>
+              <div className="mt-4 pt-4 border-t border-border">
+                <p className="text-xs text-muted uppercase tracking-wider mb-2">Files</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedApp.cv_url && (
+                    <a href={selectedApp.cv_url} target="_blank" className="text-xs text-primary font-semibold hover:underline bg-primary/5 px-2 py-1 rounded">
+                      View CV
+                    </a>
+                  )}
+                  {selectedApp.photo_url && (
+                    <a href={selectedApp.photo_url} target="_blank" className="text-xs text-primary font-semibold hover:underline bg-primary/5 px-2 py-1 rounded">
+                      View Photo
+                    </a>
+                  )}
+                  {selectedApp.documents_url && Array.isArray(selectedApp.documents_url) && (selectedApp.documents_url as string[]).map((d: string, i: number) => (
+                    <a key={i} href={d} target="_blank" className="text-xs text-primary font-semibold hover:underline bg-primary/5 px-2 py-1 rounded">
+                      Doc {i + 1}
+                    </a>
+                  ))}
+                </div>
               </div>
               <div className="mt-4 pt-4 border-t border-border">
                 <p className="text-xs text-muted uppercase tracking-wider mb-2">Update Status</p>

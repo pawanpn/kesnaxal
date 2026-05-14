@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
+import { supabase } from "@/lib/supabase/client";
 import type { JobVacancy, Translations, Locale } from "@/types";
 import { resolveJob } from "@/lib/translate";
 
@@ -265,13 +266,93 @@ export default function ApplicationForm({ job, locale, t, onClose, schoolName }:
     }));
   };
 
-  const handleSubmit = () => {
+  const uploadFile = async (file: File, folder: string): Promise<string | null> => {
+    const fileName = `career-applications/${folder}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+    const { data, error } = await supabase.storage.from("media").upload(fileName, file, { upsert: true });
+    if (error) {
+      console.error("Upload failed:", error.message);
+      return null;
+    }
+    const { data: urlData } = supabase.storage.from("media").getPublicUrl(data.path);
+    return urlData.publicUrl;
+  };
+
+  const handleSubmit = async () => {
     setSubmitting(true);
-    // Simulate API call
-    setTimeout(() => {
-      setSubmitting(false);
+    try {
+      let photoUrl: string | null = null;
+      let cvUrl: string | null = null;
+      const docUrls: string[] = [];
+
+      if (form.photo) {
+        photoUrl = await uploadFile(form.photo, "photos");
+      }
+      if (form.cv) {
+        cvUrl = await uploadFile(form.cv, "cvs");
+      }
+      if (form.experienceDoc) {
+        const url = await uploadFile(form.experienceDoc, "docs");
+        if (url) docUrls.push(url);
+      }
+      if (form.academicDoc) {
+        const url = await uploadFile(form.academicDoc, "docs");
+        if (url) docUrls.push(url);
+      }
+
+      const experienceData = form.workExperience.filter((r) => r.organization || r.position);
+      const educationData = form.educationHistory.filter((r) => r.institution || r.degree);
+      const trainingData = form.trainings.filter((r) => r.institution || r.title);
+
+      const { error } = await supabase.from("career_applications").insert({
+        job_id: String(job.id),
+        job_title: resolved.title,
+        full_name: form.fullName,
+        email: form.email,
+        phone: form.phone || null,
+        address: form.address || null,
+        dob: form.dateOfBirth || null,
+        nationality: form.nationality || null,
+        place_of_birth: form.placeOfBirth || null,
+        gender: form.gender || null,
+        marital_status: form.maritalStatus || null,
+        dependents: form.dependents || null,
+        degree: form.highestEducation || null,
+        major_subject: form.majorSubject || null,
+        experience_years: experienceData.length,
+        subjects: form.interestedSubjects || null,
+        grades: form.gradeLevel || null,
+        cv_url: cvUrl,
+        photo_url: photoUrl,
+        documents_url: docUrls,
+        cover_letter: form.whyWorkWithUs,
+        form_data: {
+          workExperience: experienceData,
+          educationHistory: educationData,
+          trainings: trainingData,
+          challengesFaced: form.challengesFaced,
+          thoughtsOnEducation: form.thoughtsOnEducation,
+          specialInterests: form.specialInterests,
+          healthDetails: form.healthDetails,
+          references: [
+            { name: form.ref1Name, address: form.ref1Address, phone: form.ref1Phone },
+            { name: form.ref2Name, address: form.ref2Address, phone: form.ref2Phone },
+          ],
+        },
+      });
+
+      if (error) {
+        console.error("Submission error:", error.message);
+        alert("Failed to submit application. Please try again.");
+        setSubmitting(false);
+        return;
+      }
+
       setSubmitted(true);
-    }, 1500);
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      alert("Something went wrong. Please try again.");
+    }
+    setSubmitting(false);
   };
 
   const steps = [af.stepPersonal, af.stepExperience, af.stepSubjective, af.stepUpload];

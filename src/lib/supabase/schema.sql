@@ -111,7 +111,13 @@ CREATE TABLE IF NOT EXISTS career_applications (
   phone TEXT,
   address TEXT,
   dob TEXT,
+  nationality TEXT,
+  place_of_birth TEXT,
+  gender TEXT,
+  marital_status TEXT,
+  dependents TEXT,
   degree TEXT,
+  major_subject TEXT,
   university TEXT,
   experience_years INTEGER DEFAULT 0,
   current_position TEXT,
@@ -119,8 +125,9 @@ CREATE TABLE IF NOT EXISTS career_applications (
   grades TEXT,
   cv_url TEXT,
   photo_url TEXT,
-  documents_url JSONB DEFAULT '[]',
+  documents_url JSONB DEFAULT '[]'::jsonb,
   cover_letter TEXT,
+  form_data JSONB DEFAULT '{}'::jsonb,
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'reviewed', 'shortlisted', 'rejected', 'hired')),
   notes TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -271,9 +278,18 @@ DROP POLICY IF EXISTS "Admins can upload media" ON storage.objects;
 CREATE POLICY "Admins can upload media" ON storage.objects
   FOR INSERT WITH CHECK (bucket_id = 'media' AND is_admin());
 
+DROP POLICY IF EXISTS "Anyone can upload career application files" ON storage.objects;
+CREATE POLICY "Anyone can upload career application files" ON storage.objects
+  FOR INSERT WITH CHECK (bucket_id = 'media' AND (storage.foldername(name))[1] = 'career-applications');
+
 DROP POLICY IF EXISTS "Admins can delete storage media" ON storage.objects;
 CREATE POLICY "Admins can delete storage media" ON storage.objects
   FOR DELETE USING (bucket_id = 'media' AND is_admin());
+
+DROP POLICY IF EXISTS "Anyone can update career application files" ON storage.objects;
+CREATE POLICY "Anyone can update career application files" ON storage.objects
+  FOR UPDATE USING (bucket_id = 'media' AND (storage.foldername(name))[1] = 'career-applications')
+  WITH CHECK (bucket_id = 'media' AND (storage.foldername(name))[1] = 'career-applications');
 
 -- ============================================================
 -- ── Postgres Functions (RPC) ──
