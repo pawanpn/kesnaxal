@@ -200,6 +200,10 @@ export function useDynamicContent() {
   // ── Academic Levels — Supabase only ──
   const academicLevels: AcademicLevel[] = useMemo(() => {
     if (!hasDb) return [];
+
+    const json = getJson("academics", "academic_levels", locale) as { levels?: AcademicLevel[] };
+    if (json?.levels?.length) return json.levels;
+
     const results: AcademicLevel[] = [];
     const ids = ["primary", "secondary", "higher"];
     ids.forEach((id) => {
@@ -215,20 +219,22 @@ export function useDynamicContent() {
       }
     });
     return results;
-  }, [hasDb, getContent, locale]);
+  }, [hasDb, getJson, getContent, locale]);
 
   // ── Faculty — Supabase only ──
   const faculty: FacultyMember[] = useMemo(() => {
     if (!hasDb) return [];
-    const jsonStr = getContent("academics", "faculty_list", "en");
-    if (jsonStr) {
+    const json = getJson("academics", "faculty_list", locale) as { members?: FacultyMember[] };
+    if (json?.members?.length) return json.members;
+    const fallback = getContent("academics", "faculty_list", "en");
+    if (fallback) {
       try {
-        const p = JSON.parse(jsonStr);
+        const p = JSON.parse(fallback);
         if (p.members?.length) return p.members as FacultyMember[];
       } catch {}
     }
     return [];
-  }, [hasDb, getContent]);
+  }, [hasDb, getJson, getContent, locale]);
 
   // ── Staff — Supabase only ──
   const staff: StaffMember[] = useMemo(() => {
