@@ -24,12 +24,12 @@ export function middleware(request: NextRequest) {
 
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.supabase.co",
-    "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://picsum.photos https://drive.google.com",
-    "font-src 'self'",
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
-    "frame-src 'self' https://www.google.com",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.supabase.co https://*.googleapis.com https://*.google.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://picsum.photos https://drive.google.com https://*.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.googleapis.com",
+    "frame-src 'self' https://*.google.com https://www.google.com",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

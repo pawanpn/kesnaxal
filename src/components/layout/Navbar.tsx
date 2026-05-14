@@ -2,10 +2,10 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
+import { usePathname } from "next/navigation";
 import { siteConfig } from "@/constants/siteConfig";
 import { useLocale } from "@/hooks/useLocale";
+import { usePrefetch } from "@/hooks/usePrefetch";
 import SiteLogo from "@/components/SiteLogo";
 import type { NavLink } from "@/types";
 
@@ -13,8 +13,7 @@ const navLinks: NavLink[] = siteConfig.nav.links;
 
 export default function Navbar() {
   const pathname = usePathname();
-  const router = useRouter();
-  const queryClient = useQueryClient();
+  const prefetch = usePrefetch();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [academicsOpen, setAcademicsOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
@@ -22,19 +21,6 @@ export default function Navbar() {
   const langRef = useRef<HTMLDivElement>(null);
 
   const isActive = (href: string) => pathname === href;
-
-  const handlePrefetch = (href: string) => {
-    router.prefetch(href);
-    queryClient.prefetchQuery({
-      queryKey: ["site_content", false],
-      queryFn: async () => {
-        const { supabase } = await import("@/lib/supabase/client");
-        const { data } = await supabase.from("site_content").select("*");
-        return (data || []) as import("@/context/AdminContext").SiteContentRow[];
-      },
-      staleTime: 5 * 60 * 1000,
-    });
-  };
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -52,7 +38,7 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 bg-white shadow-md">
       <div className="container-custom">
         <div className="flex items-center justify-between h-16 lg:h-20">
-          <Link href="/" onMouseEnter={() => handlePrefetch("/")} className="flex items-center gap-2 shrink-0 min-w-0">
+          <Link href="/" onMouseEnter={() => prefetch("/")} className="flex items-center gap-2 shrink-0 min-w-0">
             <div className="relative shrink-0">
               <SiteLogo
                 size={48}
@@ -81,7 +67,7 @@ export default function Navbar() {
                 >
                   <Link
                     href={link.href}
-                    onMouseEnter={() => handlePrefetch(link.href)}
+                    onMouseEnter={() => prefetch(link.href)}
                     className={`px-2 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-0.5 ${
                       isActive(link.href)
                         ? "bg-primary text-white"
@@ -112,7 +98,7 @@ export default function Navbar() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  onMouseEnter={() => handlePrefetch(link.href)}
+                  onMouseEnter={() => prefetch(link.href)}
                   className={`px-2 py-1.5 rounded-md text-xs font-medium transition-colors ${
                     isActive(link.href)
                       ? "bg-primary text-white"
@@ -219,7 +205,7 @@ export default function Navbar() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  onMouseEnter={() => handlePrefetch(link.href)}
+                  onMouseEnter={() => prefetch(link.href)}
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     isActive(link.href) ? "bg-primary text-white" : "text-foreground hover:bg-primary/10 hover:text-primary"
                   }`}

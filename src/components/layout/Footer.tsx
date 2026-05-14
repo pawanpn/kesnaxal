@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { siteConfig } from "@/constants/siteConfig";
 import { useLocale } from "@/hooks/useLocale";
+import { usePrefetch } from "@/hooks/usePrefetch";
 import EditableElement from "@/components/admin/EditableElement";
 import SiteLogo from "@/components/SiteLogo";
 import { useSiteContent } from "@/hooks/useSiteContent";
@@ -17,6 +18,7 @@ interface SocialLinkData {
 
 export default function Footer() {
   const pathname = usePathname();
+  const prefetch = usePrefetch();
   const { locale, t } = useLocale();
   const { school, contact, social, footer } = siteConfig;
   const { getJson } = useSiteContent("global", "en");
@@ -75,7 +77,7 @@ export default function Footer() {
             <ul className="space-y-2">
               {footer.quickLinks.map((link) => (
                 <li key={link.label}>
-                  <Link href={link.href} className="text-gray-300 text-sm hover:text-secondary transition-colors">
+                  <Link href={link.href} onMouseEnter={() => prefetch(link.href)} className="text-gray-300 text-sm hover:text-secondary transition-colors">
                     {link.label}
                   </Link>
                 </li>

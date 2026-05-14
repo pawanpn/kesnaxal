@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { usePrefetch } from "@/hooks/usePrefetch";
 import { useAdmin } from "@/hooks/useAdmin";
 
 const navSections = [
@@ -43,6 +44,7 @@ const navSections = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { isAdmin, authReady, logout, draftCount, togglePreviewMode, isPreviewMode } = useAdmin();
+  const prefetch = usePrefetch();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
@@ -92,7 +94,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <p className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-white/40">{group.heading}</p>
               )}
               {group.items.map((item) => (
-                <button key={item.href} onClick={() => router.push(item.href)}
+                <button key={item.href} onClick={() => router.push(item.href)} onMouseEnter={() => prefetch(item.href)}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all mb-0.5 ${
                     isActive(item.href, (item as { exact?: boolean }).exact)
                       ? "bg-white/15 text-white"

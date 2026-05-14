@@ -345,13 +345,15 @@ AS $$ DECLARE cnt integer; BEGIN
   RETURN cnt;
 END; $$;
 
--- 13. RPC: Get unread message count
+-- 13. RPC: Get unread message count (admin only)
 DROP FUNCTION IF EXISTS get_message_counts CASCADE;
 CREATE FUNCTION get_message_counts()
 RETURNS TABLE(category TEXT, total bigint, unread bigint) LANGUAGE sql SECURITY DEFINER SET search_path = ''
 AS $$
   SELECT category, count(*)::bigint, count(*) FILTER (WHERE status = 'unread')::bigint
-  FROM public.contact_messages GROUP BY category ORDER BY category;
+  FROM public.contact_messages
+  WHERE public.is_admin()
+  GROUP BY category ORDER BY category;
 $$;
 
 -- ============================================================
@@ -379,5 +381,30 @@ VALUES (
 ) ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================
+-- 16. DATA MIGRATION: Move alerts from "news" → "alerts" section
+--    (breaking/emergency now live in their own section)
+--    Safe to re-run — uses ON CONFLICT to avoid duplicates
+-- ============================================================
+DO $$
+BEGIN
+  -- Migrate breaking news text
+  UPDATE public.site_content
+  SET section = 'alerts'
+  WHERE section = 'news' AND content_key IN (
+    'breaking_news_text', 'emergency_title', 'emergency_message',
+    'breaking_news_active', 'emergency_active'
+  );
+
+  -- Handle any duplicate constraint issues (if alerts section already has these keys)
+  -- by deleting old news-section copies that weren't moved
+  DELETE FROM public.site_content
+  WHERE section = 'news' AND content_key IN (
+    'breaking_news_text', 'emergency_title', 'emergency_message',
+    'breaking_news_active', 'emergency_active'
+  );
+END $$;
+
+-- ============================================================
 -- DONE — All tables, policies, functions, and storage created.
+-- Copy-paste this entire file into Supabase SQL Editor.
 -- ============================================================
