@@ -59,7 +59,7 @@ function newJob(): JobVacancy {
 }
 
 export default function CareerManagerPage() {
-  const { getContent, savePublishedContent, loadAllContent, isSuperadmin, seedSection } = useAdmin();
+  const { getContent, savePublishedContent, loadAllContent } = useAdmin();
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState<"jobs" | "applications">("jobs");

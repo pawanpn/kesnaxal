@@ -19,12 +19,10 @@ interface SectionStats {
 }
 
 export default function AdminDashboard() {
-  const { draftCount, publishedContent, draftContent, loadAllContent, seedContent } = useAdmin();
+  const { draftCount, publishedContent, draftContent, loadAllContent } = useAdmin();
   const { toast } = useToast();
   const router = useRouter();
 
-  const [seeding, setSeeding] = useState(false);
-  const [seedResult, setSeedResult] = useState<{ count?: number; error?: string } | null>(null);
   const [appCount, setAppCount] = useState<number | null>(null);
   const [appStatusCounts, setAppStatusCounts] = useState<Record<string, number>>({});
 
@@ -91,14 +89,6 @@ export default function AdminDashboard() {
   const newsCount = siteConfig.newsArticles?.length || 0;
   const noticeCount = siteConfig.notices?.length || 0;
   const vacancyCount = siteConfig.jobVacancies?.length || 0;
-
-  const handleSeed = async () => {
-    setSeeding(true);
-    setSeedResult(null);
-    const result = await seedContent();
-    setSeedResult(result);
-    setSeeding(false);
-  };
 
   return (
     <AdminGuard>
@@ -233,15 +223,6 @@ export default function AdminDashboard() {
               {sectionStats.length === 0 && (
                 <div className="px-5 py-8 text-center">
                   <p className="text-xs text-muted">No content in database yet.</p>
-                  <button onClick={handleSeed} disabled={seeding}
-                    className="mt-3 px-4 py-2 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">
-                    {seeding ? "Seeding..." : "Seed from siteConfig"}
-                  </button>
-                  {seedResult && (
-                    <p className={`text-xs mt-2 ${seedResult.error ? "text-accent" : "text-green-600"}`}>
-                      {seedResult.error || `Seeded ${seedResult.count} rows`}
-                    </p>
-                  )}
                 </div>
               )}
               {sectionStats.map((s) => (
@@ -288,13 +269,6 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {seedResult && (
-            <div className={`mt-6 px-4 py-3 rounded-xl text-sm font-medium ${
-              seedResult.error ? "bg-accent/10 border border-accent/20 text-accent" : "bg-green-50 border border-green-200 text-green-700"
-            }`}>
-              {seedResult.error || `Seeded ${seedResult.count} rows to Supabase`}
-            </div>
-          )}
         </div>
       </div>
     </AdminGuard>

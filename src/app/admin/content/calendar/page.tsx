@@ -29,7 +29,7 @@ const PRESET_COLORS = [
 ];
 
 export default function CalendarAdminPage() {
-  const { getJson, getContent, saveJson, hasDraft, discardSectionDrafts, loadAllContent, isSuperadmin, seedSection } = useAdmin();
+  const { getJson, getContent, saveJson, hasDraft, loadAllContent } = useAdmin();
   const { toast } = useToast();
 
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -37,7 +37,6 @@ export default function CalendarAdminPage() {
   const [lang, setLang] = useState<Locale>("en");
   const [syncing, setSyncing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [discarding, setDiscarding] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const [showTypeForm, setShowTypeForm] = useState(false);

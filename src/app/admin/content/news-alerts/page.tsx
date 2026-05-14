@@ -14,7 +14,7 @@ const LOCALES: { id: Locale; label: string }[] = [
 ];
 
 export default function AlertsPage() {
-  const { getContent, getJson, saveContent, saveJson, isSuperadmin, seedSection } = useAdmin();
+  const { getContent, getJson, saveContent, saveJson } = useAdmin();
   const { toast } = useToast();
 
   const [lang, setLang] = useState<Locale>("en");

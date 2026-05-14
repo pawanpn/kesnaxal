@@ -65,12 +65,11 @@ const DEF_TEST: Record<Locale, Testimonial[]> = { en: DEF_TEST_EN, ne: DEF_TEST_
 const DEF_FAQ: Record<Locale, Faq[]> = { en: DEF_FAQ_EN, ne: DEF_FAQ_NE, ja: DEF_FAQ_JA };
 
 export default function HomepageManagerPage() {
-  const { getJson, saveJson, hasDraft, discardSectionDrafts, loadAllContent, isSuperadmin, seedSection } = useAdmin();
+  const { getJson, saveJson, hasDraft, loadAllContent } = useAdmin();
   const { toast } = useToast();
   const [activeSection, setActiveSection] = useState<string>("hero");
   const [lang, setLang] = useState<Locale>("en");
   const [syncing, setSyncing] = useState(false);
-  const [discarding, setDiscarding] = useState(false);
 
   const [heroSlides, setHeroSlides] = useState<Record<Locale, HeroSlide[]>>({ en: [], ne: [], ja: [] });
   const [testimonials, setTestimonials] = useState<Record<Locale, Testimonial[]>>({ en: [], ne: [], ja: [] });

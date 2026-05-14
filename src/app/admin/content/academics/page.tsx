@@ -62,14 +62,13 @@ const TABS = [
 ];
 
 export default function AcademicHubPage() {
-  const { getJson, saveJson, getContent, saveContent, discardSectionDrafts, uploadMedia, loadAllContent, isSuperadmin, seedSection } = useAdmin();
+  const { getJson, saveJson, getContent, saveContent, uploadMedia, loadAllContent } = useAdmin();
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState("pdfs");
   const [lang, setLang] = useState<Locale>("en");
   const [syncing, setSyncing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [discarding, setDiscarding] = useState(false);
 
   // PDF state
   const [docsByLocale, setDocsByLocale] = useState<Record<Locale, PdfDoc[]>>({ en: [], ne: [], ja: [] });

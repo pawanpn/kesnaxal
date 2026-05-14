@@ -31,7 +31,7 @@ function emptyNotice(): Notice {
 }
 
 export default function NoticesPage() {
-  const { getJson, saveJson, hasDraft, discardSectionDrafts, loadAllContent, isSuperadmin, seedSection } = useAdmin();
+  const { getJson, saveJson, hasDraft, loadAllContent } = useAdmin();
   const { toast } = useToast();
   const [lang, setLang] = useState<Locale>("en");
   const [syncing, setSyncing] = useState(false);
@@ -41,7 +41,6 @@ export default function NoticesPage() {
   const [form, setForm] = useState<Notice>(emptyNotice());
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
-  const [discarding, setDiscarding] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => { loadAllContent(); }, []);

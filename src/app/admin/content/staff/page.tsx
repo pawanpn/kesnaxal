@@ -7,12 +7,11 @@ import { useToast } from "@/context/ToastContext";
 import type { StaffMember } from "@/types";
 
 export default function StaffAdminPage() {
-  const { getJson, saveJson, uploadMedia, hasDraft, discardSectionDrafts, loadAllContent, isSuperadmin, seedSection } = useAdmin();
+  const { getJson, saveJson, uploadMedia, hasDraft, loadAllContent } = useAdmin();
   const { toast } = useToast();
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState<string | null>(null);
-  const [discarding, setDiscarding] = useState(false);
 
   useEffect(() => { loadAllContent(); }, []);
 

@@ -59,8 +59,6 @@ interface AdminContextValue {
   getMeta: (section: string, key: string, locale: string) => Record<string, unknown>;
   getMedia: (section: string, key: string) => string;
   uploadMedia: (file: File, section: string, key: string) => Promise<string | null>;
-  seedContent: () => Promise<{ count: number; error?: string }>;
-  seedSection: (section: string) => Promise<{ count: number; error?: string }>;
   hasDraft: (section: string, key: string, locale: string) => boolean;
   loadAllContent: () => Promise<void>;
   contentReady: boolean;
@@ -260,7 +258,6 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     [draftContent, publishedContent]
   );
 
-  /* ── Check if draft exists ── */
   const hasDraft = useCallback(
     (section: string, key: string, locale: string): boolean => {
       return draftContent.has(rowKey(section, key, locale));
@@ -653,8 +650,6 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
         getMeta,
         getMedia,
         uploadMedia,
-        seedContent,
-        seedSection,
         hasDraft,
         loadAllContent,
         contentReady,

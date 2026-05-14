@@ -21,7 +21,7 @@ function convertDriveUrl(url: string): string {
 }
 
 export default function GalleryAdminPage() {
-  const { getJson, getContent, saveJson, saveContent, uploadMedia, loadAllContent, hasDraft, isSuperadmin, seedSection } = useAdmin();
+  const { getJson, getContent, saveJson, saveContent, uploadMedia, loadAllContent, hasDraft } = useAdmin();
   const { toast } = useToast();
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [categories, setCategories] = useState<string[]>([]);

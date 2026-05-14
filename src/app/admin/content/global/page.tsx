@@ -71,7 +71,7 @@ const DEF_HOURS: HourEntry[] = [
 type FormDataType = Record<string, Record<Locale, string>>;
 
 export default function GlobalSettingsPage() {
-  const { getContent, saveContent, savePublishedContent, getJson, saveJson, discardSectionDrafts, hasDraft, loadAllContent, uploadMedia, isSuperadmin, seedSection } = useAdmin();
+  const { getContent, saveContent, savePublishedContent, getJson, saveJson, discardSectionDrafts, hasDraft, loadAllContent, uploadMedia } = useAdmin();
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState("schoolInfo");

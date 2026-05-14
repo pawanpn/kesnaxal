@@ -99,7 +99,7 @@ function ToolbarBtn({ cmd, val, label, title, cls }: { cmd: string; val?: string
 }
 
 export default function NewsAdminPage() {
-  const { getJson, saveJson, getContent, uploadMedia, hasDraft, discardSectionDrafts, loadAllContent, publishedContent, draftContent, isSuperadmin, seedSection } = useAdmin();
+  const { getJson, saveJson, getContent, uploadMedia, hasDraft, discardSectionDrafts, loadAllContent, publishedContent, draftContent } = useAdmin();
   const { toast } = useToast();
 
   const [articles, setArticles] = useState<NewsArticle[]>([]);
