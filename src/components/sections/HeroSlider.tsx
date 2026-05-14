@@ -17,8 +17,15 @@ export default function HeroSlider({ slides, motto }: HeroSliderProps) {
   const { locale, t } = useLocale();
   const [current, setCurrent] = useState(0);
 
-  const next = useCallback(() => setCurrent((p) => (p + 1) % slides.length), [slides.length]);
-  const prev = useCallback(() => setCurrent((p) => (p - 1 + slides.length) % slides.length), [slides.length]);
+  const safeSlides: HeroSlide[] = slides.length > 0 ? slides : [{
+    image: "",
+    title: { en: "", ne: "", ja: "" },
+    subtitle: { en: "", ne: "", ja: "" },
+  }];
+
+  const slide = safeSlides[current] ?? safeSlides[0];
+  const next = useCallback(() => setCurrent((p) => (p + 1) % safeSlides.length), [safeSlides.length]);
+  const prev = useCallback(() => setCurrent((p) => (p - 1 + safeSlides.length) % safeSlides.length), [safeSlides.length]);
 
   useEffect(() => {
     const timer = setInterval(next, 5000);
@@ -27,17 +34,17 @@ export default function HeroSlider({ slides, motto }: HeroSliderProps) {
 
   return (
     <section className="relative w-full h-[500px] sm:h-[550px] lg:h-[600px] overflow-hidden bg-primary-dark">
-      {slides.map((slide, index) => (
+      {safeSlides.map((s, index) => (
         <div
           key={index}
           className={`absolute inset-0 transition-opacity duration-700 ${index === current ? "opacity-100" : "opacity-0"}`}
         >
-          {slide.image ? (
+          {s.image ? (
             <EditableImage
               section="hero"
               contentKey={`slide_${index}_image`}
-              src={slide.image}
-              alt={resolveContent(slide.title, locale)}
+              src={s.image}
+              alt={resolveContent(s.title, locale)}
               fill
               priority={index === 0}
               className="object-cover"
@@ -49,7 +56,6 @@ export default function HeroSlider({ slides, motto }: HeroSliderProps) {
           <div className="absolute inset-0 bg-black/50" />
         </div>
       ))}
-
       <div className="absolute inset-0 flex items-center justify-center text-center px-4">
         <div className="max-w-3xl">
           <p className="text-secondary font-heading text-sm sm:text-lg font-light tracking-widest mb-2 animate-fadein uppercase">
@@ -64,7 +70,7 @@ export default function HeroSlider({ slides, motto }: HeroSliderProps) {
             <EditableElement
               section="hero"
               contentKey={`slide_${current}_title`}
-              value={slides[current].title}
+              value={slide.title}
               as="span"
             />
           </h1>
@@ -72,7 +78,7 @@ export default function HeroSlider({ slides, motto }: HeroSliderProps) {
             <EditableElement
               section="hero"
               contentKey={`slide_${current}_subtitle`}
-              value={slides[current].subtitle}
+              value={slide.subtitle}
               as="span"
             />
           </p>
@@ -104,7 +110,7 @@ export default function HeroSlider({ slides, motto }: HeroSliderProps) {
       </button>
 
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-        {slides.map((_, index) => (
+        {safeSlides.map((_, index) => (
           <button key={index} onClick={() => setCurrent(index)} className={`w-3 h-3 rounded-full transition-colors ${index === current ? "bg-secondary" : "bg-white/50 hover:bg-white/80"}`} aria-label={`Go to slide ${index + 1}`} />
         ))}
       </div>
