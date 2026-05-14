@@ -524,7 +524,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
   /* ── Auth ── */
   const login = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { error: error.message };
+    if (error) return { error: "Invalid email or password." };
     return {};
   }, []);
 
@@ -583,8 +583,8 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
       const next = !prev;
       if (typeof document !== "undefined") {
         document.cookie = next
-          ? "kes_preview=1; path=/; max-age=86400; SameSite=Lax"
-          : "kes_preview=; path=/; max-age=0";
+          ? "kes_preview=1; path=/; max-age=86400; SameSite=Lax; Secure"
+          : "kes_preview=; path=/; max-age=0; Secure";
       }
       return next;
     });

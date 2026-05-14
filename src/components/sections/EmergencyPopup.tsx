@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useLocale } from "@/hooks/useLocale";
 import { useDynamicContent } from "@/hooks/useDynamicContent";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 export default function EmergencyPopup() {
   const { locale } = useLocale();
@@ -42,7 +43,7 @@ export default function EmergencyPopup() {
             <div className="px-6 py-5">
               <div
                 className="text-sm text-foreground leading-relaxed prose-custom"
-                dangerouslySetInnerHTML={{ __html: message }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(message) }}
               />
             </div>
             <div className="px-6 pb-5 flex justify-end">

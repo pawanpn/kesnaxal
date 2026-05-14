@@ -300,6 +300,7 @@ DROP FUNCTION IF EXISTS publish_all_drafts CASCADE;
 CREATE FUNCTION publish_all_drafts()
 RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
 AS $$ DECLARE cnt integer; BEGIN
+  IF NOT public.is_admin() THEN RAISE EXCEPTION 'Permission denied: admin role required'; END IF;
   WITH updated AS (
     UPDATE public.site_content SET status = 'published', content_meta = content_meta || ('{"publishedAt":"' || NOW()::text || '"}')::jsonb
     WHERE status = 'draft' RETURNING 1
@@ -312,6 +313,7 @@ DROP FUNCTION IF EXISTS publish_selected_drafts CASCADE;
 CREATE FUNCTION publish_selected_drafts(p_ids UUID[])
 RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
 AS $$ DECLARE cnt integer; BEGIN
+  IF NOT public.is_admin() THEN RAISE EXCEPTION 'Permission denied: admin role required'; END IF;
   WITH updated AS (
     UPDATE public.site_content SET status = 'published', content_meta = content_meta || ('{"publishedAt":"' || NOW()::text || '"}')::jsonb
     WHERE id = ANY(p_ids) AND status = 'draft' RETURNING 1
@@ -324,6 +326,7 @@ DROP FUNCTION IF EXISTS discard_all_drafts CASCADE;
 CREATE FUNCTION discard_all_drafts()
 RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
 AS $$ DECLARE cnt integer; BEGIN
+  IF NOT public.is_admin() THEN RAISE EXCEPTION 'Permission denied: admin role required'; END IF;
   WITH deleted AS (
     DELETE FROM public.site_content WHERE status = 'draft' RETURNING 1
   ) SELECT count(*) INTO cnt FROM deleted;
@@ -335,6 +338,7 @@ DROP FUNCTION IF EXISTS discard_section_drafts CASCADE;
 CREATE FUNCTION discard_section_drafts(p_section TEXT)
 RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
 AS $$ DECLARE cnt integer; BEGIN
+  IF NOT public.is_admin() THEN RAISE EXCEPTION 'Permission denied: admin role required'; END IF;
   WITH deleted AS (
     DELETE FROM public.site_content WHERE section = p_section AND status = 'draft' RETURNING 1
   ) SELECT count(*) INTO cnt FROM deleted;

@@ -34,8 +34,8 @@ export default function AdminLoginPage() {
       if (result.error) {
         setError(result.error);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error during login");
+    } catch {
+      setError("Invalid email or password.");
     } finally {
       setLoading(false);
     }

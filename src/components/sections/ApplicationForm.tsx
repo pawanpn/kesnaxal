@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase/client";
+import { stripHtml } from "@/lib/sanitize";
 import type { JobVacancy, Translations, Locale } from "@/types";
 import { resolveJob } from "@/lib/translate";
 
@@ -306,36 +307,49 @@ export default function ApplicationForm({ job, locale, t, onClose, schoolName }:
       const { error } = await supabase.from("career_applications").insert({
         job_id: String(job.id),
         job_title: resolved.title,
-        full_name: form.fullName,
-        email: form.email,
-        phone: form.phone || null,
-        address: form.address || null,
+        full_name: stripHtml(form.fullName),
+        email: stripHtml(form.email),
+        phone: stripHtml(form.phone || ""),
+        address: stripHtml(form.address || ""),
         dob: form.dateOfBirth || null,
-        nationality: form.nationality || null,
-        place_of_birth: form.placeOfBirth || null,
+        nationality: stripHtml(form.nationality || ""),
+        place_of_birth: stripHtml(form.placeOfBirth || ""),
         gender: form.gender || null,
         marital_status: form.maritalStatus || null,
         dependents: form.dependents || null,
-        degree: form.highestEducation || null,
-        major_subject: form.majorSubject || null,
+        degree: stripHtml(form.highestEducation || ""),
+        major_subject: stripHtml(form.majorSubject || ""),
         experience_years: experienceData.length,
-        subjects: form.interestedSubjects || null,
-        grades: form.gradeLevel || null,
+        subjects: stripHtml(form.interestedSubjects || ""),
+        grades: stripHtml(form.gradeLevel || ""),
         cv_url: cvUrl,
         photo_url: photoUrl,
         documents_url: docUrls,
-        cover_letter: form.whyWorkWithUs,
+        cover_letter: stripHtml(form.whyWorkWithUs),
         form_data: {
-          workExperience: experienceData,
-          educationHistory: educationData,
-          trainings: trainingData,
-          challengesFaced: form.challengesFaced,
-          thoughtsOnEducation: form.thoughtsOnEducation,
-          specialInterests: form.specialInterests,
-          healthDetails: form.healthDetails,
+          workExperience: experienceData.map((r) => ({
+            ...r,
+            organization: r.organization ? stripHtml(r.organization) : r.organization,
+            position: r.position ? stripHtml(r.position) : r.position,
+          })),
+          educationHistory: educationData.map((r) => ({
+            ...r,
+            institution: r.institution ? stripHtml(r.institution) : r.institution,
+            degree: r.degree ? stripHtml(r.degree) : r.degree,
+            major: r.major ? stripHtml(r.major) : r.major,
+          })),
+          trainings: trainingData.map((r) => ({
+            ...r,
+            institution: r.institution ? stripHtml(r.institution) : r.institution,
+            title: r.title ? stripHtml(r.title) : r.title,
+          })),
+          challengesFaced: stripHtml(form.challengesFaced),
+          thoughtsOnEducation: stripHtml(form.thoughtsOnEducation),
+          specialInterests: stripHtml(form.specialInterests),
+          healthDetails: stripHtml(form.healthDetails),
           references: [
-            { name: form.ref1Name, address: form.ref1Address, phone: form.ref1Phone },
-            { name: form.ref2Name, address: form.ref2Address, phone: form.ref2Phone },
+            { name: stripHtml(form.ref1Name), address: stripHtml(form.ref1Address), phone: stripHtml(form.ref1Phone) },
+            { name: stripHtml(form.ref2Name), address: stripHtml(form.ref2Address), phone: stripHtml(form.ref2Phone) },
           ],
         },
       });

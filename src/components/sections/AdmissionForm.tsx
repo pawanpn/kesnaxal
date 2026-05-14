@@ -6,6 +6,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Spinner from "@/components/ui/Spinner";
 import { useT } from "@/hooks/useLocale";
+import { supabase } from "@/lib/supabase/client";
 
 const admissionSchema = z.object({
   studentName: z.string().min(2, "Full name is required"),
@@ -70,10 +71,22 @@ export default function AdmissionForm() {
 
   const onSubmit = async (data: AdmissionFormData) => {
     setIsSubmitting(true);
-    await new Promise((r) => setTimeout(r, 1500));
+    const { error } = await supabase.from("admission_inquiries").insert({
+      student_name: data.studentName,
+      parent_name: `${data.fatherName} / ${data.motherName}`,
+      email: data.parentEmail || "",
+      phone: data.parentPhone,
+      grade_applying: data.studentClass,
+      previous_school: data.parentOccupation || null,
+      message: `Address: ${data.address}, City: ${data.city}`,
+      status: "pending",
+    });
     setIsSubmitting(false);
+    if (error) {
+      console.error("Admission form submission error:", error.message);
+      return;
+    }
     setShowSuccess(true);
-    console.log("Admission Form Submitted:", data);
   };
 
   const closeSuccess = () => { setShowSuccess(false); reset(); setStep(1); };

@@ -5,6 +5,7 @@ import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/context/ToastContext";
 import { translateToAll } from "@/lib/autoTranslate";
+import { sanitizeHtml } from "@/lib/sanitize";
 import type { NewsArticle, LocaleContent } from "@/types";
 
 type Locale = "en" | "ne" | "ja";
@@ -148,10 +149,14 @@ export default function NewsAdminPage() {
   const saveArticles = async (updated: NewsArticle[]) => {
     setSaving(true);
     try {
+      const sanitized = updated.map((a) => ({
+        ...a,
+        content: { en: sanitizeHtml(a.content.en), ne: sanitizeHtml(a.content.ne), ja: sanitizeHtml(a.content.ja) },
+      }));
       for (const { id: l } of LOCALES) {
-        await saveJson("news", "news_articles", l, { articles: updated });
+        await saveJson("news", "news_articles", l, { articles: sanitized });
       }
-      setArticles(updated);
+      setArticles(sanitized);
       toast("success", "Saved as draft - publish from Review page");
     } catch { toast("error", "Save failed"); }
     setSaving(false);

@@ -4,6 +4,7 @@ import { useState } from "react";
 import SectionHeading from "@/components/ui/SectionHeading";
 import EditableElement from "@/components/admin/EditableElement";
 import { useT } from "@/hooks/useLocale";
+import { supabase } from "@/lib/supabase/client";
 import type { ContactInfo } from "@/types";
 
 interface InquiryFormProps {
@@ -14,10 +15,26 @@ export default function InquiryForm({ contact }: InquiryFormProps) {
   const t = useT();
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setSubmitting(true);
     const fd = new FormData(e.currentTarget);
-    console.log("Inquiry Form Data:", Object.fromEntries(fd.entries()));
+    const { error } = await supabase.from("contact_messages").insert({
+      name: fd.get("name") as string,
+      email: fd.get("email") as string,
+      phone: (fd.get("phone") as string) || null,
+      subject: fd.get("subject") as string,
+      message: fd.get("message") as string,
+      category: (fd.get("subject") as string) || "general",
+      status: "unread",
+    });
+    setSubmitting(false);
+    if (error) {
+      console.error("Inquiry form submission error:", error.message);
+      return;
+    }
     setSubmitted(true);
   };
 
@@ -62,7 +79,9 @@ export default function InquiryForm({ contact }: InquiryFormProps) {
               <label className="block text-sm font-medium text-foreground mb-1">{t.forms.message}</label>
               <textarea name="message" rows={4} required className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm resize-none" placeholder={t.forms.messagePlaceholder} />
             </div>
-            <button type="submit" className="w-full sm:w-auto px-6 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-dark transition-colors">{t.forms.sendMessage}</button>
+            <button type="submit" disabled={submitting} className="w-full sm:w-auto px-6 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-dark transition-colors disabled:opacity-60">
+              {submitting ? t.forms.sending || "Sending..." : t.forms.sendMessage}
+            </button>
           </form>
         )}
       </div>

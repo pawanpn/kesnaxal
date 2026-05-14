@@ -5,6 +5,7 @@ import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/context/ToastContext";
 import { translateToAll } from "@/lib/autoTranslate";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { siteConfig } from "@/constants/siteConfig";
 import type { NewsArticle } from "@/types";
 
@@ -194,10 +195,14 @@ export default function NewsAlertsPage() {
   const saveArticles = async (updated: NewsArticle[]) => {
     setSaving(true);
     try {
+      const sanitized = updated.map((a) => ({
+        ...a,
+        content: { en: sanitizeHtml(a.content.en), ne: sanitizeHtml(a.content.ne), ja: sanitizeHtml(a.content.ja) },
+      }));
       for (const loc of ["en", "ne", "ja"]) {
-        await saveJson("news", "news_articles", loc, { articles: updated });
+        await saveJson("news", "news_articles", loc, { articles: sanitized });
       }
-      setArticles(updated);
+      setArticles(sanitized);
       toast("success", "Articles saved as draft — publish from Review page");
     } catch { toast("error", "Save failed"); }
     setSaving(false);
@@ -303,7 +308,7 @@ export default function NewsAlertsPage() {
     try {
       for (const { id: l } of LOCALES) {
         await saveContent("news", "emergency_title", l, syncing ? emergencyTitle[lang] : emergencyTitle[l]);
-        await saveContent("news", "emergency_message", l, syncing ? emergencyMsg[lang] : emergencyMsg[l]);
+        await saveContent("news", "emergency_message", l, sanitizeHtml(syncing ? emergencyMsg[lang] : emergencyMsg[l]));
       }
       toast("success", "Saved");
     } catch { toast("error", "Failed"); }

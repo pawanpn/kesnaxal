@@ -7,6 +7,7 @@ import Badge from "@/components/ui/Badge";
 import SocialShare from "@/components/ui/SocialShare";
 import { useLocale } from "@/hooks/useLocale";
 import { resolveArticle } from "@/lib/translate";
+import { sanitizeHtml } from "@/lib/sanitize";
 import type { NewsArticle } from "@/types";
 
 interface NewsDetailProps {
@@ -73,7 +74,7 @@ export default function NewsDetail({ article, recentPosts }: NewsDetailProps) {
 
             <div className="prose-custom text-sm lg:text-base">
               {resolved.content.includes("<") ? (
-                <div dangerouslySetInnerHTML={{ __html: resolved.content }} />
+                <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolved.content) }} />
               ) : (
                 resolved.content.split("\n\n").map((para, i) => {
                   const trimmed = para.trim();
