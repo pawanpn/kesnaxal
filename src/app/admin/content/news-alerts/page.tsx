@@ -35,16 +35,16 @@ export default function AlertsPage() {
     const et: Record<Locale, string> = { en: "", ne: "", ja: "" };
     const em: Record<Locale, string> = { en: "", ne: "", ja: "" };
     LOCALES.forEach(({ id: l }) => {
-      bn[l] = getContent("news", "breaking_news_text", l);
-      et[l] = getContent("news", "emergency_title", l);
-      em[l] = getContent("news", "emergency_message", l);
+      bn[l] = getContent("alerts", "breaking_news_text", l);
+      et[l] = getContent("alerts", "emergency_title", l);
+      em[l] = getContent("alerts", "emergency_message", l);
     });
     setBreakingNews(bn);
     setEmergencyTitle(et);
     setEmergencyMsg(em);
-    const bm = getJson("news", "breaking_news_active", "en");
+    const bm = getJson("alerts", "breaking_news_active", "en");
     setBreakingActive((bm as { active?: boolean })?.active || false);
-    const emeta = getJson("news", "emergency_active", "en");
+    const emeta = getJson("alerts", "emergency_active", "en");
     setEmergencyActive((emeta as { active?: boolean })?.active || false);
   }, [getContent, getJson]);
 
@@ -70,13 +70,13 @@ export default function AlertsPage() {
   };
 
   const handleToggleSave = async (key: string, active: boolean) => {
-    try { await saveJson("news", key, "en", { active }); toast("success", "Saved"); } catch { toast("error", "Failed"); }
+    try { await saveJson("alerts", key, "en", { active }); toast("success", "Saved"); } catch { toast("error", "Failed"); }
   };
 
   const handleSaveBreaking = async () => {
     setAlertSaving("breaking");
     try {
-      for (const { id: l } of LOCALES) await saveContent("news", "breaking_news_text", l, syncing ? breakingNews[lang] : breakingNews[l]);
+      for (const { id: l } of LOCALES) await saveContent("alerts", "breaking_news_text", l, syncing ? breakingNews[lang] : breakingNews[l]);
       toast("success", "Saved");
     } catch { toast("error", "Failed"); }
     setAlertSaving(null);
@@ -86,8 +86,8 @@ export default function AlertsPage() {
     setAlertSaving("emergency");
     try {
       for (const { id: l } of LOCALES) {
-        await saveContent("news", "emergency_title", l, syncing ? emergencyTitle[lang] : emergencyTitle[l]);
-        await saveContent("news", "emergency_message", l, sanitizeHtml(syncing ? emergencyMsg[lang] : emergencyMsg[l]));
+        await saveContent("alerts", "emergency_title", l, syncing ? emergencyTitle[lang] : emergencyTitle[l]);
+        await saveContent("alerts", "emergency_message", l, sanitizeHtml(syncing ? emergencyMsg[lang] : emergencyMsg[l]));
       }
       toast("success", "Saved");
     } catch { toast("error", "Failed"); }
@@ -104,7 +104,7 @@ export default function AlertsPage() {
           </div>
           <div className="flex items-center gap-3">
             {isSuperadmin && (
-              <button onClick={async () => { const r = await seedSection("news"); toast(r.error ? "error" : "success", r.error || `Seeded ${r.count} rows`); }}
+              <button onClick={async () => { const r = await seedSection("alerts"); toast(r.error ? "error" : "success", r.error || `Seeded ${r.count} rows`); }}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-primary/30 text-primary hover:bg-primary/5">
                 Seed Defaults
               </button>

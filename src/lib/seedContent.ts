@@ -261,6 +261,18 @@ export function seedNotices(): SeedRow[] {
   return rows;
 }
 
+export function seedAlerts(): SeedRow[] {
+  const rows: SeedRow[] = [];
+  locales.forEach((l) => {
+    rows.push({ section: "alerts", content_key: "breaking_news_text", locale: l, content_text: "", content_json: {}, status: "published" });
+    rows.push({ section: "alerts", content_key: "emergency_title", locale: l, content_text: "", content_json: {}, status: "published" });
+    rows.push({ section: "alerts", content_key: "emergency_message", locale: l, content_text: "", content_json: {}, status: "published" });
+  });
+  rows.push({ section: "alerts", content_key: "breaking_news_active", locale: "en", content_text: JSON.stringify({ active: false }), content_json: { active: false }, status: "published" });
+  rows.push({ section: "alerts", content_key: "emergency_active", locale: "en", content_text: JSON.stringify({ active: false }), content_json: { active: false }, status: "published" });
+  return rows;
+}
+
 // ── Section map ──
 
 const SECTION_SEEDERS: Record<string, () => SeedRow[]> = {
@@ -270,6 +282,7 @@ const SECTION_SEEDERS: Record<string, () => SeedRow[]> = {
   testimonials: seedTestimonials,
   faqs: seedFAQs,
   news: seedNews,
+  alerts: seedAlerts,
   events: seedEvents,
   academics: seedAcademics,
   faculty: seedFaculty,
@@ -291,7 +304,7 @@ export function getAllSeedRows(): SeedRow[] {
   const seen = new Set<string>();
   const uniqueSections = [
     ...seedGlobal(), ...seedHero(), ...seedTestimonials(), ...seedFAQs(),
-    ...seedNews(), ...seedEvents(), ...seedAcademics(), ...seedFaculty(),
+    ...seedNews(), ...seedAlerts(), ...seedEvents(), ...seedAcademics(), ...seedFaculty(),
     ...seedStaff(), ...seedCareers(), ...seedCalendar(), ...seedGallery(),
     ...seedNotices(),
   ];

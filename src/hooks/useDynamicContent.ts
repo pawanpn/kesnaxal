@@ -159,12 +159,12 @@ export function useDynamicContent() {
   // ── Breaking News ──
   const breakingNews = useMemo(() => {
     if (!contentReady) return { active: false, messages: {} as Record<Locale, string> };
-    const active = (getContent("news", "breaking_news_active", "en")?.startsWith("{")
-      ? (() => { try { const j = JSON.parse(getContent("news", "breaking_news_active", "en")); return !!j.active; } catch { return false; } })()
+    const active = (getContent("alerts", "breaking_news_active", "en")?.startsWith("{")
+      ? (() => { try { const j = JSON.parse(getContent("alerts", "breaking_news_active", "en")); return !!j.active; } catch { return false; } })()
       : false);
     const messages: Record<Locale, string> = { en: "", ne: "", ja: "" };
     for (const loc of ["en", "ne", "ja"] as Locale[]) {
-      messages[loc] = getContent("news", "breaking_news_text", loc);
+      messages[loc] = getContent("alerts", "breaking_news_text", loc);
     }
     return { active, messages };
   }, [contentReady, getContent]);
@@ -172,14 +172,14 @@ export function useDynamicContent() {
   // ── Emergency ──
   const emergency = useMemo(() => {
     if (!contentReady) return { active: false, title: {} as Record<Locale, string>, message: {} as Record<Locale, string> };
-    const active = (getContent("news", "emergency_active", "en")?.startsWith("{")
-      ? (() => { try { const j = JSON.parse(getContent("news", "emergency_active", "en")); return !!j.active; } catch { return false; } })()
+    const active = (getContent("alerts", "emergency_active", "en")?.startsWith("{")
+      ? (() => { try { const j = JSON.parse(getContent("alerts", "emergency_active", "en")); return !!j.active; } catch { return false; } })()
       : false);
     const title: Record<Locale, string> = { en: "", ne: "", ja: "" };
     const message: Record<Locale, string> = { en: "", ne: "", ja: "" };
     for (const loc of ["en", "ne", "ja"] as Locale[]) {
-      title[loc] = getContent("news", "emergency_title", loc);
-      message[loc] = getContent("news", "emergency_message", loc);
+      title[loc] = getContent("alerts", "emergency_title", loc);
+      message[loc] = getContent("alerts", "emergency_message", loc);
     }
     return { active, title, message };
   }, [contentReady, getContent]);
