@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import type { CalendarEvent, CalendarEventType } from "@/types";
 import { useLocale } from "@/hooks/useLocale";
 import { resolveCalendarEvent } from "@/lib/translate";
-import { adToBs, daysInBsMonth, firstDayOfBsMonth } from "@/lib/bsCal";
+import { adToBs, daysInBsMonth, firstDayOfBsMonth, getBsMonthName, getBsDayName } from "@/lib/bsCal";
 import SectionHeading from "@/components/ui/SectionHeading";
 
 interface CalendarSectionProps {
@@ -30,6 +30,7 @@ function formatDateLocale(
 export default function CalendarSection({ events, eventTypes = [] }: CalendarSectionProps) {
   const [mode, setMode] = useState<CalendarMode>("AD");
   const [month, setMonth] = useState(mode === "BS" ? 0 : 0);
+  const [hoverDay, setHoverDay] = useState<number | null>(null);
   const { locale, t } = useLocale();
 
   const typeColorMap = useMemo(() => {
@@ -82,6 +83,7 @@ export default function CalendarSection({ events, eventTypes = [] }: CalendarSec
     const map: Record<number, CalendarEvent[]> = {};
     events.forEach((e) => {
       const adDate = new Date(e.date);
+      if (isNaN(adDate.getTime())) return;
       if (mode === "AD") {
         if (adDate.getFullYear() === adYear && adDate.getMonth() === month) {
           const day = adDate.getDate();
@@ -90,6 +92,7 @@ export default function CalendarSection({ events, eventTypes = [] }: CalendarSec
         }
       } else {
         const bs = adToBs(e.date);
+        if (bs.year <= 0) return;
         if (bs.year === bsYear && bs.month === month) {
           if (!map[bs.date]) map[bs.date] = [];
           map[bs.date].push(e);
@@ -103,10 +106,12 @@ export default function CalendarSection({ events, eventTypes = [] }: CalendarSec
   const monthEvents = useMemo(() => {
     return events.filter((e) => {
       const adDate = new Date(e.date);
+      if (isNaN(adDate.getTime())) return false;
       if (mode === "AD") {
         return adDate.getFullYear() === adYear && adDate.getMonth() === month;
       }
       const bs = adToBs(e.date);
+      if (bs.year <= 0) return false;
       return bs.year === bsYear && bs.month === month;
     });
   }, [events, month, mode, adYear, bsYear]);
@@ -119,35 +124,21 @@ export default function CalendarSection({ events, eventTypes = [] }: CalendarSec
     setMonth(0);
   };
 
-  /* ── Event date display (AD or BS) ── */
-  const getEventDay = (e: CalendarEvent) => {
-    if (mode === "AD") return new Date(e.date).getDate();
-    return adToBs(e.date).date;
-  };
-  const getEventMonthLabel = (e: CalendarEvent) => {
-    if (mode === "AD") {
-      return formatDateLocale(new Date(e.date), locale, { month: "short" });
-    }
+  /* ── Event date display (always show both AD + BS, dominant based on mode) ── */
+  const getEventDates = (e: CalendarEvent) => {
+    const adDate = new Date(e.date);
+    const adValid = !isNaN(adDate.getTime());
     const bs = adToBs(e.date);
-    return BS_MONTHS[bs.month]?.slice(0, 3) || "";
-  };
-  const getEventWeekday = (e: CalendarEvent) => {
-    if (mode === "AD") {
-      return formatDateLocale(new Date(e.date), locale, { weekday: "long" });
-    }
-    const bs = adToBs(e.date);
-    return BS_DAYS[bs.day] || "";
-  };
-  const getEventDateStr = (e: CalendarEvent) => {
-    if (mode === "AD") {
-      return formatDateLocale(new Date(e.date), locale, {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-    }
-    const bs = adToBs(e.date);
-    return `${BS_MONTHS[bs.month]} ${bs.date}, ${bs.year}`;
+    const bsValid = bs.year > 0;
+    const adDay = adValid ? adDate.getDate() : 0;
+    const adMonth = adValid ? formatDateLocale(adDate, locale, { month: "short" }) : "";
+    const adWeekday = adValid ? formatDateLocale(adDate, locale, { weekday: "long" }) : "";
+    const adFull = adValid ? formatDateLocale(adDate, locale, { year: "numeric", month: "long", day: "numeric" }) : "";
+    const bsDay = bsValid ? bs.date : 0;
+    const bsMonth = bsValid ? getBsMonthName(bs.month, true) : "";
+    const bsWeekday = bsValid ? getBsDayName(bs.day) : "";
+    const bsFull = bsValid ? `${getBsMonthName(bs.month)} ${bs.date}, ${bs.year}` : "";
+    return { adDay, adMonth, adWeekday, adFull, bsDay, bsMonth, bsWeekday, bsFull };
   };
 
   return (
@@ -247,9 +238,9 @@ export default function CalendarSection({ events, eventTypes = [] }: CalendarSec
             </div>
 
             {/* Calendar Days */}
-            <div className="grid grid-cols-7 gap-1.5">
+            <div className="grid grid-cols-7 gap-px bg-border rounded-xl overflow-hidden border border-border">
               {days.map((day, idx) => {
-                if (day === null) return <div key={`empty-${idx}`} className="aspect-square rounded-lg" />;
+                if (day === null) return <div key={`empty-${idx}`} className="aspect-square bg-white/60" />;
                 const dayEvents = eventMap[day] || [];
                 const hasEvent = dayEvents.length > 0;
                 const primaryType = dayEvents[0]?.type || "event";
@@ -257,15 +248,14 @@ export default function CalendarSection({ events, eventTypes = [] }: CalendarSec
                 return (
                   <div
                     key={day}
-                    title={dayEvents.length > 0 ? dayEvents.map((e) => resolveCalendarEvent(e, locale).title).join(", ") : undefined}
-                    className={`aspect-square rounded-lg border transition-all duration-200 flex flex-col items-center justify-center relative ${
-                      hasEvent
-                        ? "border-primary/30 bg-primary/5 cursor-pointer hover:shadow-md hover:border-primary"
-                        : "border-transparent hover:bg-surface"
+                    onMouseEnter={() => hasEvent && setHoverDay(day)}
+                    onMouseLeave={() => setHoverDay(null)}
+                    className={`relative aspect-square bg-white flex flex-col items-center justify-center transition-colors ${
+                      hasEvent ? "cursor-pointer hover:bg-primary/5" : "hover:bg-surface"
                     }`}
                   >
                     <span
-                      className={`text-sm font-bold w-8 h-8 flex items-center justify-center rounded-full ${
+                      className={`text-xs font-bold w-7 h-7 flex items-center justify-center rounded-full ${
                         hasEvent ? "text-white" : "text-foreground"
                       }`}
                       style={hasEvent ? { backgroundColor: getTypeColor(primaryType) } : undefined}
@@ -273,14 +263,29 @@ export default function CalendarSection({ events, eventTypes = [] }: CalendarSec
                       {day}
                     </span>
                     {hasEvent && (
-                      <div className="absolute -bottom-1 flex gap-0.5">
+                      <div className="absolute bottom-0.5 flex gap-0.5">
                         {dayEvents.slice(0, 3).map((e, i) => (
                           <span
                             key={i}
-                            className={`w-1.5 h-1.5 rounded-full ${i > 0 ? "bg-muted" : ""}`}
+                            className={`w-1 h-1 rounded-full ${i > 0 ? "bg-muted" : ""}`}
                             style={i === 0 ? { backgroundColor: getTypeColor(e.type) } : undefined}
                           />
                         ))}
+                      </div>
+                    )}
+                    {hoverDay === day && hasEvent && (
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 z-20 bg-foreground text-white text-[10px] rounded-lg px-2 py-1.5 shadow-xl whitespace-nowrap max-w-[180px] pointer-events-none">
+                        {dayEvents.map((e, i) => (
+                          <div key={i} className={i > 0 ? "mt-1 pt-1 border-t border-white/20" : ""}>
+                            <div className="font-semibold">{resolveCalendarEvent(e, locale).title}</div>
+                            <div className="text-white/60 text-[9px]">
+                              {mode === "AD"
+                                ? formatDateLocale(new Date(e.date), locale, { month: "short", day: "numeric" })
+                                : `${getBsMonthName(adToBs(e.date).month, true)} ${adToBs(e.date).date}`}
+                            </div>
+                          </div>
+                        ))}
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-foreground" />
                       </div>
                     )}
                   </div>
@@ -300,36 +305,44 @@ export default function CalendarSection({ events, eventTypes = [] }: CalendarSec
 
             {/* Event List */}
             {monthEvents.length > 0 ? (
-              <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {monthEvents
-                    .filter(Boolean)
-                    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                    .map((event) => {
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {monthEvents
+                  .filter(Boolean)
+                  .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                  .map((event) => {
                     const resolved = resolveCalendarEvent(event, locale);
+                    const d = getEventDates(event);
+                    const isAD = mode === "AD";
                     return (
                       <div
                         key={event.id}
-                        className="bg-white rounded-xl p-4 shadow-sm border border-border hover:shadow-md transition-shadow flex gap-4"
+                        className="bg-white rounded-lg p-3 shadow-sm border border-border hover:shadow-md transition-shadow flex gap-3"
                       >
                         <div
-                          className="shrink-0 w-14 h-14 rounded-xl flex flex-col items-center justify-center"
+                          className="shrink-0 w-12 h-12 rounded-lg flex flex-col items-center justify-center"
                           style={{ backgroundColor: getTypeColor(event.type), color: "white" }}
                         >
-                          <span className="text-lg font-bold leading-none">
-                            {getEventDay(event)}
+                          <span className="text-base font-bold leading-none">
+                            {isAD ? d.adDay : d.bsDay || d.adDay}
                           </span>
-                          <span className="text-[10px] uppercase font-medium">
-                            {getEventMonthLabel(event)}
+                          <span className="text-[9px] uppercase font-medium leading-tight">
+                            {isAD ? d.adMonth : d.bsMonth || d.adMonth}
                           </span>
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-xs text-muted mb-0.5">{getEventWeekday(event)}</p>
-                          <p className="text-sm font-semibold text-foreground leading-snug">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[11px] font-semibold text-foreground leading-snug">
                             {resolved.title}
                           </p>
-                          <p className="text-[11px] text-muted mt-0.5">{getEventDateStr(event)}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[11px] text-foreground font-medium">
+                              {isAD ? d.adFull : d.bsFull || d.adFull}
+                            </span>
+                            <span className="text-[10px] text-muted">
+                              {isAD ? d.bsFull : d.adFull}
+                            </span>
+                          </div>
                           {resolved.description && (
-                            <p className="text-xs text-muted mt-1 line-clamp-2">
+                            <p className="text-[10px] text-muted mt-0.5 line-clamp-1">
                               {resolved.description}
                             </p>
                           )}
