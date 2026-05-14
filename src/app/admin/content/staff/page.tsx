@@ -20,7 +20,8 @@ export default function StaffAdminPage() {
     if (staffLoaded) return;
     const json = getJson("staff", "staff_members", "en");
     const arr = json?.members as StaffMember[] | undefined;
-    if (arr?.length) { setStaff(arr); setStaffLoaded(true); }
+    if (arr?.length) setStaff(arr);
+    setStaffLoaded(true);
   }, [getJson, staffLoaded]);
 
   const saveToDb = async (updated: StaffMember[]) => {
