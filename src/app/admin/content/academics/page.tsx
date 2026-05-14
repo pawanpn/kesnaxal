@@ -186,22 +186,43 @@ export default function AcademicHubPage() {
     setLevelForm({ ...level });
   };
 
-  const handleSaveLevel = () => {
+  const handleSaveLevel = async () => {
+    let updated: AcademicLevel[];
     if (editingLevelId === "new") {
-      setLevels((p) => [...p, levelForm]);
+      updated = [...levels, levelForm];
+      setLevels(updated);
     } else {
-      setLevels((p) => p.map((l) => l.id === editingLevelId ? levelForm : l));
+      updated = levels.map((l) => l.id === editingLevelId ? levelForm : l);
+      setLevels(updated);
     }
     setEditingLevelId(null);
     setLevelForm({ id: "", title: "", grades: "", desc: "", image: "", subjects: [] });
+
+    setSaving(true);
+    try {
+      for (const { id: l } of LOCALES) {
+        await saveJson("academics", "academic_levels", l, { levels: updated });
+      }
+      toast("success", "Level saved as draft. Publish to make it live.");
+    } catch { toast("error", "Save failed"); }
+    setSaving(false);
   };
 
-  const handleDeleteLevel = (id: string) => {
-    setLevels((p) => p.filter((l) => l.id !== id));
+  const handleDeleteLevel = async (id: string) => {
+    const updated = levels.filter((l) => l.id !== id);
+    setLevels(updated);
     if (editingLevelId === id) {
       setEditingLevelId(null);
       setLevelForm({ id: "", title: "", grades: "", desc: "", image: "", subjects: [] });
     }
+    setSaving(true);
+    try {
+      for (const { id: l } of LOCALES) {
+        await saveJson("academics", "academic_levels", l, { levels: updated });
+      }
+      toast("success", "Level removed. Publish to reflect on site.");
+    } catch { toast("error", "Delete failed"); }
+    setSaving(false);
   };
 
   const handleSaveLevels = async () => {
@@ -342,10 +363,10 @@ export default function AcademicHubPage() {
 
         {/* Academic Levels */}
         {activeTab === "levels" && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="flex gap-0 h-[calc(100vh-12rem)]">
             {/* Level list */}
-            <div className="lg:col-span-2 space-y-3">
-              <div className="flex items-center justify-between mb-2">
+            <div className="flex-1 overflow-y-auto pr-4 space-y-3 min-w-0">
+              <div className="flex items-center justify-between mb-2 sticky top-0 bg-gray-50 z-10 py-2">
                 <h2 className="font-heading font-bold text-sm text-foreground">Academic Levels</h2>
                 <div className="flex gap-2">
                   <button onClick={handleAddLevel}
@@ -357,36 +378,42 @@ export default function AcademicHubPage() {
                 </div>
               </div>
               {levels.length === 0 ? (
-                <p className="text-xs text-muted italic">No academic levels yet. Click Add Level to create.</p>
+                <p className="text-xs text-muted italic py-4">No academic levels yet. Click Add Level to create.</p>
               ) : (
                 levels.map((level) => (
-                  <div key={level.id} className="bg-white rounded-xl border border-border p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 mr-3">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-primary/10 text-primary uppercase">{level.id}</span>
-                          <h3 className="font-heading font-bold text-sm text-foreground">{level.title || "(Untitled)"}</h3>
+                  <div key={level.id} className={`bg-white rounded-xl border p-3 cursor-pointer transition-colors ${editingLevelId === level.id ? "border-primary shadow-md ring-1 ring-primary/20" : "border-border hover:border-primary/30"}`}
+                    onClick={() => handleEditLevel(level)}>
+                    <div className="flex gap-3">
+                      {level.image && (
+                        <div className="w-16 h-12 shrink-0 rounded-lg overflow-hidden bg-surface">
+                          <img src={level.image} alt={level.title} className="w-full h-full object-cover" />
                         </div>
-                        <p className="text-xs text-muted mb-1">Grades: {level.grades || "-"}</p>
-                        <p className="text-xs text-muted line-clamp-2">{level.desc || "-"}</p>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-primary/10 text-primary uppercase">{level.id}</span>
+                          <h3 className="font-heading font-bold text-xs text-foreground truncate">{level.title || "(Untitled)"}</h3>
+                        </div>
+                        <p className="text-[10px] text-muted">Grades: {level.grades || "-"}</p>
                         {level.subjects && level.subjects.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {level.subjects.map((s) => (
-                              <span key={s} className="text-[10px] px-1.5 py-0.5 rounded bg-surface text-muted">{s}</span>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {level.subjects.slice(0, 4).map((s) => (
+                              <span key={s} className="text-[9px] px-1 py-0.5 rounded bg-surface text-muted">{s}</span>
                             ))}
+                            {level.subjects.length > 4 && <span className="text-[9px] text-muted">+{level.subjects.length - 4}</span>}
                           </div>
                         )}
                       </div>
-                      <div className="flex gap-1 shrink-0">
+                      <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                         <button onClick={() => handleEditLevel(level)}
-                          className="w-7 h-7 flex items-center justify-center rounded bg-blue-50 text-blue-600 hover:bg-blue-100">
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          className="w-6 h-6 flex items-center justify-center rounded bg-blue-50 text-blue-600 hover:bg-blue-100">
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                           </svg>
                         </button>
                         <button onClick={() => handleDeleteLevel(level.id)}
-                          className="w-7 h-7 flex items-center justify-center rounded bg-red-50 text-red-600 hover:bg-red-100">
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          className="w-6 h-6 flex items-center justify-center rounded bg-red-50 text-red-600 hover:bg-red-100">
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
                         </button>
@@ -397,147 +424,205 @@ export default function AcademicHubPage() {
               )}
             </div>
 
-            {/* Level edit form */}
+            {/* Drag handle + Edit panel */}
             {editingLevelId && (
-              <div className="bg-white rounded-xl border border-border p-5">
-                <h3 className="font-heading font-bold text-sm text-foreground mb-3">
-                  {editingLevelId === "new" ? "New Level" : "Edit Level"}
-                </h3>
-                <div className="space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[10px] font-semibold text-muted mb-0.5">ID (slug)</label>
-                      <input value={levelForm.id} onChange={(e) => setLevelForm((p) => ({ ...p, id: e.target.value }))}
-                        className="w-full px-2 py-1.5 rounded border border-border text-xs focus:border-primary outline-none font-mono"
-                        placeholder="e.g., primary" />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-semibold text-muted mb-0.5">Title</label>
-                      <input value={levelForm.title} onChange={(e) => setLevelForm((p) => ({ ...p, title: e.target.value }))}
-                        className="w-full px-2 py-1.5 rounded border border-border text-xs focus:border-primary outline-none"
-                        placeholder="e.g., Primary Level" />
+              <>
+                <div className="w-1.5 bg-border hover:bg-primary/40 active:bg-primary cursor-col-resize shrink-0 rounded-full transition-colors" title="Drag to resize" />
+                <div className="bg-white rounded-xl border border-primary/30 shadow-lg overflow-y-auto flex flex-col"
+                  style={{ width: "460px", minWidth: "380px", maxWidth: "700px", resize: "horizontal" }}>
+                  <div className="p-4 border-b border-border shrink-0 sticky top-0 bg-white z-10">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-heading font-bold text-sm text-foreground">
+                        {editingLevelId === "new" ? "New Level" : "Edit Level"}
+                      </h3>
+                      <button onClick={() => { setEditingLevelId(null); setLevelForm({ id: "", title: "", grades: "", desc: "", image: "", subjects: [], streams: [] }); }}
+                        className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-surface text-muted">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-semibold text-muted mb-0.5">Grades</label>
-                    <input value={levelForm.grades} onChange={(e) => setLevelForm((p) => ({ ...p, grades: e.target.value }))}
-                      className="w-full px-2 py-1.5 rounded border border-border text-xs focus:border-primary outline-none"
-                      placeholder="e.g., Nursery to Grade 5" />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-semibold text-muted mb-0.5">Description</label>
-                    <textarea value={levelForm.desc} onChange={(e) => setLevelForm((p) => ({ ...p, desc: e.target.value }))} rows={2}
-                      className="w-full px-2 py-1.5 rounded border border-border text-xs focus:border-primary outline-none resize-y"
-                      placeholder="Brief description of this academic level" />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-semibold text-muted mb-0.5">Image URL</label>
-                    <input value={levelForm.image} onChange={(e) => setLevelForm((p) => ({ ...p, image: e.target.value }))}
-                      className="w-full px-2 py-1.5 rounded border border-border text-xs focus:border-primary outline-none font-mono"
-                      placeholder="https://..." />
-                  </div>
+                  <div className="p-4 space-y-4 overflow-y-auto flex-1">
+                    {/* Photo section */}
+                    <div>
+                      <label className="block text-[10px] font-semibold text-muted uppercase tracking-wider mb-2">Photo</label>
+                      {levelForm.image ? (
+                        <div className="relative w-full h-40 rounded-xl overflow-hidden bg-surface border border-border mb-2 group">
+                          <img src={levelForm.image} alt="Preview" className="w-full h-full object-cover" />
+                          <button
+                            onClick={() => setLevelForm((p) => ({ ...p, image: "" }))}
+                            className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center w-full h-32 rounded-xl border-2 border-dashed border-border hover:border-primary/40 cursor-pointer transition-colors bg-surface/50">
+                          <svg className="w-6 h-6 text-muted mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-[10px] text-muted">Click to upload photo</span>
+                          <input type="file" accept="image/*" className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              setUploading("level_photo");
+                              const url = await uploadMedia(file, "academics", `level_${levelForm.id}_image`);
+                              if (url) setLevelForm((p) => ({ ...p, image: url }));
+                              else toast("error", "Upload failed");
+                              setUploading(null);
+                            }} />
+                        </label>
+                      )}
+                      {uploading === "level_photo" && <p className="text-[10px] text-primary mt-1">Uploading...</p>}
+                      <input value={levelForm.image} onChange={(e) => setLevelForm((p) => ({ ...p, image: e.target.value }))}
+                        className="w-full mt-2 px-2 py-1.5 rounded border border-border text-[10px] focus:border-primary outline-none font-mono"
+                        placeholder="Or paste image URL..." />
+                    </div>
 
-                  {/* Subjects */}
-                  <div className="border-t border-border pt-3">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-[10px] font-semibold text-muted uppercase tracking-wider">Subjects</label>
-                      <button type="button"
-                        onClick={() => setLevelForm((p) => ({ ...p, subjects: [...(p.subjects || []), ""] }))}
-                        className="text-[10px] font-bold text-primary hover:underline">+ Add</button>
-                    </div>
-                    {(levelForm.subjects || []).map((s, i) => (
-                      <div key={i} className="flex gap-1.5 mb-1.5">
-                        <input value={s}
-                          onChange={(e) => setLevelForm((p) => {
-                            const subs = [...(p.subjects || [])];
-                            subs[i] = e.target.value;
-                            return { ...p, subjects: subs };
-                          })}
-                          className="flex-1 px-2 py-1 rounded border border-border text-xs focus:border-primary outline-none"
-                          placeholder={`Subject ${i + 1}`} />
-                        <button type="button"
-                          onClick={() => setLevelForm((p) => ({ ...p, subjects: (p.subjects || []).filter((_, j) => j !== i) }))}
-                          className="w-6 h-6 flex items-center justify-center rounded text-red-400 hover:bg-red-50 hover:text-red-600 text-xs">&times;</button>
+                    {/* ID + Title */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-muted mb-0.5">ID (slug)</label>
+                        <input value={levelForm.id} onChange={(e) => setLevelForm((p) => ({ ...p, id: e.target.value }))}
+                          className="w-full px-2 py-1.5 rounded border border-border text-xs focus:border-primary outline-none font-mono"
+                          placeholder="e.g., primary" />
                       </div>
-                    ))}
-                    {(!levelForm.subjects || levelForm.subjects.length === 0) && (
-                      <p className="text-[10px] text-muted italic">No subjects. Click + Add to add one.</p>
-                    )}
-                  </div>
-
-                  {/* Streams */}
-                  <div className="border-t border-border pt-3">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-[10px] font-semibold text-muted uppercase tracking-wider">Streams (10+2)</label>
-                      <button type="button"
-                        onClick={() => setLevelForm((p) => ({ ...p, streams: [...(p.streams || []), { name: "", subjects: [""] }] }))}
-                        className="text-[10px] font-bold text-primary hover:underline">+ Add Stream</button>
+                      <div>
+                        <label className="block text-[10px] font-semibold text-muted mb-0.5">Title</label>
+                        <input value={levelForm.title} onChange={(e) => setLevelForm((p) => ({ ...p, title: e.target.value }))}
+                          className="w-full px-2 py-1.5 rounded border border-border text-xs focus:border-primary outline-none"
+                          placeholder="e.g., Primary Level" />
+                      </div>
                     </div>
-                    {(levelForm.streams || []).map((stream, si) => (
-                      <div key={si} className="bg-gray-50 rounded-lg p-3 mb-2 border border-border">
-                        <div className="flex items-center gap-2 mb-2">
-                          <input value={stream.name}
-                            onChange={(e) => setLevelForm((p) => {
-                              const st = [...(p.streams || [])];
-                              st[si] = { ...st[si], name: e.target.value };
-                              return { ...p, streams: st };
-                            })}
-                            className="flex-1 px-2 py-1 rounded border border-border text-xs focus:border-primary outline-none"
-                            placeholder="Stream name (e.g., Science)" />
-                          <button type="button"
-                            onClick={() => setLevelForm((p) => ({ ...p, streams: (p.streams || []).filter((_, j) => j !== si) }))}
-                            className="w-6 h-6 flex items-center justify-center rounded text-red-400 hover:bg-red-50 hover:text-red-600 text-xs">&times;</button>
+
+                    {/* Grades */}
+                    <div>
+                      <label className="block text-[10px] font-semibold text-muted mb-0.5">Grades</label>
+                      <input value={levelForm.grades} onChange={(e) => setLevelForm((p) => ({ ...p, grades: e.target.value }))}
+                        className="w-full px-2 py-1.5 rounded border border-border text-xs focus:border-primary outline-none"
+                        placeholder="e.g., Nursery to Grade 5" />
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                      <label className="block text-[10px] font-semibold text-muted mb-0.5">Description</label>
+                      <textarea value={levelForm.desc} onChange={(e) => setLevelForm((p) => ({ ...p, desc: e.target.value }))} rows={3}
+                        className="w-full px-2 py-1.5 rounded border border-border text-xs focus:border-primary outline-none resize-y"
+                        placeholder="Brief description of this academic level" />
+                    </div>
+
+                    {/* Subjects */}
+                    <div className="border-t border-border pt-3">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-[10px] font-semibold text-muted uppercase tracking-wider">Subjects</label>
+                        <button type="button"
+                          onClick={() => setLevelForm((p) => ({ ...p, subjects: [...(p.subjects || []), ""] }))}
+                          className="text-[10px] font-bold text-primary hover:underline">+ Add</button>
+                      </div>
+                      {(levelForm.subjects || []).length === 0 ? (
+                        <p className="text-[10px] text-muted italic">No subjects. Click + Add.</p>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {(levelForm.subjects || []).map((s, i) => (
+                            <div key={i} className="flex gap-1.5">
+                              <input value={s}
+                                onChange={(e) => setLevelForm((p) => {
+                                  const subs = [...(p.subjects || [])];
+                                  subs[i] = e.target.value;
+                                  return { ...p, subjects: subs };
+                                })}
+                                className="flex-1 px-2 py-1 rounded border border-border text-[10px] focus:border-primary outline-none"
+                                placeholder={`Subject ${i + 1}`} />
+                              <button type="button"
+                                onClick={() => setLevelForm((p) => ({ ...p, subjects: (p.subjects || []).filter((_, j) => j !== i) }))}
+                                className="w-6 h-6 flex items-center justify-center rounded text-red-400 hover:bg-red-50 hover:text-red-600 text-xs">&times;</button>
+                            </div>
+                          ))}
                         </div>
-                        <div className="flex items-center gap-1 mb-1">
-                          <span className="text-[9px] text-muted">Subjects:</span>
-                          <button type="button"
-                            onClick={() => setLevelForm((p) => {
-                              const st = [...(p.streams || [])];
-                              st[si] = { ...st[si], subjects: [...st[si].subjects, ""] };
-                              return { ...p, streams: st };
-                            })}
-                            className="text-[9px] text-primary hover:underline">+ Add</button>
-                        </div>
-                        {stream.subjects.map((subj, ssi) => (
-                          <div key={ssi} className="flex gap-1.5 mb-1">
-                            <input value={subj}
-                              onChange={(e) => setLevelForm((p) => {
-                                const st = [...(p.streams || [])];
-                                const subs = [...st[si].subjects];
-                                subs[ssi] = e.target.value;
-                                st[si] = { ...st[si], subjects: subs };
-                                return { ...p, streams: st };
-                              })}
-                              className="flex-1 px-2 py-1 rounded border border-border text-[10px] focus:border-primary outline-none"
-                              placeholder={`Subject ${ssi + 1}`} />
-                            {stream.subjects.length > 1 && (
+                      )}
+                    </div>
+
+                    {/* Streams */}
+                    <div className="border-t border-border pt-3">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-[10px] font-semibold text-muted uppercase tracking-wider">Streams (10+2)</label>
+                        <button type="button"
+                          onClick={() => setLevelForm((p) => ({ ...p, streams: [...(p.streams || []), { name: "", subjects: [""] }] }))}
+                          className="text-[10px] font-bold text-primary hover:underline">+ Add Stream</button>
+                      </div>
+                      {(levelForm.streams || []).length === 0 ? (
+                        <p className="text-[10px] text-muted italic">No streams. Streams are optional.</p>
+                      ) : (
+                        (levelForm.streams || []).map((stream, si) => (
+                          <div key={si} className="bg-gray-50 rounded-lg p-3 mb-2 border border-border">
+                            <div className="flex items-center gap-2 mb-2">
+                              <input value={stream.name}
+                                onChange={(e) => setLevelForm((p) => {
+                                  const st = [...(p.streams || [])];
+                                  st[si] = { ...st[si], name: e.target.value };
+                                  return { ...p, streams: st };
+                                })}
+                                className="flex-1 px-2 py-1 rounded border border-border text-xs focus:border-primary outline-none"
+                                placeholder="Stream name (e.g., Science)" />
+                              <button type="button"
+                                onClick={() => setLevelForm((p) => ({ ...p, streams: (p.streams || []).filter((_, j) => j !== si) }))}
+                                className="w-6 h-6 flex items-center justify-center rounded text-red-400 hover:bg-red-50 hover:text-red-600 text-xs">&times;</button>
+                            </div>
+                            <div className="flex items-center gap-1 mb-1">
+                              <span className="text-[9px] text-muted">Subjects:</span>
                               <button type="button"
                                 onClick={() => setLevelForm((p) => {
                                   const st = [...(p.streams || [])];
-                                  st[si] = { ...st[si], subjects: st[si].subjects.filter((_, j) => j !== ssi) };
+                                  st[si] = { ...st[si], subjects: [...st[si].subjects, ""] };
                                   return { ...p, streams: st };
                                 })}
-                                className="w-6 h-6 flex items-center justify-center rounded text-red-400 hover:bg-red-50 hover:text-red-600 text-[10px]">&times;</button>
-                            )}
+                                className="text-[9px] text-primary hover:underline">+ Add</button>
+                            </div>
+                            <div className="space-y-1">
+                              {stream.subjects.map((subj, ssi) => (
+                                <div key={ssi} className="flex gap-1.5">
+                                  <input value={subj}
+                                    onChange={(e) => setLevelForm((p) => {
+                                      const st = [...(p.streams || [])];
+                                      const subs = [...st[si].subjects];
+                                      subs[ssi] = e.target.value;
+                                      st[si] = { ...st[si], subjects: subs };
+                                      return { ...p, streams: st };
+                                    })}
+                                    className="flex-1 px-2 py-1 rounded border border-border text-[10px] focus:border-primary outline-none"
+                                    placeholder={`Subject ${ssi + 1}`} />
+                                  {stream.subjects.length > 1 && (
+                                    <button type="button"
+                                      onClick={() => setLevelForm((p) => {
+                                        const st = [...(p.streams || [])];
+                                        st[si] = { ...st[si], subjects: st[si].subjects.filter((_, j) => j !== ssi) };
+                                        return { ...p, streams: st };
+                                      })}
+                                      className="w-6 h-6 flex items-center justify-center rounded text-red-400 hover:bg-red-50 hover:text-red-600 text-[10px]">&times;</button>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        ))}
-                      </div>
-                    ))}
-                    {(!levelForm.streams || levelForm.streams.length === 0) && (
-                      <p className="text-[10px] text-muted italic">No streams. Streams are optional (usually for 10+2 levels).</p>
-                    )}
-                  </div>
+                        ))
+                      )}
+                    </div>
 
-                  <div className="flex gap-2">
-                    <button onClick={handleSaveLevel}
-                      className="flex-1 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark">
-                      {editingLevelId === "new" ? "Add Level" : "Update Level"}
-                    </button>
-                    <button onClick={() => { setEditingLevelId(null); setLevelForm({ id: "", title: "", grades: "", desc: "", image: "", subjects: [], streams: [] }); }}
-                      className="py-2 px-3 rounded-lg text-xs font-semibold border border-border text-muted hover:bg-surface">Cancel</button>
+                    {/* Actions */}
+                    <div className="flex gap-2 pt-2 border-t border-border sticky bottom-0 bg-white pb-1">
+                      <button onClick={handleSaveLevel}
+                        className="flex-1 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark">
+                        {editingLevelId === "new" ? "Add Level" : "Update Level"}
+                      </button>
+                      <button onClick={() => { setEditingLevelId(null); setLevelForm({ id: "", title: "", grades: "", desc: "", image: "", subjects: [], streams: [] }); }}
+                        className="py-2 px-3 rounded-lg text-xs font-semibold border border-border text-muted hover:bg-surface">Cancel</button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
         )}

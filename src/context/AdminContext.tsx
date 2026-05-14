@@ -219,30 +219,34 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     return () => { supabase.removeChannel(channel); };
   }, [isAdmin, queryClient]);
 
-  /* ── Get content (draft overrides published) ── */
+  /* ── Get content (draft overrides published for admin only) ── */
   const getContent = useCallback(
     (section: string, key: string, locale: string): string => {
       const rk = rowKey(section, key, locale);
-      const d = draftContent.get(rk);
-      if (d) return d.content_text || "";
+      if (isAdmin) {
+        const d = draftContent.get(rk);
+        if (d) return d.content_text || "";
+      }
       const p = publishedContent.get(rk);
       if (p) return p.content_text || "";
       return "";
     },
-    [draftContent, publishedContent]
+    [draftContent, publishedContent, isAdmin]
   );
 
   /* ── Get JSON content ── */
   const getJson = useCallback(
     (section: string, key: string, locale: string): Record<string, unknown> => {
       const rk = rowKey(section, key, locale);
-      const d = draftContent.get(rk);
-      if (d?.content_json && Object.keys(d.content_json).length > 0) return d.content_json;
+      if (isAdmin) {
+        const d = draftContent.get(rk);
+        if (d?.content_json && Object.keys(d.content_json).length > 0) return d.content_json;
+      }
       const p = publishedContent.get(rk);
       if (p?.content_json && Object.keys(p.content_json).length > 0) return p.content_json;
       return {};
     },
-    [draftContent, publishedContent]
+    [draftContent, publishedContent, isAdmin]
   );
 
   /* ── Get meta ── */
