@@ -19,14 +19,14 @@ const JOB_CATEGORIES = ["Teaching", "Administration", "Support Staff"];
 interface Application {
   id: string; job_id: string; job_title: string; full_name: string;
   email: string; phone: string | null; address: string | null;
-  nationality: string | null; place_of_birth: string | null;
+  dob: string | null; nationality: string | null; place_of_birth: string | null;
   gender: string | null; marital_status: string | null;
   dependents: string | null; degree: string | null; major_subject: string | null;
   experience_years: number; current_position: string | null;
   subjects: string | null; grades: string | null;
   status: string; created_at: string;
   cv_url: string | null; photo_url: string | null;
-  documents_url: unknown; cover_letter: string | null;
+  documents_url: string[] | null; cover_letter: string | null;
   form_data: Record<string, unknown> | null;
   notes: string | null;
 }
