@@ -251,7 +251,10 @@ export function useDynamicContent() {
   // ── Jobs — Supabase only ──
   const jobVacancies: JobVacancy[] = useMemo(() => {
     if (!contentReady) return [];
-    // Try JSON from careers listing admin
+    // Try JSON from careers admin (saveJson stores in content_json)
+    const json = getJson("careers", "job_vacancies", locale) as { vacancies?: JobVacancy[] };
+    if (json?.vacancies?.length) return json.vacancies;
+    // Try old flat keys from old seed
     const jsonStr = getContent("careers", "job_listings", "en");
     if (jsonStr) {
       try {

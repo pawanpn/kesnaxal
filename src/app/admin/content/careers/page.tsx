@@ -59,7 +59,7 @@ function newJob(): JobVacancy {
 }
 
 export default function CareerManagerPage() {
-  const { getContent, savePublishedContent, loadAllContent } = useAdmin();
+  const { getContent, saveJson, loadAllContent } = useAdmin();
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState<"jobs" | "applications">("jobs");
@@ -102,13 +102,12 @@ export default function CareerManagerPage() {
   const saveJobs = async (updatedJobs: JobVacancy[]) => {
     setSaving(true);
     try {
-      const payload = JSON.stringify({ vacancies: updatedJobs });
       for (const { id: l } of LOCALES) {
-        await savePublishedContent("careers", "job_vacancies", l, payload);
+        await saveJson("careers", "job_vacancies", l, { vacancies: updatedJobs });
       }
       await loadAllContent();
       setJobs(updatedJobs);
-      toast("success", "Jobs saved & published");
+      toast("success", "Jobs saved as draft. Publish to make them live.");
     } catch { toast("error", "Failed to save jobs"); }
     setSaving(false);
   };
@@ -375,7 +374,7 @@ export default function CareerManagerPage() {
                   <div className="flex gap-2 mt-4 pt-4 border-t border-border">
                     <button onClick={handleSaveJob} disabled={saving || !(editingJob.title as LocaleContent).en?.trim()}
                       className="flex-1 py-2.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
-                      {saving ? "Saving..." : jobs.find((j) => j.id === editingJob.id) ? "Update & Publish" : "Add & Publish"}
+                      {saving ? "Saving..." : jobs.find((j) => j.id === editingJob.id) ? "Update & Save Draft" : "Add & Save Draft"}
                     </button>
                     <button onClick={() => setEditingJob(null)}
                       className="py-2.5 px-4 rounded-lg text-xs font-semibold border border-border text-muted hover:bg-surface">
