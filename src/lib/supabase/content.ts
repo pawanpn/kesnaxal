@@ -30,12 +30,15 @@ async function getAllContent(): Promise<ContentMap> {
   try {
     const { data } = await supabase
       .from("site_content")
-      .select("section, content_key, locale, content_text")
+      .select("section, content_key, locale, content_text, content_json")
       .eq("status", "published");
 
     if (data) {
       for (const row of data) {
-        map.set(`${row.section}::${row.content_key}::${row.locale}`, row.content_text || "");
+        const text = (row as Record<string, unknown>).content_text as string | null;
+        const json = (row as Record<string, unknown>).content_json as Record<string, unknown> | null;
+        const val = text || (json && Object.keys(json).length > 0 ? JSON.stringify(json) : "");
+        map.set(`${row.section}::${row.content_key}::${row.locale}`, val);
       }
     }
   } catch {
@@ -117,8 +120,16 @@ export async function getEvents(locale: Locale): Promise<UpcomingEvent[]> {
 export async function getNewsArticles(locale: Locale): Promise<NewsArticle[]> {
   const content = await getAllContent();
 
-  // Try JSON format first (from admin panel)
-  const jsonStr = content.get(`news::news_articles::${locale}`);
+  // Try JSON format first (from admin panel) — search all locales
+  const allLocales: Locale[] = ["en", "ne", "ja"];
+  let jsonStr = content.get(`news::news_articles::${locale}`);
+  if (!jsonStr) {
+    for (const loc of allLocales) {
+      if (loc === locale) continue;
+      const s = content.get(`news::news_articles::${loc}`);
+      if (s) { jsonStr = s; break; }
+    }
+  }
   if (jsonStr) {
     try {
       const parsed = JSON.parse(jsonStr);
