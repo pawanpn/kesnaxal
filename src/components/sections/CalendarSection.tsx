@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import type { CalendarEvent } from "@/types";
+import type { CalendarEvent, CalendarEventType } from "@/types";
 import { useLocale } from "@/hooks/useLocale";
 import { resolveCalendarEvent } from "@/lib/translate";
 import { adToBs, daysInBsMonth, firstDayOfBsMonth } from "@/lib/bsCal";
@@ -9,16 +9,10 @@ import SectionHeading from "@/components/ui/SectionHeading";
 
 interface CalendarSectionProps {
   events: CalendarEvent[];
+  eventTypes?: CalendarEventType[];
 }
 
 type CalendarMode = "AD" | "BS";
-
-const typeStyles: Record<CalendarEvent["type"], string> = {
-  holiday: "bg-accent text-white",
-  exam: "bg-orange-500 text-white",
-  event: "bg-primary text-white",
-  vacation: "bg-secondary text-primary",
-};
 
 function formatDateLocale(
   date: Date,
@@ -33,10 +27,25 @@ function formatDateLocale(
   return date.toLocaleDateString(localeMap[locale] || "en-US", options);
 }
 
-export default function CalendarSection({ events }: CalendarSectionProps) {
+export default function CalendarSection({ events, eventTypes = [] }: CalendarSectionProps) {
   const [mode, setMode] = useState<CalendarMode>("AD");
   const [month, setMonth] = useState(mode === "BS" ? 0 : 0);
   const { locale, t } = useLocale();
+
+  const typeColorMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    eventTypes.forEach((et) => { map[et.id] = et.color; });
+    if (eventTypes.length === 0) {
+      map.holiday = "#ef4444";
+      map.exam = "#f59e0b";
+      map.event = "#10b981";
+      map.vacation = "#3b82f6";
+    }
+    return map;
+  }, [eventTypes]);
+
+  const getTypeLabel = (typeId: string) => eventTypes.find((t) => t.id === typeId)?.label || typeId;
+  const getTypeColor = (typeId: string) => typeColorMap[typeId] || "#6b7280";
 
   const AD_MONTHS = useMemo(() => t.calendar.months.split(","), [t.calendar.months]);
   const AD_DAYS = useMemo(() => t.calendar.days.split(","), [t.calendar.days]);
@@ -257,8 +266,9 @@ export default function CalendarSection({ events }: CalendarSectionProps) {
                   >
                     <span
                       className={`text-sm font-bold w-8 h-8 flex items-center justify-center rounded-full ${
-                        hasEvent ? typeStyles[primaryType] : "text-foreground"
+                        hasEvent ? "text-white" : "text-foreground"
                       }`}
+                      style={hasEvent ? { backgroundColor: getTypeColor(primaryType) } : undefined}
                     >
                       {day}
                     </span>
@@ -267,7 +277,8 @@ export default function CalendarSection({ events }: CalendarSectionProps) {
                         {dayEvents.slice(0, 3).map((e, i) => (
                           <span
                             key={i}
-                            className={`w-1.5 h-1.5 rounded-full ${i === 0 ? typeStyles[e.type] : "bg-muted"}`}
+                            className={`w-1.5 h-1.5 rounded-full ${i > 0 ? "bg-muted" : ""}`}
+                            style={i === 0 ? { backgroundColor: getTypeColor(e.type) } : undefined}
                           />
                         ))}
                       </div>
@@ -279,10 +290,10 @@ export default function CalendarSection({ events }: CalendarSectionProps) {
 
             {/* Legend */}
             <div className="flex items-center gap-4 mt-6 pt-4 border-t border-border flex-wrap">
-              {(["holiday", "exam", "event", "vacation"] as const).map((type) => (
-                <div key={type} className="flex items-center gap-1.5">
-                  <span className={`w-3 h-3 rounded-full ${typeStyles[type]}`} />
-                  <span className="text-xs text-muted capitalize">{type}</span>
+              {eventTypes.map((et) => (
+                <div key={et.id} className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: et.color }} />
+                  <span className="text-xs text-muted">{et.label}</span>
                 </div>
               ))}
             </div>
@@ -301,9 +312,8 @@ export default function CalendarSection({ events }: CalendarSectionProps) {
                         className="bg-white rounded-xl p-4 shadow-sm border border-border hover:shadow-md transition-shadow flex gap-4"
                       >
                         <div
-                          className={`shrink-0 w-14 h-14 rounded-xl flex flex-col items-center justify-center ${
-                            typeStyles[event.type]
-                          }`}
+                          className="shrink-0 w-14 h-14 rounded-xl flex flex-col items-center justify-center"
+                          style={{ backgroundColor: getTypeColor(event.type), color: "white" }}
                         >
                           <span className="text-lg font-bold leading-none">
                             {getEventDay(event)}

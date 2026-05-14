@@ -216,10 +216,16 @@ export interface JobVacancy {
 
 // ── Calendar ──
 
+export interface CalendarEventType {
+  id: string;
+  label: string;
+  color: string;
+}
+
 export interface CalendarEvent {
   id: number;
   title: LocaleContent;
-  type: "holiday" | "exam" | "event" | "vacation";
+  type: string;
   date: string;
   description?: LocaleContent;
 }

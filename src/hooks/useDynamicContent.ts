@@ -13,6 +13,7 @@ import type {
   LocaleContent,
   Locale,
   CalendarEvent,
+  CalendarEventType,
   StaffMember,
   JobVacancy,
   AcademicLevel,
@@ -289,8 +290,24 @@ export function useDynamicContent() {
   }, [contentReady, getContent]);
 
   // ── Calendar — Supabase only ──
+  const calendarEventTypes: CalendarEventType[] = useMemo(() => {
+    const json = getJson("calendar", "calendar_types", "en");
+    if (json?.types?.length) return json.types as CalendarEventType[];
+    const t = getJson("calendar", "calendar_types", locale);
+    if (t?.types?.length) return t.types as CalendarEventType[];
+    const ne = getJson("calendar", "calendar_types", "ne");
+    if (ne?.types?.length) return ne.types as CalendarEventType[];
+    const ja = getJson("calendar", "calendar_types", "ja");
+    if (ja?.types?.length) return ja.types as CalendarEventType[];
+    return [];
+  }, [getJson, locale]);
+
   const calendarEvents: CalendarEvent[] = useMemo(() => {
     if (!hasDb) return [];
+
+    const json = getJson("calendar", "calendar_events", locale);
+    if (json?.events?.length) return json.events as CalendarEvent[];
+
     const results: CalendarEvent[] = [];
     for (let i = 1; i <= 30; i++) {
       const title = getContent("calendar", `calendar_${i}_title`, locale);
@@ -298,13 +315,13 @@ export function useDynamicContent() {
       results.push({
         id: i,
         title: { en: getContent("calendar", `calendar_${i}_title`, "en") || "", ne: getContent("calendar", `calendar_${i}_title`, "ne") || "", ja: getContent("calendar", `calendar_${i}_title`, "ja") || "" },
-        type: (getContent("calendar", `calendar_${i}_type`, locale) as CalendarEvent["type"]) || "event",
+        type: getContent("calendar", `calendar_${i}_type`, locale) || "event",
         date: getContent("calendar", `calendar_${i}_date`, locale) || "",
         description: { en: getContent("calendar", `calendar_${i}_description`, "en") || "", ne: getContent("calendar", `calendar_${i}_description`, "ne") || "", ja: getContent("calendar", `calendar_${i}_description`, "ja") || "" },
       });
     }
     return results;
-  }, [hasDb, getContent, locale]);
+  }, [hasDb, getJson, getContent, locale]);
 
   return {
     school,
@@ -323,6 +340,7 @@ export function useDynamicContent() {
     staff,
     jobVacancies,
     calendarEvents,
+    calendarEventTypes,
     notices,
   };
 }

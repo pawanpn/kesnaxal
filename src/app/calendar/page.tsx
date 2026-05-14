@@ -5,11 +5,11 @@ import CalendarSection from "@/components/sections/CalendarSection";
 import { useDynamicContent } from "@/hooks/useDynamicContent";
 
 export default function CalendarPage() {
-  const { calendarEvents } = useDynamicContent();
+  const { calendarEvents, calendarEventTypes } = useDynamicContent();
   return (
     <div className="min-h-screen">
       <PageHero pageKey="calendar" />
-      <CalendarSection events={calendarEvents} />
+      <CalendarSection events={calendarEvents} eventTypes={calendarEventTypes} />
     </div>
   );
 }

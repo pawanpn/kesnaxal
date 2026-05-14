@@ -228,13 +228,20 @@ export function seedCareers(): SeedRow[] {
 
 export function seedCalendar(): SeedRow[] {
   const rows: SeedRow[] = [];
-  siteConfig.calendarEvents.forEach((e) => {
-    const id = `calendar_${e.id}`;
-    addLC(rows, "calendar", `${id}_title`, e.title);
-    if (e.description) addLC(rows, "calendar", `${id}_description`, e.description);
-    addSimple(rows, "calendar", `${id}_date`, e.date);
-    addSimple(rows, "calendar", `${id}_type`, e.type);
-  });
+
+  const defaultTypes = [
+    { id: "holiday", label: "Holiday", color: "#ef4444" },
+    { id: "exam", label: "Exam", color: "#f59e0b" },
+    { id: "event", label: "Event", color: "#10b981" },
+    { id: "vacation", label: "Vacation", color: "#3b82f6" },
+  ];
+  addJson(rows, "calendar", "calendar_types", { types: defaultTypes });
+
+  const events = siteConfig.calendarEvents.map((e) => ({
+    ...e,
+    type: e.type || "event",
+  }));
+  addJson(rows, "calendar", "calendar_events", { events });
   return rows;
 }
 
