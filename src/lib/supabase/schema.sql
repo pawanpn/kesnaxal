@@ -381,27 +381,45 @@ VALUES (
 ) ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================
--- 16. DATA MIGRATION: Move alerts from "news" → "alerts" section
---    (breaking/emergency now live in their own section)
+-- 16. DATA MIGRATION: Fix section/key mismatches
+--    Moves old data to the canonical sections/keys used by admin & public
 --    Safe to re-run — uses ON CONFLICT to avoid duplicates
 -- ============================================================
 DO $$
 BEGIN
-  -- Migrate breaking news text
-  UPDATE public.site_content
-  SET section = 'alerts'
-  WHERE section = 'news' AND content_key IN (
-    'breaking_news_text', 'emergency_title', 'emergency_message',
-    'breaking_news_active', 'emergency_active'
-  );
+  -- A. Move school fields: "school" → "global" with correct key names
+  UPDATE public.site_content SET section = 'global', content_key = 'schoolName'
+    WHERE section = 'school' AND content_key = 'name';
+  UPDATE public.site_content SET section = 'global', content_key = 'shortName'
+    WHERE section = 'school' AND content_key = 'shortName';
+  UPDATE public.site_content SET section = 'global', content_key = 'motto'
+    WHERE section = 'school' AND content_key = 'motto';
+  UPDATE public.site_content SET section = 'global', content_key = 'established'
+    WHERE section = 'school' AND content_key = 'established';
+  UPDATE public.site_content SET section = 'global', content_key = 'history'
+    WHERE section = 'school' AND content_key = 'history';
+  UPDATE public.site_content SET section = 'global', content_key = 'principalName'
+    WHERE section = 'school' AND content_key = 'principal_name';
+  UPDATE public.site_content SET section = 'global', content_key = 'principalMessage'
+    WHERE section = 'school' AND content_key = 'principal_message';
 
-  -- Handle any duplicate constraint issues (if alerts section already has these keys)
-  -- by deleting old news-section copies that weren't moved
-  DELETE FROM public.site_content
-  WHERE section = 'news' AND content_key IN (
-    'breaking_news_text', 'emergency_title', 'emergency_message',
-    'breaking_news_active', 'emergency_active'
-  );
+  -- B. Move contact fields: "contact" → "global" (old seed wrote to "contact")
+  UPDATE public.site_content SET section = 'global'
+    WHERE section = 'contact' AND content_key IN ('address', 'phone', 'phone2', 'email', 'admissionsEmail', 'mapEmbedUrl');
+
+  -- C. Move alerts: "news" → "alerts" section
+  UPDATE public.site_content SET section = 'alerts'
+    WHERE section = 'news' AND content_key IN (
+      'breaking_news_text', 'emergency_title', 'emergency_message',
+      'breaking_news_active', 'emergency_active'
+    );
+
+  -- Clean up orphaned rows in old sections
+  DELETE FROM public.site_content WHERE section = 'school' AND content_key IN
+    ('name', 'shortName', 'motto', 'established', 'history', 'principal_name', 'principal_message');
+  DELETE FROM public.site_content WHERE section = 'contact';
+  DELETE FROM public.site_content WHERE section = 'news' AND content_key IN
+    ('breaking_news_text', 'emergency_title', 'emergency_message', 'breaking_news_active', 'emergency_active');
 END $$;
 
 -- ============================================================

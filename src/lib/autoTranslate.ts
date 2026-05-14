@@ -7,7 +7,7 @@ type Locale = "en" | "ne" | "ja";
 const LOCALES: Locale[] = ["en", "ne", "ja"];
 
 const API = "https://api.mymemory.translated.net/get";
-const MAX_CHUNK_LEN = 500;
+const MAX_CHUNK_LEN = 1000;
 
 // In-memory cache for translations
 const cache = new Map<string, string>();

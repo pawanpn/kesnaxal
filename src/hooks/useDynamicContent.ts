@@ -23,342 +23,290 @@ import type {
 } from "@/types";
 
 /**
- * Hook that resolves content from Supabase (via AdminContext) with fallback to siteConfig.
+ * Dynamic content hook — reads ONLY from Supabase.
+ * No static fallbacks. Superadmin must seed each section.
+ * School & contact have minimal hardcoded defaults for site identity.
  */
 export function useDynamicContent() {
-  const { getContent, contentReady } = useAdmin();
+  const { getContent, getJson, contentReady } = useAdmin();
   const { locale, t } = useLocale();
 
-  const supabaseHasContent = useMemo(() => {
+  const hasDb = useMemo(() => {
     return !!(
+      getContent("global", "schoolName", locale) ||
+      getContent("global", "logo_url", "en") ||
       getContent("hero", "slide_0_title", locale) ||
-      getContent("events", "event_1_title", locale) ||
-      getContent("school", "name", locale) ||
-      getContent("global", "mapEmbedUrl", locale) ||
-      getContent("global", "logo_url", "en")
+      getContent("events", "event_1_title", locale)
     );
   }, [getContent, locale]);
 
-  const resolveText = (section: string, key: string, fallback: LocaleContent): string => {
-    const fromDb = getContent(section, key, locale);
-    if (fromDb) return fromDb;
-    return fallback[locale] || fallback.en || "";
-  };
-
-  const resolveSimple = (section: string, key: string, fallback: string): string => {
-    const fromDb = getContent(section, key, locale);
-    return fromDb || fallback;
-  };
-
-  // ── School ──
+  // ── School (minimal fallback for site identity) ──
   const school: SchoolInfo = useMemo(() => {
-    if (!supabaseHasContent) return siteConfig.school;
+    const def = siteConfig.school;
     return {
-      ...siteConfig.school,
-      name: resolveSimple("school", "name", siteConfig.school.name),
-      shortName: resolveSimple("school", "shortName", siteConfig.school.shortName),
-      motto: resolveSimple("school", "motto", siteConfig.school.motto),
-      established: Number(resolveSimple("school", "established", String(siteConfig.school.established))) || siteConfig.school.established,
-      history: resolveSimple("school", "history", siteConfig.school.history),
+      ...def,
+      name: getContent("global", "schoolName", locale) || def.name,
+      shortName: getContent("global", "shortName", locale) || def.shortName,
+      motto: getContent("global", "motto", locale) || def.motto,
+      established: Number(getContent("global", "established", locale)) || def.established,
+      history: getContent("global", "history", locale) || def.history,
       principal: {
-        name: resolveSimple("school", "principal_name", siteConfig.school.principal.name),
-        message: resolveSimple("school", "principal_message", siteConfig.school.principal.message),
+        name: getContent("global", "principalName", locale) || def.principal.name,
+        message: getContent("global", "principalMessage", locale) || def.principal.message,
       },
     };
-  }, [supabaseHasContent, getContent, locale]);
+  }, [getContent, locale]);
 
-  // ── Contact ──
+  // ── Contact (minimal fallback) ──
   const contact: ContactInfo = useMemo(() => {
-    if (!supabaseHasContent) return siteConfig.contact;
+    const def = siteConfig.contact;
     return {
-      address: resolveSimple("global", "address", siteConfig.contact.address),
-      phone: resolveSimple("global", "phone", siteConfig.contact.phone),
-      phone2: resolveSimple("global", "phone2", siteConfig.contact.phone2),
-      email: resolveSimple("global", "email", siteConfig.contact.email),
-      admissionsEmail: resolveSimple("global", "admissionsEmail", siteConfig.contact.admissionsEmail),
-      mapEmbedUrl: resolveSimple("global", "mapEmbedUrl", siteConfig.contact.mapEmbedUrl),
+      address: getContent("global", "address", locale) || def.address,
+      phone: getContent("global", "phone", locale) || def.phone,
+      phone2: getContent("global", "phone2", locale) || def.phone2,
+      email: getContent("global", "email", locale) || def.email,
+      admissionsEmail: getContent("global", "admissionsEmail", locale) || def.admissionsEmail,
+      mapEmbedUrl: getContent("global", "mapEmbedUrl", locale) || def.mapEmbedUrl,
     };
-  }, [supabaseHasContent, getContent, locale]);
+  }, [getContent, locale]);
 
-  // ── Hero ──
+  // ── Hero — Supabase only, no fallback ──
   const heroSlides: HeroSlide[] = useMemo(() => {
-    if (!supabaseHasContent) return siteConfig.hero.slides;
-    return siteConfig.hero.slides.map((slide, i) => {
-      const resolve_ = (key: string) => resolveText("hero", `slide_${i}_${key}`, slide[key as keyof HeroSlide] as LocaleContent);
-      return {
-        ...slide,
-        title: {
-          en: getContent("hero", `slide_${i}_title`, "en") || slide.title.en || "",
-          ne: getContent("hero", `slide_${i}_title`, "ne") || slide.title.ne || "",
-          ja: getContent("hero", `slide_${i}_title`, "ja") || slide.title.ja || "",
-        },
-        subtitle: {
-          en: getContent("hero", `slide_${i}_subtitle`, "en") || slide.subtitle.en || "",
-          ne: getContent("hero", `slide_${i}_subtitle`, "ne") || slide.subtitle.ne || "",
-          ja: getContent("hero", `slide_${i}_subtitle`, "ja") || slide.subtitle.ja || "",
-        },
-        image: resolveSimple("hero", `slide_${i}_image`, slide.image),
-      };
-    });
-  }, [supabaseHasContent, getContent, locale]);
-
-  // ── Events ──
-  const events: UpcomingEvent[] = useMemo(() => {
-    if (!supabaseHasContent) return siteConfig.upcomingEvents;
-    return siteConfig.upcomingEvents.map((event) => {
-      const id = `event_${event.id}`;
-      return {
-        ...event,
-        title: { ...event.title, [locale]: resolveText("events", `${id}_title`, event.title) },
-        description: { ...event.description, [locale]: resolveText("events", `${id}_description`, event.description) },
-        location: { ...event.location, [locale]: resolveText("events", `${id}_location`, event.location) },
-        date: resolveSimple("events", `${id}_date`, event.date),
-        time: resolveSimple("events", `${id}_time`, event.time),
-        image: resolveSimple("events", `${id}_image`, event.image),
-      };
-    });
-  }, [supabaseHasContent, getContent, locale]);
-
-  // ── News ──
-  const newsArticles: NewsArticle[] = useMemo(() => {
-    if (!contentReady) return [];
-    let jsonStr = getContent("news", "news_articles", locale);
-    if (!jsonStr) {
-      for (const loc of ["en", "ne", "ja"] as Locale[]) {
-        if (loc === locale) continue;
-        const s = getContent("news", "news_articles", loc);
-        if (s) { jsonStr = s; break; }
-      }
-    }
+    if (!hasDb) return [];
+    const jsonStr = getContent("homepage", "hero_slides", locale);
     if (jsonStr) {
       try {
-        const parsed = JSON.parse(jsonStr);
-        if (parsed.articles && Array.isArray(parsed.articles) && parsed.articles.length > 0) {
-          return parsed.articles as NewsArticle[];
-        }
-      } catch { /* fall through */ }
+        const p = JSON.parse(jsonStr);
+        if (p.slides?.length) return p.slides as HeroSlide[];
+      } catch {}
     }
+    // Try flat keys (old format)
+    const slides: HeroSlide[] = [];
+    for (let i = 0; i < 10; i++) {
+      const title = getContent("hero", `slide_${i}_title`, locale);
+      if (!title && i > 2) break;
+      slides.push({
+        image: getContent("hero", `slide_${i}_image`, locale) || "",
+        title: { en: getContent("hero", `slide_${i}_title`, "en") || "", ne: getContent("hero", `slide_${i}_title`, "ne") || "", ja: getContent("hero", `slide_${i}_title`, "ja") || "" },
+        subtitle: { en: getContent("hero", `slide_${i}_subtitle`, "en") || "", ne: getContent("hero", `slide_${i}_subtitle`, "ne") || "", ja: getContent("hero", `slide_${i}_subtitle`, "ja") || "" },
+      });
+    }
+    return slides;
+  }, [hasDb, getContent, locale]);
 
-    if (!supabaseHasContent) return siteConfig.newsArticles;
-    return siteConfig.newsArticles.map((article) => {
-      const id = `article_${article.id}`;
-      return {
-        ...article,
-        title: { ...article.title, [locale]: resolveText("news", `${id}_title`, article.title) },
-        excerpt: { ...article.excerpt, [locale]: resolveText("news", `${id}_excerpt`, article.excerpt) },
-        content: { ...article.content, [locale]: resolveText("news", `${id}_content`, article.content) },
-        author: resolveSimple("news", `${id}_author`, article.author),
-        date: resolveSimple("news", `${id}_date`, article.date),
-        image: resolveSimple("news", `${id}_image`, article.image),
-        category: resolveSimple("news", `${id}_category`, article.category),
-        slug: resolveSimple("news", `${id}_slug`, article.slug),
-      };
-    });
-  }, [contentReady, supabaseHasContent, getContent, locale]);
+  // ── Events — Supabase only ──
+  const events: UpcomingEvent[] = useMemo(() => {
+    if (!hasDb) return [];
+    const result: UpcomingEvent[] = [];
+    for (let i = 1; i <= 50; i++) {
+      const title = getContent("events", `event_${i}_title`, locale);
+      if (!title) break;
+      result.push({
+        id: i,
+        title: { en: getContent("events", `event_${i}_title`, "en") || "", ne: getContent("events", `event_${i}_title`, "ne") || "", ja: getContent("events", `event_${i}_title`, "ja") || "" },
+        date: getContent("events", `event_${i}_date`, locale) || "",
+        time: getContent("events", `event_${i}_time`, locale) || "",
+        location: { en: getContent("events", `event_${i}_location`, "en") || "", ne: getContent("events", `event_${i}_location`, "ne") || "", ja: getContent("events", `event_${i}_location`, "ja") || "" },
+        image: getContent("events", `event_${i}_image`, locale) || "",
+        description: { en: getContent("events", `event_${i}_description`, "en") || "", ne: getContent("events", `event_${i}_description`, "ne") || "", ja: getContent("events", `event_${i}_description`, "ja") || "" },
+      });
+    }
+    return result;
+  }, [hasDb, getContent, locale]);
+
+  // ── News — Supabase only ──
+  const newsArticles: NewsArticle[] = useMemo(() => {
+    if (!contentReady) return [];
+    const jsonStr = getContent("news", "news_articles", "en") || getContent("news", "news_articles", "ne") || getContent("news", "news_articles", "ja");
+    if (jsonStr) {
+      try {
+        const p = JSON.parse(jsonStr);
+        if (p.articles?.length) return p.articles as NewsArticle[];
+      } catch {}
+    }
+    return [];
+  }, [contentReady, getContent]);
 
   // ── Breaking News ──
   const breakingNews = useMemo(() => {
     if (!contentReady) return { active: false, messages: {} as Record<Locale, string> };
-    const active = (getContent("alerts", "breaking_news_active", "en")?.startsWith("{")
-      ? (() => { try { const j = JSON.parse(getContent("alerts", "breaking_news_active", "en")); return !!j.active; } catch { return false; } })()
-      : false);
+    const raw = getContent("alerts", "breaking_news_active", "en");
+    let active = false;
+    if (raw) { try { const j = JSON.parse(raw); active = !!j.active; } catch {} }
+    if (raw === "true") active = true;
     const messages: Record<Locale, string> = { en: "", ne: "", ja: "" };
-    for (const loc of ["en", "ne", "ja"] as Locale[]) {
-      messages[loc] = getContent("alerts", "breaking_news_text", loc);
-    }
+    (["en", "ne", "ja"] as Locale[]).forEach((l) => { messages[l] = getContent("alerts", "breaking_news_text", l); });
     return { active, messages };
   }, [contentReady, getContent]);
 
-  // ── Emergency ──
+  // ── Emergency Popup ──
   const emergency = useMemo(() => {
     if (!contentReady) return { active: false, title: {} as Record<Locale, string>, message: {} as Record<Locale, string> };
-    const active = (getContent("alerts", "emergency_active", "en")?.startsWith("{")
-      ? (() => { try { const j = JSON.parse(getContent("alerts", "emergency_active", "en")); return !!j.active; } catch { return false; } })()
-      : false);
+    const raw = getContent("alerts", "emergency_active", "en");
+    let active = false;
+    if (raw) { try { const j = JSON.parse(raw); active = !!j.active; } catch {} }
+    if (raw === "true") active = true;
     const title: Record<Locale, string> = { en: "", ne: "", ja: "" };
     const message: Record<Locale, string> = { en: "", ne: "", ja: "" };
-    for (const loc of ["en", "ne", "ja"] as Locale[]) {
-      title[loc] = getContent("alerts", "emergency_title", loc);
-      message[loc] = getContent("alerts", "emergency_message", loc);
-    }
+    (["en", "ne", "ja"] as Locale[]).forEach((l) => {
+      title[l] = getContent("alerts", "emergency_title", l);
+      message[l] = getContent("alerts", "emergency_message", l);
+    });
     return { active, title, message };
   }, [contentReady, getContent]);
 
-  // ── Testimonials ──
+  // ── Testimonials — Supabase only ──
   const testimonials: Testimonial[] = useMemo(() => {
-    if (!supabaseHasContent) return siteConfig.testimonials;
-    return siteConfig.testimonials.map((t) => {
-      const id = `testimonial_${t.id}`;
-      return {
-        ...t,
-        text: { ...t.text, [locale]: resolveText("testimonials", `${id}_text`, t.text) },
-        name: resolveSimple("testimonials", `${id}_name`, t.name),
-        role: resolveSimple("testimonials", `${id}_role`, t.role),
-        image: resolveSimple("testimonials", `${id}_image`, t.image),
-      };
-    });
-  }, [supabaseHasContent, getContent, locale]);
+    if (!hasDb) return [];
+    const jsonStr = getContent("homepage", "testimonials", "en") || getContent("homepage", "testimonials", "ne") || getContent("homepage", "testimonials", "ja");
+    if (jsonStr) {
+      try {
+        const p = JSON.parse(jsonStr);
+        if (p.items?.length) return p.items as Testimonial[];
+      } catch {}
+    }
+    return [];
+  }, [hasDb, getContent]);
 
-  // ── Gallery ──
+  // ── Gallery — Supabase only ──
   const gallerySubtitle = useMemo(() => {
-    if (!contentReady) return "";
-    const fromDb = getContent("gallery", "gallery_subtitle", locale);
-    if (fromDb) return fromDb;
-    return t.pages.gallery.subtitle || "A glimpse into our vibrant campus life";
-  }, [contentReady, getContent, locale]);
+    return getContent("gallery", "gallery_subtitle", locale) || "";
+  }, [getContent, locale]);
 
   const galleryImages: GalleryImage[] = useMemo(() => {
     if (!contentReady) return [];
     const jsonStr = getContent("gallery", "gallery_images", "en");
     if (jsonStr) {
       try {
-        const parsed = JSON.parse(jsonStr);
-        if (parsed.images && Array.isArray(parsed.images) && parsed.images.length > 0) {
-          return parsed.images as GalleryImage[];
-        }
-      } catch { /* fall through */ }
+        const p = JSON.parse(jsonStr);
+        if (p.images?.length) return p.images as GalleryImage[];
+      } catch {}
     }
-
-    return siteConfig.gallery.images;
-  }, [contentReady, supabaseHasContent, getContent, locale]);
+    return [];
+  }, [contentReady, getContent]);
 
   const galleryCategories: string[] = useMemo(() => {
-    if (!contentReady) return [];
     const jsonStr = getContent("gallery", "gallery_images", "en");
     if (jsonStr) {
       try {
-        const parsed = JSON.parse(jsonStr);
-        if (parsed.categories && Array.isArray(parsed.categories) && parsed.categories.length > 0) {
-          return parsed.categories as string[];
-        }
-      } catch { /* fall through */ }
+        const p = JSON.parse(jsonStr);
+        if (p.categories?.length) return p.categories as string[];
+      } catch {}
     }
-    return siteConfig.gallery.categories;
-  }, [contentReady, getContent]);
+    return [];
+  }, [getContent]);
 
-  // ── Academic Levels ──
+  // ── Academic Levels — Supabase only ──
   const academicLevels: AcademicLevel[] = useMemo(() => {
-    if (!supabaseHasContent) return siteConfig.academicLevels;
-    return siteConfig.academicLevels.map((level) => {
-      const id = `level_${level.id}`;
-      return {
-        ...level,
-        title: resolveSimple("academics", `${id}_title`, level.title),
-        grades: resolveSimple("academics", `${id}_grades`, level.grades),
-        desc: resolveSimple("academics", `${id}_desc`, level.desc),
-        image: resolveSimple("academics", `${id}_image`, level.image),
-      };
+    if (!hasDb) return [];
+    const results: AcademicLevel[] = [];
+    const ids = ["primary", "secondary", "higher"];
+    ids.forEach((id) => {
+      const title = getContent("academics", `level_${id}_title`, locale);
+      if (title) {
+        results.push({
+          id,
+          title,
+          grades: getContent("academics", `level_${id}_grades`, locale) || "",
+          desc: getContent("academics", `level_${id}_desc`, locale) || "",
+          image: getContent("academics", `level_${id}_image`, locale) || "",
+        });
+      }
     });
-  }, [supabaseHasContent, getContent, locale]);
+    return results;
+  }, [hasDb, getContent, locale]);
 
-  // ── Faculty ──
+  // ── Faculty — Supabase only ──
   const faculty: FacultyMember[] = useMemo(() => {
-    if (!supabaseHasContent) return siteConfig.faculty;
-    return siteConfig.faculty.map((m, i) => {
-      const id = `faculty_${i}`;
-      return {
-        name: resolveSimple("faculty", `${id}_name`, m.name),
-        role: resolveSimple("faculty", `${id}_role`, m.role),
-        dept: resolveSimple("faculty", `${id}_dept`, m.dept),
-      };
-    });
-  }, [supabaseHasContent, getContent, locale]);
+    if (!hasDb) return [];
+    const jsonStr = getContent("academics", "faculty_list", "en");
+    if (jsonStr) {
+      try {
+        const p = JSON.parse(jsonStr);
+        if (p.members?.length) return p.members as FacultyMember[];
+      } catch {}
+    }
+    return [];
+  }, [hasDb, getContent]);
 
-  // ── Staff ──
+  // ── Staff — Supabase only ──
   const staff: StaffMember[] = useMemo(() => {
-    // Try JSON format first (from admin staff panel)
     const jsonStr = getContent("staff", "staff_members", "en");
     if (jsonStr) {
       try {
-        const parsed = JSON.parse(jsonStr);
-        if (parsed.members && Array.isArray(parsed.members) && parsed.members.length > 0) {
-          return parsed.members as StaffMember[];
-        }
-      } catch { /* fall through */ }
+        const p = JSON.parse(jsonStr);
+        if (p.members?.length) return p.members as StaffMember[];
+      } catch {}
     }
+    return [];
+  }, [getContent]);
 
-    if (!supabaseHasContent) return siteConfig.staff;
-    return siteConfig.staff.map((m) => {
-      const id = `staff_${m.id}`;
-      return {
-        ...m,
-        name: resolveSimple("staff", `${id}_name`, m.name),
-        designation: resolveSimple("staff", `${id}_designation`, m.designation),
-        department: m.department ? resolveSimple("staff", `${id}_department`, m.department) : undefined,
-        photo: resolveSimple("staff", `${id}_photo`, m.photo),
-      };
-    });
-  }, [supabaseHasContent, getContent, locale]);
-
-  // ── Jobs ──
+  // ── Jobs — Supabase only ──
   const jobVacancies: JobVacancy[] = useMemo(() => {
     if (!contentReady) return [];
-    const jsonStr = getContent("careers", "job_vacancies", "en");
+    // Try JSON from careers listing admin
+    const jsonStr = getContent("careers", "job_listings", "en");
     if (jsonStr) {
       try {
-        const parsed = JSON.parse(jsonStr);
-        if (parsed.vacancies && Array.isArray(parsed.vacancies) && parsed.vacancies.length > 0) {
-          return parsed.vacancies as JobVacancy[];
-        }
-      } catch { /* fall through */ }
+        const p = JSON.parse(jsonStr);
+        if (p.jobs?.length) return p.jobs as JobVacancy[];
+      } catch {}
     }
+    // Try old flat keys from old seed
+    const results: JobVacancy[] = [];
+    for (let i = 1; i <= 20; i++) {
+      const title = getContent("careers", `job_${i}_title`, locale);
+      if (!title) break;
+      results.push({
+        id: i,
+        title: { en: getContent("careers", `job_${i}_title`, "en") || "", ne: getContent("careers", `job_${i}_title`, "ne") || "", ja: getContent("careers", `job_${i}_title`, "ja") || "" },
+        category: { en: getContent("careers", `job_${i}_category`, "en") || "", ne: getContent("careers", `job_${i}_category`, "ne") || "", ja: getContent("careers", `job_${i}_category`, "ja") || "" },
+        level: { en: getContent("careers", `job_${i}_level`, "en") || "", ne: getContent("careers", `job_${i}_level`, "ne") || "", ja: getContent("careers", `job_${i}_level`, "ja") || "" },
+        experience: { en: getContent("careers", `job_${i}_experience`, "en") || "", ne: getContent("careers", `job_${i}_experience`, "ne") || "", ja: getContent("careers", `job_${i}_experience`, "ja") || "" },
+        salary: { en: getContent("careers", `job_${i}_salary`, "en") || "", ne: getContent("careers", `job_${i}_salary`, "ne") || "", ja: getContent("careers", `job_${i}_salary`, "ja") || "" },
+        vacancies: Number(getContent("careers", `job_${i}_vacancies`, locale)) || 0,
+        workstation: { en: getContent("careers", `job_${i}_workstation`, "en") || "", ne: getContent("careers", `job_${i}_workstation`, "ne") || "", ja: getContent("careers", `job_${i}_workstation`, "ja") || "" },
+        responsibilities: [],
+        addedOn: getContent("careers", `job_${i}_addedOn`, locale) || "",
+        expiresOn: getContent("careers", `job_${i}_expiresOn`, locale) || "",
+        isActive: getContent("careers", `job_${i}_isActive`, locale) === "true",
+      });
+    }
+    return results;
+  }, [contentReady, getContent, locale]);
 
-    if (!supabaseHasContent) return siteConfig.jobVacancies;
-    return siteConfig.jobVacancies.map((job) => {
-      const id = `job_${job.id}`;
-      return {
-        ...job,
-        title:       { ...job.title,       [locale]: resolveText("careers", `${id}_title`,       job.title) },
-        category:    { ...job.category,    [locale]: resolveText("careers", `${id}_category`,    job.category) },
-        level:       { ...job.level,       [locale]: resolveText("careers", `${id}_level`,       job.level) },
-        experience:  { ...job.experience,  [locale]: resolveText("careers", `${id}_experience`,  job.experience) },
-        salary:      { ...job.salary,      [locale]: resolveText("careers", `${id}_salary`,      job.salary) },
-        workstation: { ...job.workstation, [locale]: resolveText("careers", `${id}_workstation`, job.workstation) },
-        vacancies:   Number(resolveSimple("careers", `${id}_vacancies`, String(job.vacancies))) || job.vacancies,
-        addedOn:     resolveSimple("careers", `${id}_addedOn`,   job.addedOn),
-        expiresOn:   resolveSimple("careers", `${id}_expiresOn`, job.expiresOn),
-        isActive:    resolveSimple("careers", `${id}_isActive`,  String(job.isActive)) === "true",
-      };
-    });
-  }, [contentReady, supabaseHasContent, getContent, locale]);
-
-  // ── Notices ──
+  // ── Notices — Supabase only ──
   const notices: Notice[] = useMemo(() => {
     if (!contentReady) return [];
     const jsonStr = getContent("notices", "notices_list", "en");
     if (jsonStr) {
       try {
-        const parsed = JSON.parse(jsonStr);
-        if (parsed.notices && Array.isArray(parsed.notices) && parsed.notices.length > 0) {
-          return parsed.notices as Notice[];
-        }
-      } catch { /* fall through */ }
+        const p = JSON.parse(jsonStr);
+        if (p.notices?.length) return p.notices as Notice[];
+      } catch {}
     }
+    return [];
+  }, [contentReady, getContent]);
 
-    return siteConfig.notices || [];
-  }, [contentReady, supabaseHasContent, getContent]);
-
-  // ── Calendar ──
+  // ── Calendar — Supabase only ──
   const calendarEvents: CalendarEvent[] = useMemo(() => {
-    if (!supabaseHasContent) return siteConfig.calendarEvents;
-    return siteConfig.calendarEvents.map((event) => {
-      const id = `calendar_${event.id}`;
-      return {
-        ...event,
-        title: { ...event.title, [locale]: resolveText("calendar", `${id}_title`, event.title) },
-        type: resolveSimple("calendar", `${id}_type`, event.type) as CalendarEvent["type"],
-        date: resolveSimple("calendar", `${id}_date`, event.date),
-        description: event.description
-          ? { ...event.description, [locale]: resolveText("calendar", `${id}_description`, event.description) }
-          : undefined,
-      };
-    });
-  }, [supabaseHasContent, getContent, locale]);
+    if (!hasDb) return [];
+    const results: CalendarEvent[] = [];
+    for (let i = 1; i <= 30; i++) {
+      const title = getContent("calendar", `calendar_${i}_title`, locale);
+      if (!title) break;
+      results.push({
+        id: i,
+        title: { en: getContent("calendar", `calendar_${i}_title`, "en") || "", ne: getContent("calendar", `calendar_${i}_title`, "ne") || "", ja: getContent("calendar", `calendar_${i}_title`, "ja") || "" },
+        type: (getContent("calendar", `calendar_${i}_type`, locale) as CalendarEvent["type"]) || "event",
+        date: getContent("calendar", `calendar_${i}_date`, locale) || "",
+        description: { en: getContent("calendar", `calendar_${i}_description`, "en") || "", ne: getContent("calendar", `calendar_${i}_description`, "ne") || "", ja: getContent("calendar", `calendar_${i}_description`, "ja") || "" },
+      });
+    }
+    return results;
+  }, [hasDb, getContent, locale]);
 
   return {
-    supabaseHasContent,
-    resolveText,
-    resolveSimple,
     school,
     contact,
     heroSlides,
