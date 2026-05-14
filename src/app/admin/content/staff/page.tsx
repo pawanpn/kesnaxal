@@ -12,14 +12,16 @@ export default function StaffAdminPage() {
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [savingId, setSavingId] = useState<number | null>(null);
   const [uploading, setUploading] = useState<number | null>(null);
+  const [staffLoaded, setStaffLoaded] = useState(false);
 
   useEffect(() => { loadAllContent(); }, []);
 
   useEffect(() => {
+    if (staffLoaded) return;
     const json = getJson("staff", "staff_members", "en");
     const arr = json?.members as StaffMember[] | undefined;
-    if (arr?.length) setStaff(arr);
-  }, [getJson]);
+    if (arr?.length) { setStaff(arr); setStaffLoaded(true); }
+  }, [getJson, staffLoaded]);
 
   const saveToDb = async (updated: StaffMember[]) => {
     try {
