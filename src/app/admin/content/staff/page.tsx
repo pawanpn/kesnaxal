@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/context/ToastContext";
@@ -10,8 +10,8 @@ export default function StaffAdminPage() {
   const { getJson, saveJson, uploadMedia, hasDraft, loadAllContent } = useAdmin();
   const { toast } = useToast();
   const [staff, setStaff] = useState<StaffMember[]>([]);
-  const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState<string | null>(null);
+  const [savingId, setSavingId] = useState<number | null>(null);
+  const [uploading, setUploading] = useState<number | null>(null);
 
   useEffect(() => { loadAllContent(); }, []);
 
@@ -21,47 +21,73 @@ export default function StaffAdminPage() {
     if (arr?.length) setStaff(arr);
   }, [getJson]);
 
-  const handleSave = async (updated: StaffMember[]) => {
-    setSaving(true);
+  const saveToDb = async (updated: StaffMember[]) => {
     try {
       await saveJson("staff", "staff_members", "en", { members: updated });
       await saveJson("staff", "staff_members", "ne", { members: updated });
       await saveJson("staff", "staff_members", "ja", { members: updated });
-      setStaff(updated);
-      toast("success", "Saved successfully");
+      return true;
     } catch {
+      return false;
+    }
+  };
+
+  const handleSaveMember = async (member: StaffMember) => {
+    setSavingId(member.id);
+    const updated = staff.map((s) => (s.id === member.id ? member : s));
+    const ok = await saveToDb(updated);
+    if (ok) {
+      setStaff(updated);
+      toast("success", "Saved as draft — publish to make visible on site");
+    } else {
       toast("error", "Save failed");
     }
-    setSaving(false);
+    setSavingId(null);
   };
 
   const handleChange = (index: number, field: keyof StaffMember, value: string) => {
     setStaff((prev) => prev.map((s, i) => (i === index ? { ...s, [field]: value } : s)));
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const maxId = staff.reduce((max, s) => Math.max(max, s.id), 0);
-    setStaff((prev) => [...prev, { id: maxId + 1, name: "", designation: "", photo: "", department: "" }]);
+    const newMember: StaffMember = { id: maxId + 1, name: "", designation: "", photo: "", department: "" };
+    const updated = [...staff, newMember];
+    const ok = await saveToDb(updated);
+    if (ok) {
+      setStaff(updated);
+      toast("success", "New staff added as draft — publish to make visible on site");
+    } else {
+      toast("error", "Failed to add staff");
+    }
   };
 
-  const handleDelete = (index: number) => {
+  const handleDelete = async (index: number) => {
     if (!confirm("Remove this staff member?")) return;
     const updated = staff.filter((_, i) => i !== index);
-    handleSave(updated);
+    const ok = await saveToDb(updated);
+    if (ok) {
+      setStaff(updated);
+      toast("success", "Removed — publish to update site");
+    } else {
+      toast("error", "Delete failed");
+    }
   };
 
   const handlePhotoUpload = async (index: number, file: File) => {
     const member = staff[index];
-    setUploading(String(member.id));
+    setUploading(member.id);
     const url = await uploadMedia(file, "staff", `staff_${member.id}`);
     if (url) {
-      handleChange(index, "photo", url);
-      toast("success", "Photo uploaded");
+      setStaff((prev) => prev.map((s, i) => (i === index ? { ...s, photo: url } : s)));
+      toast("success", "Photo uploaded — save to persist");
     } else {
       toast("error", "Photo upload failed");
     }
     setUploading(null);
   };
+
+  const hasD = hasDraft("staff", "staff_members", "en");
 
   return (
     <AdminGuard>
@@ -69,36 +95,29 @@ export default function StaffAdminPage() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-xl font-heading font-bold text-foreground">Staff Management</h1>
-            <p className="text-xs text-muted mt-1">Add, edit, and manage staff members displayed on the website</p>
+            <p className="text-xs text-muted mt-1">Add, edit, and manage staff members — changes save as draft</p>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={handleAdd}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700">
-              + Add Staff
-            </button>
-            <button onClick={() => handleSave(staff)} disabled={saving}
-              className="px-4 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
-              {saving ? "Saving..." : "Save All"}
-            </button>
-          </div>
+          <button onClick={handleAdd}
+            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 transition-colors">
+            + Add Staff
+          </button>
         </div>
 
-        {hasDraft("staff", "staff_members", "en") && (
+        {hasD && (
           <div className="mb-4 p-2 rounded-lg bg-yellow-50 border border-yellow-200 text-xs text-yellow-700 max-w-4xl">
-            Draft pending — publish to make changes visible on the site.
+            Draft pending — go to <strong>Review &amp; Publish</strong> to make changes visible on the site.
           </div>
         )}
 
         {staff.length === 0 ? (
           <div className="bg-white rounded-xl border border-border p-8 text-center max-w-4xl">
-            <p className="text-xs text-muted italic">No staff members added yet. Click &quot;Add Staff&quot; to begin.</p>
+            <p className="text-xs text-muted italic">No staff members yet. Click &quot;Add Staff&quot; to begin.</p>
           </div>
         ) : (
           <div className="space-y-3 max-w-4xl">
             {staff.map((member, i) => (
-              <div key={member.id} className="bg-white rounded-xl border border-border p-4">
+              <div key={member.id} className="bg-white rounded-xl border border-border p-4 group">
                 <div className="flex items-start gap-4">
-                  {/* Photo */}
                   <div className="shrink-0">
                     <div className="w-16 h-16 rounded-full border border-border bg-surface flex items-center justify-center overflow-hidden">
                       {member.photo ? (
@@ -111,7 +130,7 @@ export default function StaffAdminPage() {
                     </div>
                     <label className="block text-center mt-1.5 cursor-pointer">
                       <span className="text-[9px] text-primary font-medium hover:underline">
-                        {uploading === String(member.id) ? "Uploading..." : "Change"}
+                        {uploading === member.id ? "Uploading..." : "Change"}
                       </span>
                       <input type="file" accept="image/*" className="hidden"
                         onChange={(e) => {
@@ -122,7 +141,6 @@ export default function StaffAdminPage() {
                     </label>
                   </div>
 
-                  {/* Form fields */}
                   <div className="flex-1 grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[10px] font-semibold text-muted mb-0.5">Name</label>
@@ -154,13 +172,18 @@ export default function StaffAdminPage() {
                     </div>
                   </div>
 
-                  {/* Delete */}
-                  <button onClick={() => handleDelete(i)}
-                    className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-50 mt-1" title="Remove">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button onClick={() => handleSaveMember(member)} disabled={savingId === member.id}
+                      className="px-3 py-1.5 rounded-lg text-[10px] font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50 transition-colors">
+                      {savingId === member.id ? "Saving..." : "Save"}
+                    </button>
+                    <button onClick={() => handleDelete(i)}
+                      className="w-7 h-7 flex items-center justify-center rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors" title="Remove">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
