@@ -290,9 +290,10 @@ export default function CalendarSection({ events }: CalendarSectionProps) {
             {/* Event List */}
             {monthEvents.length > 0 ? (
               <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {monthEvents
-                  .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                  .map((event) => {
+                    {monthEvents
+                    .filter(Boolean)
+                    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                    .map((event) => {
                     const resolved = resolveCalendarEvent(event, locale);
                     return (
                       <div

@@ -32,7 +32,7 @@ export default function NewsGrid({ articles }: NewsGridProps) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {articles.map((article) => {
+          {articles.filter(Boolean).map((article) => {
             const resolved = resolveArticle(article, locale);
             return (
               <Link key={article.id} href={`/news/${article.slug}`} className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-border hover:border-primary/30 flex flex-col">

@@ -17,7 +17,7 @@ export default function StaffGrid({ staff, title }: StaffGridProps) {
         {title && <SectionHeading title={title} subtitle="Meet the dedicated professionals behind KES" align="center" />}
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-          {staff.map((member) => (
+          {staff.filter(Boolean).map((member) => (
             <div
               key={member.id}
               className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-border hover:border-primary/30"

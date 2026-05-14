@@ -87,7 +87,7 @@ export default function NoticesPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {filtered.map((notice) => (
+              {filtered.filter(Boolean).map((notice) => (
                 <div
                   key={notice.id}
                   className={`bg-white rounded-xl p-5 lg:p-6 border-l-4 ${priorityBorder(notice.priority)} shadow-sm hover:shadow-md transition-shadow`}

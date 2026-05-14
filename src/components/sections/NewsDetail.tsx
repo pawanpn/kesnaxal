@@ -105,7 +105,7 @@ export default function NewsDetail({ article, recentPosts }: NewsDetailProps) {
               <div className="bg-surface rounded-xl p-6 border border-border">
                 <h3 className="font-heading font-bold text-primary text-sm uppercase tracking-wider mb-4">Recent News</h3>
                 <div className="space-y-4">
-                  {recentPosts.map((post) => {
+                  {recentPosts.filter(Boolean).map((post) => {
                     const r = resolveArticle(post, locale);
                     return (
                       <Link key={post.id} href={`/news/${post.slug}`} className="flex gap-3 group">

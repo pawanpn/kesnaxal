@@ -29,7 +29,7 @@ export default function EventsGrid({ events }: EventsGridProps) {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {events.map((event) => {
+          {events.filter(Boolean).map((event) => {
             const { title, description, location } = resolveEvent(event, locale);
             const dateLocale = locale === "en" ? "en-US" : locale === "ne" ? "ne-NP" : "ja-JP";
             return (

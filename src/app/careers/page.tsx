@@ -27,7 +27,7 @@ export default function CareersPage() {
   const [applyingJob, setApplyingJob] = useState<JobVacancy | null>(null);
   const { locale, t } = useLocale();
   const { jobVacancies: jobs, school } = useDynamicContent();
-  const activeJobs = jobs.filter((j) => j.isActive);
+  const activeJobs = jobs.filter(Boolean).filter((j) => j.isActive);
 
   const toggleDetails = (job: JobVacancy) => {
     setSelectedJob((prev) => (prev?.id === job.id ? null : job));

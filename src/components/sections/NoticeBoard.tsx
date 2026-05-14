@@ -43,7 +43,7 @@ export default function NoticeBoard() {
           <p className="text-center text-sm text-muted py-8">No notices at this time.</p>
         ) : (
           <div className="space-y-3">
-            {notices.map((notice) => (
+            {notices.filter(Boolean).map((notice) => (
               <div key={notice.id} className={`bg-white rounded-lg p-4 lg:p-5 border-l-4 ${priorityBorder(notice.priority)} shadow-sm hover:shadow-md transition-shadow`}>
                 <div className="flex items-start justify-between gap-4">
                   <div>
