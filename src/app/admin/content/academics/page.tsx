@@ -261,17 +261,6 @@ export default function AcademicHubPage() {
             <p className="text-xs text-muted mt-1">Manage PDF documents, academic levels, and faculty</p>
           </div>
           <div className="flex items-center gap-2">
-            {isSuperadmin && (
-              <button onClick={async () => { const r = await seedSection("academics"); toast(r.error ? "error" : "success", r.error || `Seeded ${r.count} rows`); }}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-primary/30 text-primary hover:bg-primary/5">
-                Seed Defaults
-              </button>
-            )}
-            <button onClick={async () => { setDiscarding(true); await discardSectionDrafts("academics"); setDiscarding(false); window.location.reload(); }}
-              disabled={discarding}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5 disabled:opacity-50">
-              Discard Drafts
-            </button>
           </div>
         </div>
 

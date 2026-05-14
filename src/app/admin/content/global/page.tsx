@@ -231,16 +231,6 @@ export default function GlobalSettingsPage() {
             <p className="text-xs text-muted mt-1">Manage school info, logo, contact, social links, and hours</p>
           </div>
           <div className="flex items-center gap-2">
-            {isSuperadmin && (
-              <button onClick={async () => { const r = await seedSection("global"); toast(r.error ? "error" : "success", r.error || `Seeded ${r.count} rows`); }}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-primary/30 text-primary hover:bg-primary/5">
-                Seed Defaults
-              </button>
-            )}
-            <button onClick={handleDiscard} disabled={discarding}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5 disabled:opacity-50">
-              {discarding ? "Discarding..." : "Discard Drafts"}
-            </button>
           </div>
         </div>
 
