@@ -49,6 +49,7 @@ function newJob(): JobVacancy {
     level: emptyLocale(),
     experience: emptyLocale(),
     salary: emptyLocale(),
+    description: emptyLocale(),
     vacancies: 1,
     workstation: emptyLocale(),
     responsibilities: [],
@@ -59,7 +60,7 @@ function newJob(): JobVacancy {
 }
 
 export default function CareerManagerPage() {
-  const { getContent, saveJson, loadAllContent } = useAdmin();
+  const { getContent, getJson, saveJson, hasDraft, loadAllContent } = useAdmin();
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState<"jobs" | "applications">("jobs");
@@ -82,16 +83,11 @@ export default function CareerManagerPage() {
   }, []);
 
   useEffect(() => {
-    const jsonStr = getContent("careers", "job_vacancies", "en");
-    if (jsonStr) {
-      try {
-        const parsed = JSON.parse(jsonStr);
-        if (parsed.vacancies && Array.isArray(parsed.vacancies)) {
-          setJobs(parsed.vacancies);
-        }
-      } catch { /* ignore */ }
+    for (const { id: l } of LOCALES) {
+      const json = getJson("careers", "job_vacancies", l) as { vacancies?: JobVacancy[] };
+      if (json?.vacancies?.length) { setJobs(json.vacancies); return; }
     }
-  }, [getContent]);
+  }, [getJson]);
 
   const fetchApplications = async () => {
     const { data } = await supabase.from("career_applications").select("*").order("created_at", { ascending: false });

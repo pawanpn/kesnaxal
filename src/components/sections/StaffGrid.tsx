@@ -3,12 +3,15 @@
 import EditableImage from "@/components/admin/EditableImage";
 import EditableElement from "@/components/admin/EditableElement";
 import SectionHeading from "@/components/ui/SectionHeading";
+import BorderGlow from "@/components/ui/BorderGlow";
 import type { StaffMember } from "@/types";
 
 interface StaffGridProps {
   staff: StaffMember[];
   title?: string;
 }
+
+const glowColors = ['#3b82f6', '#6366f1', '#8b5cf6'];
 
 export default function StaffGrid({ staff, title }: StaffGridProps) {
   return (
@@ -18,11 +21,19 @@ export default function StaffGrid({ staff, title }: StaffGridProps) {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
           {staff.filter(Boolean).map((member) => (
-            <div
+            <BorderGlow
               key={member.id}
-              className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-border hover:border-primary/30"
+              borderRadius={16}
+              backgroundColor="#ffffff"
+              glowRadius={20}
+              edgeSensitivity={25}
+              glowIntensity={0.8}
+              coneSpread={14}
+              colors={glowColors}
+              glowColor="220 60 55"
+              fillOpacity={0.3}
             >
-              <div className="relative h-56 overflow-hidden bg-surface">
+              <div className="h-56 overflow-hidden bg-surface rounded-t-2xl">
                 <EditableImage
                   section="staff"
                   contentKey={`staff_${member.id}_photo`}
@@ -61,7 +72,7 @@ export default function StaffGrid({ staff, title }: StaffGridProps) {
                   </p>
                 )}
               </div>
-            </div>
+            </BorderGlow>
           ))}
         </div>
       </div>

@@ -208,6 +208,7 @@ export interface JobVacancy {
   salary: LocaleContent;
   vacancies: number;
   workstation: LocaleContent;
+  description?: LocaleContent;
   responsibilities: LocaleContent[];
   addedOn: string;
   expiresOn: string;
