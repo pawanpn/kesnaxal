@@ -60,7 +60,7 @@ function newJob(): JobVacancy {
 }
 
 export default function CareerManagerPage() {
-  const { getContent, getJson, saveJson, hasDraft, loadAllContent } = useAdmin();
+  const { getJson, saveJson, hasDraft, loadAllContent } = useAdmin();
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState<"jobs" | "applications">("jobs");
@@ -129,7 +129,7 @@ export default function CareerManagerPage() {
 
   const updateField = (field: keyof JobVacancy, value: string) => {
     if (!editingJob) return;
-    const localeFields = ["title", "category", "level", "experience", "salary", "workstation"];
+    const localeFields = ["title", "category", "level", "experience", "salary", "workstation", "description"];
     if (localeFields.includes(field)) {
       setEditingJob({ ...editingJob, [field]: { ...(editingJob[field] as LocaleContent), [lang]: value } });
     } else {
@@ -203,6 +203,12 @@ export default function CareerManagerPage() {
             </div>
           )}
         </div>
+
+        {activeTab === "jobs" && hasDraft("careers", "job_vacancies", "en") && (
+          <div className="mb-4 p-2 rounded-lg bg-yellow-50 border border-yellow-200 text-xs text-yellow-700 max-w-5xl">
+            Draft pending — go to <strong>Review &amp; Publish</strong> to make changes visible on the site.
+          </div>
+        )}
 
         {activeTab === "jobs" && (
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -315,6 +321,13 @@ export default function CareerManagerPage() {
                       <label className="block text-[11px] font-semibold text-foreground mb-1">Workstation</label>
                       <input value={(editingJob.workstation as LocaleContent)[lang] || ""} onChange={(e) => updateField("workstation", e.target.value)}
                         className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none" placeholder="e.g. Naxal, Kathmandu" />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-foreground mb-1">Job Description ({lang.toUpperCase()})</label>
+                      <textarea value={(editingJob.description as LocaleContent)?.[lang] || ""} onChange={(e) => updateField("description", e.target.value)}
+                        rows={4}
+                        className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none resize-y"
+                        placeholder="Full job description, requirements, and details..." />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
