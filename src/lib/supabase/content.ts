@@ -177,3 +177,38 @@ export async function getFooterAbout(locale: Locale): Promise<FooterInfo> {
   };
   return { ...siteConfig.footer, about };
 }
+
+export async function getJsonContent(section: string, key: string, locale: Locale): Promise<Record<string, unknown> | null> {
+  try {
+    const { data } = await supabase
+      .from("site_content")
+      .select("content_json, content_text")
+      .eq("section", section)
+      .eq("content_key", key)
+      .eq("locale", locale)
+      .eq("status", "published")
+      .maybeSingle();
+
+    if (data?.content_json && Object.keys(data.content_json).length > 0) {
+      return data.content_json as Record<string, unknown>;
+    }
+    if (data?.content_text) {
+      try { return JSON.parse(data.content_text); } catch { return null; }
+    }
+  } catch { /* fallback */ }
+  return null;
+}
+
+export async function getSiteMetadata(): Promise<{
+  schoolName: string;
+  motto: string;
+  description: string;
+  logoUrl: string;
+}> {
+  const content = await getAllContent();
+  const schoolName = content.get("global::schoolName::en") || siteConfig.school.name;
+  const motto = content.get("global::motto::en") || siteConfig.school.motto;
+  const logoUrl = content.get("global::logo_url::en") || "/data/logo.jpg";
+  const description = `${schoolName} - A premier educational institution in Nepal providing quality education from Nursery to Grade 12.`;
+  return { schoolName, motto, description, logoUrl };
+}

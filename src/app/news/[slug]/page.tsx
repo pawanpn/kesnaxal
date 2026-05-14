@@ -10,7 +10,9 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const article = siteConfig.newsArticles.find((a) => a.slug === slug);
+  clearContentCache();
+  const dbArticles = await getNewsArticles("en");
+  const article = dbArticles.find((a) => a.slug === slug) || siteConfig.newsArticles.find((a) => a.slug === slug);
   if (!article) return { title: "Article Not Found" };
 
   return {

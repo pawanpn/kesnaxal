@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/context/ToastContext";
 import { siteConfig } from "@/constants/siteConfig";
 import { translateToAll } from "@/lib/autoTranslate";
+import { SOCIAL_PLATFORMS, getSocialIcon } from "@/constants/socialIcons";
 
 type Locale = "en" | "ne" | "ja";
 
@@ -53,7 +54,7 @@ function getFallback(key: string): string {
   return map[key] || "";
 }
 
-interface SocialLink { platform: string; url: string; }
+interface SocialLink { platform: string; url: string; iconUrl?: string; }
 interface HourEntry { days: string; time: string; }
 
 const DEF_SOCIAL: SocialLink[] = [
@@ -349,17 +350,51 @@ export default function GlobalSettingsPage() {
           <div className="bg-white rounded-xl border border-border p-6 max-w-2xl">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-heading font-bold text-sm text-foreground">Social Media Links</h2>
-              <button onClick={() => setSocialLinks((p) => [...p, { platform: "", url: "" }])}
+              <button onClick={() => setSocialLinks((p) => [...p, { platform: "facebook", url: "" }])}
                 className="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700">+ Add</button>
             </div>
             <div className="space-y-3">
               {socialLinks.map((link, i) => (
-                <div key={i} className="flex gap-2 items-start p-3 rounded-lg bg-surface/50 border border-border/50">
+                <div key={i} className="flex gap-3 items-start p-4 rounded-lg bg-surface/50 border border-border/50">
+                  <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-border shrink-0 text-gray-600">
+                    {link.iconUrl ? (
+                      <img src={link.iconUrl} alt={link.platform} className="w-5 h-5 object-contain rounded-sm" />
+                    ) : (
+                      getSocialIcon(link.platform)
+                    )}
+                  </div>
                   <div className="flex-1 space-y-2">
-                    <input value={link.platform} onChange={(e) => setSocialLinks((p) => p.map((l, j) => j === i ? { ...l, platform: e.target.value } : l))}
-                      placeholder="Platform (e.g., facebook)" className="w-full px-3 py-1.5 rounded border border-border text-xs focus:border-primary outline-none" />
+                    <select
+                      value={SOCIAL_PLATFORMS.some((p) => p.id === link.platform) ? link.platform : "custom"}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSocialLinks((p) => p.map((l, j) => j === i ? { ...l, platform: val, iconUrl: val === "custom" ? l.iconUrl : undefined } : l));
+                      }}
+                      className="w-full px-3 py-1.5 rounded border border-border text-xs focus:border-primary outline-none bg-white"
+                    >
+                      {SOCIAL_PLATFORMS.map((p) => (
+                        <option key={p.id} value={p.id}>{p.label}</option>
+                      ))}
+                    </select>
                     <input type="url" value={link.url} onChange={(e) => setSocialLinks((p) => p.map((l, j) => j === i ? { ...l, url: e.target.value } : l))}
                       placeholder="https://..." className="w-full px-3 py-1.5 rounded border border-border text-xs focus:border-primary outline-none" />
+                    {(link.platform === "custom" || !SOCIAL_PLATFORMS.some((p) => p.id === link.platform)) && (
+                      <div className="space-y-1">
+                        <input
+                          value={link.platform === "custom" ? "" : link.platform}
+                          onChange={(e) => setSocialLinks((p) => p.map((l, j) => j === i ? { ...l, platform: e.target.value || "custom" } : l))}
+                          placeholder="Platform name (e.g., telegram)"
+                          className="w-full px-3 py-1.5 rounded border border-border text-xs focus:border-primary outline-none"
+                        />
+                        <input
+                          type="url"
+                          value={link.iconUrl || ""}
+                          onChange={(e) => setSocialLinks((p) => p.map((l, j) => j === i ? { ...l, iconUrl: e.target.value || undefined } : l))}
+                          placeholder="Custom icon URL (optional, e.g., https://...icon.png)"
+                          className="w-full px-3 py-1.5 rounded border border-dashed border-border text-xs focus:border-primary outline-none"
+                        />
+                      </div>
+                    )}
                   </div>
                   <button onClick={() => setSocialLinks((p) => p.filter((_, j) => j !== i))}
                     className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-50">
@@ -368,10 +403,13 @@ export default function GlobalSettingsPage() {
                 </div>
               ))}
             </div>
-            <button onClick={handleSaveSocial} disabled={socialSaving}
-              className="mt-4 px-4 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
-              {socialSaving ? "Saving..." : "Save Draft"}
-            </button>
+            <div className="flex items-center gap-3 mt-4">
+              <button onClick={handleSaveSocial} disabled={socialSaving}
+                className="px-4 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
+                {socialSaving ? "Saving..." : "Save Draft"}
+              </button>
+              <span className="text-[10px] text-muted">Supports: Facebook, Instagram, X, YouTube, TikTok, LinkedIn, WhatsApp, Viber, Telegram, Threads, Pinterest, Snapchat, and custom icons</span>
+            </div>
           </div>
         )}
 

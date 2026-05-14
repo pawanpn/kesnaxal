@@ -9,7 +9,7 @@ import { ToastProvider } from "@/context/ToastContext";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import EmergencyPopup from "@/components/sections/EmergencyPopup";
-import { siteConfig } from "@/constants/siteConfig";
+import { getSiteMetadata } from "@/lib/supabase/content";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
@@ -27,27 +27,35 @@ const merriweather = Merriweather({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: `${siteConfig.school.name} | ${siteConfig.school.motto}`,
-    template: `%s | ${siteConfig.school.name}`,
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const { schoolName, motto, description, logoUrl } = await getSiteMetadata();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kes.edu.np";
+  const ogImage = logoUrl.startsWith("http") ? logoUrl : `${siteUrl}${logoUrl}`;
 
-  description:
-    "Kathmandu English School - A premier educational institution in Nepal providing quality education from Nursery to Grade 12.",
-
-  keywords: [
-    "Kathmandu English School",
-    "KES",
-    "education",
-    "Nepal",
-    "school",
-  ],
-
-  verification: {
-    google: "googlef387d18f57e91ec0",
-  },
-};
+  return {
+    title: {
+      default: `${schoolName} | ${motto}`,
+      template: `%s | ${schoolName}`,
+    },
+    description,
+    keywords: [schoolName, "KES", "education", "Nepal", "school"],
+    verification: { google: "googlef387d18f57e91ec0" },
+    openGraph: {
+      title: `${schoolName} | ${motto}`,
+      description,
+      siteName: schoolName,
+      type: "website",
+      locale: "en_US",
+      images: [{ url: ogImage, width: 1200, height: 630, alt: schoolName }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${schoolName} | ${motto}`,
+      description,
+      images: [ogImage],
+    },
+  };
+}
 
 export default function RootLayout({
   children,

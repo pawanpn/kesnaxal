@@ -95,14 +95,22 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
       if (mounted) setAuthReady(true);
     }, 10000);
 
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(({ data, error }) => {
       if (!mounted) return;
-      setIsAdmin(!!data.session);
+      if (error) {
+        supabase.auth.signOut().catch(() => {});
+        setIsAdmin(false);
+      } else {
+        setIsAdmin(!!data.session);
+      }
       setAuthReady(true);
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
+      if (event === "TOKEN_REFRESHED" && !session) {
+        supabase.auth.signOut().catch(() => {});
+      }
       setIsAdmin(!!session);
       setAuthReady(true);
       if (!session) {
