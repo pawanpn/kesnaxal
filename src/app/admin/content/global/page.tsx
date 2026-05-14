@@ -129,12 +129,11 @@ export default function GlobalSettingsPage() {
     setSaveStatus((p) => ({ ...p, [key]: "saving" }));
     try {
       const data = formData[key] || { en: "", ne: "", ja: "" };
-      const saveFn = key === "mapEmbedUrl" ? savePublishedContent : saveContent;
       for (const { id: l } of LOCALES) {
-        await saveFn("global", key, l, data[l] || "");
+        await saveContent("global", key, l, data[l] || "");
       }
       await loadAllContent();
-      toast("success", key === "mapEmbedUrl" ? "Map URL saved & published" : `${key} saved as draft`);
+      toast("success", `"${key}" saved as draft — publish to make visible`);
     } catch { toast("error", "Failed to save"); }
     setSaveStatus((p) => ({ ...p, [key]: "saved" }));
     setTimeout(() => setSaveStatus((p) => ({ ...p, [key]: "idle" })), 1500);
