@@ -227,12 +227,6 @@ export default function GalleryAdminPage() {
             <h1 className="text-xl font-heading font-bold text-foreground">Gallery Management</h1>
             <p className="text-xs text-muted mt-1">{images.length} images · {categories.length} categories · drag to reorder</p>
           </div>
-          {isSuperadmin && (
-            <button onClick={async () => { const r = await seedSection("gallery"); toast(r.error ? "error" : "success", r.error || `Seeded ${r.count} rows`); }}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-primary/30 text-primary hover:bg-primary/5">
-              Seed Defaults
-            </button>
-          )}
         </div>
 
         {hasDraft("gallery", "gallery_images", "en") && (

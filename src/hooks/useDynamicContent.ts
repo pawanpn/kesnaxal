@@ -291,22 +291,22 @@ export function useDynamicContent() {
 
   // ── Calendar — Supabase only ──
   const calendarEventTypes: CalendarEventType[] = useMemo(() => {
-    const json = getJson("calendar", "calendar_types", "en");
-    if (json?.types?.length) return json.types as CalendarEventType[];
-    const t = getJson("calendar", "calendar_types", locale);
-    if (t?.types?.length) return t.types as CalendarEventType[];
-    const ne = getJson("calendar", "calendar_types", "ne");
-    if (ne?.types?.length) return ne.types as CalendarEventType[];
-    const ja = getJson("calendar", "calendar_types", "ja");
-    if (ja?.types?.length) return ja.types as CalendarEventType[];
+    const json = getJson("calendar", "calendar_types", "en") as { types?: CalendarEventType[] };
+    if (json?.types?.length) return json.types;
+    const t = getJson("calendar", "calendar_types", locale) as { types?: CalendarEventType[] };
+    if (t?.types?.length) return t.types;
+    const ne = getJson("calendar", "calendar_types", "ne") as { types?: CalendarEventType[] };
+    if (ne?.types?.length) return ne.types;
+    const ja = getJson("calendar", "calendar_types", "ja") as { types?: CalendarEventType[] };
+    if (ja?.types?.length) return ja.types;
     return [];
   }, [getJson, locale]);
 
   const calendarEvents: CalendarEvent[] = useMemo(() => {
     if (!hasDb) return [];
 
-    const json = getJson("calendar", "calendar_events", locale);
-    if (json?.events?.length) return json.events as CalendarEvent[];
+    const json = getJson("calendar", "calendar_events", locale) as { events?: CalendarEvent[] };
+    if (json?.events?.length) return json.events;
 
     const results: CalendarEvent[] = [];
     for (let i = 1; i <= 30; i++) {

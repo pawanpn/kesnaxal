@@ -103,12 +103,6 @@ export default function AlertsPage() {
             <p className="text-xs text-muted mt-1">Manage breaking news ticker and emergency pop-up alerts</p>
           </div>
           <div className="flex items-center gap-3">
-            {isSuperadmin && (
-              <button onClick={async () => { const r = await seedSection("alerts"); toast(r.error ? "error" : "success", r.error || `Seeded ${r.count} rows`); }}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-primary/30 text-primary hover:bg-primary/5">
-                Seed Defaults
-              </button>
-            )}
             <div className="flex gap-1 bg-white rounded-lg border border-border p-0.5">
               {LOCALES.map((l) => (
                 <button key={l.id} onClick={() => setLang(l.id)}

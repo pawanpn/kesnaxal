@@ -184,12 +184,6 @@ export default function CareerManagerPage() {
             <h1 className="text-xl font-heading font-bold text-foreground">Career Manager</h1>
             <p className="text-xs text-muted mt-1">Manage job vacancies and applications</p>
           </div>
-          {isSuperadmin && (
-            <button onClick={async () => { const r = await seedSection("careers"); toast(r.error ? "error" : "success", r.error || `Seeded ${r.count} rows`); }}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-primary/30 text-primary hover:bg-primary/5">
-              Seed Defaults
-            </button>
-          )}
         </div>
 
         <div className="flex items-center gap-3 mb-4">
