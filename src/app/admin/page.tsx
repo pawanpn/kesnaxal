@@ -52,7 +52,6 @@ export default function AdminDashboard() {
       global: { label: "Global Settings", href: "/admin/content/global" },
       homepage: { label: "Homepage", href: "/admin/content/homepage" },
       news: { label: "News Articles", href: "/admin/news" },
-      "news-alerts": { label: "News & Alerts", href: "/admin/content/news-alerts" },
       academics: { label: "Academic Hub", href: "/admin/content/academics" },
       staff: { label: "Staff Manager", href: "/admin/content/staff" },
       careers: { label: "Career Manager", href: "/admin/content/careers" },

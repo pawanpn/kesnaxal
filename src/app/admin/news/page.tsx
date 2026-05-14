@@ -99,7 +99,7 @@ function ToolbarBtn({ cmd, val, label, title, cls }: { cmd: string; val?: string
 }
 
 export default function NewsAdminPage() {
-  const { getJson, saveJson, getContent, uploadMedia, hasDraft, discardSectionDrafts, loadAllContent, publishedContent, draftContent } = useAdmin();
+  const { getJson, saveJson, getContent, uploadMedia, hasDraft, discardSectionDrafts, loadAllContent, publishedContent, draftContent, isSuperadmin, seedSection } = useAdmin();
   const { toast } = useToast();
 
   const [articles, setArticles] = useState<NewsArticle[]>([]);
@@ -313,6 +313,12 @@ export default function NewsAdminPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {isSuperadmin && (
+                <button onClick={async () => { const r = await seedSection("news"); toast(r.error ? "error" : "success", r.error || `Seeded ${r.count} rows`); }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-primary/30 text-primary hover:bg-primary/5">
+                  Seed Defaults
+                </button>
+              )}
               <label className="flex items-center gap-1.5 text-[11px] text-muted cursor-pointer select-none">
                 <button type="button" onClick={() => setSyncing(!syncing)}
                   className={`w-7 h-4 rounded-full transition-colors relative shrink-0 ${syncing ? "bg-green-500" : "bg-gray-300"}`}>
