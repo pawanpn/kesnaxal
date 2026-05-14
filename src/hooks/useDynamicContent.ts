@@ -238,15 +238,17 @@ export function useDynamicContent() {
 
   // ── Staff — Supabase only ──
   const staff: StaffMember[] = useMemo(() => {
-    const jsonStr = getContent("staff", "staff_members", "en");
-    if (jsonStr) {
+    const json = getJson("staff", "staff_members", locale) as { members?: StaffMember[] };
+    if (json?.members?.length) return json.members;
+    const fallback = getContent("staff", "staff_members", "en");
+    if (fallback) {
       try {
-        const p = JSON.parse(jsonStr);
+        const p = JSON.parse(fallback);
         if (p.members?.length) return p.members as StaffMember[];
       } catch {}
     }
     return [];
-  }, [getContent]);
+  }, [getJson, getContent, locale]);
 
   // ── Jobs — Supabase only ──
   const jobVacancies: JobVacancy[] = useMemo(() => {

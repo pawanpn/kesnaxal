@@ -106,8 +106,11 @@ export default function CareerManagerPage() {
       }
       setJobsLoaded(true);
       setJobs(updatedJobs);
-      toast("success", "Jobs saved as draft. Publish to make them live.");
-    } catch { toast("error", "Failed to save jobs"); }
+      toast("success", "Jobs saved as draft — publish to make live");
+    } catch (e) {
+      console.error("Career save failed:", e);
+      toast("error", "Failed to save jobs");
+    }
     setSaving(false);
   };
 

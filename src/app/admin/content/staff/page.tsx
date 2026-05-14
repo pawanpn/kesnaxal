@@ -27,7 +27,8 @@ export default function StaffAdminPage() {
       await saveJson("staff", "staff_members", "ne", { members: updated });
       await saveJson("staff", "staff_members", "ja", { members: updated });
       return true;
-    } catch {
+    } catch (e) {
+      console.error("Staff save failed:", e);
       return false;
     }
   };
@@ -94,8 +95,8 @@ export default function StaffAdminPage() {
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-xl font-heading font-bold text-foreground">Staff Management</h1>
-            <p className="text-xs text-muted mt-1">Add, edit, and manage staff members — changes save as draft</p>
+            <h1 className="text-xl font-heading font-bold text-foreground">Team Management</h1>
+            <p className="text-xs text-muted mt-1">Add, edit, and manage team members — changes save as draft</p>
           </div>
           <button onClick={handleAdd}
             className="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 transition-colors">
@@ -111,7 +112,7 @@ export default function StaffAdminPage() {
 
         {staff.length === 0 ? (
           <div className="bg-white rounded-xl border border-border p-8 text-center max-w-4xl">
-            <p className="text-xs text-muted italic">No staff members yet. Click &quot;Add Staff&quot; to begin.</p>
+            <p className="text-xs text-muted italic">No team members yet. Click &quot;Add Staff&quot; to begin.</p>
           </div>
         ) : (
           <div className="space-y-3 max-w-4xl">

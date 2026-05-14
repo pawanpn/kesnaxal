@@ -51,7 +51,7 @@ export const siteConfig: SiteConfig = {
       { label: "Gallery", href: "/gallery" },
       { label: "News", href: "/news" },
       { label: "Notices", href: "/notices" },
-      { label: "Staff", href: "/staff" },
+      { label: "Team", href: "/staff" },
       { label: "Careers", href: "/careers" },
       { label: "Calendar", href: "/calendar" },
       { label: "Contact", href: "/contact" },

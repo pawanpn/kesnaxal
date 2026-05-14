@@ -13,7 +13,7 @@ const SECTION_LABELS: Record<string, string> = {
   hero: "Homepage Hero",
   school: "School Details",
   news: "News & Alerts",
-  staff: "Staff Members",
+  staff: "Team Members",
   events: "Upcoming Events",
   academics: "Academic Programs",
   testimonials: "Testimonials",
@@ -41,7 +41,7 @@ const KEY_LABELS: Record<string, string> = {
   gallery_subtitle: "Gallery Subtitle",
   job_vacancies: "Job Vacancies",
   news_articles: "News Articles",
-  staff_members: "Staff Members",
+  staff_members: "Team Members",
   notices_list: "Notice Board",
 };
 
@@ -65,7 +65,7 @@ function summarizeJson(key: string, text: string | null): string {
     }
     if (key === "staff_members") {
       const count = parsed.members?.length || 0;
-      return `${count} staff member${count !== 1 ? "s" : ""}`;
+      return `${count} team member${count !== 1 ? "s" : ""}`;
     }
     if (key === "opening_hours") {
       const count = parsed.hours?.length || 0;

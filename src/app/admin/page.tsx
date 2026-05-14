@@ -52,7 +52,7 @@ export default function AdminDashboard() {
       news: { label: "News Articles", href: "/admin/news" },
       alerts: { label: "Alerts & Breaking", href: "/admin/content/news-alerts" },
       academics: { label: "Academic Hub", href: "/admin/content/academics" },
-      staff: { label: "Staff Manager", href: "/admin/content/staff" },
+      staff: { label: "Team Manager", href: "/admin/content/staff" },
       careers: { label: "Career Manager", href: "/admin/content/careers" },
       notices: { label: "Notices", href: "/admin/content/notices" },
       calendar: { label: "Calendar", href: "/admin/content/calendar" },
