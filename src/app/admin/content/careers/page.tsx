@@ -77,17 +77,20 @@ export default function CareerManagerPage() {
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
+  const [jobsLoaded, setJobsLoaded] = useState(false);
+
   useEffect(() => {
     loadAllContent();
     fetchApplications();
   }, []);
 
   useEffect(() => {
+    if (jobsLoaded) return;
     for (const { id: l } of LOCALES) {
       const json = getJson("careers", "job_vacancies", l) as { vacancies?: JobVacancy[] };
-      if (json?.vacancies?.length) { setJobs(json.vacancies); return; }
+      if (json?.vacancies?.length) { setJobs(json.vacancies); setJobsLoaded(true); return; }
     }
-  }, [getJson]);
+  }, [getJson, jobsLoaded]);
 
   const fetchApplications = async () => {
     const { data } = await supabase.from("career_applications").select("*").order("created_at", { ascending: false });
@@ -101,7 +104,7 @@ export default function CareerManagerPage() {
       for (const { id: l } of LOCALES) {
         await saveJson("careers", "job_vacancies", l, { vacancies: updatedJobs });
       }
-      await loadAllContent();
+      setJobsLoaded(true);
       setJobs(updatedJobs);
       toast("success", "Jobs saved as draft. Publish to make them live.");
     } catch { toast("error", "Failed to save jobs"); }
