@@ -31,7 +31,7 @@ function emptyNotice(): Notice {
 }
 
 export default function NoticesPage() {
-  const { getJson, saveJson, hasDraft, discardSectionDrafts, loadAllContent } = useAdmin();
+  const { getJson, saveJson, hasDraft, discardSectionDrafts, loadAllContent, isSuperadmin, seedSection } = useAdmin();
   const { toast } = useToast();
   const [lang, setLang] = useState<Locale>("en");
   const [syncing, setSyncing] = useState(false);
@@ -169,6 +169,12 @@ export default function NoticesPage() {
               </button>
               Sync
             </label>
+            {isSuperadmin && (
+              <button onClick={async () => { const r = await seedSection("notices"); toast(r.error ? "error" : "success", r.error || `Seeded ${r.count} rows`); }}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-primary/30 text-primary hover:bg-primary/5">
+                Seed Defaults
+              </button>
+            )}
             <button onClick={async () => { setDiscarding(true); await discardSectionDrafts("notices"); toast("success", "Drafts discarded"); setDiscarding(false); window.location.reload(); }}
               disabled={discarding}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5 disabled:opacity-50">

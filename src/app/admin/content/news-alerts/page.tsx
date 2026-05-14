@@ -135,7 +135,7 @@ function RichTextEditor({
 }
 
 export default function NewsAlertsPage() {
-  const { getContent, getJson, saveContent, saveJson, uploadMedia, hasDraft, discardSectionDrafts, loadAllContent } = useAdmin();
+  const { getContent, getJson, saveContent, saveJson, uploadMedia, hasDraft, discardSectionDrafts, loadAllContent, isSuperadmin, seedSection } = useAdmin();
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState<"articles" | "breaking">("articles");
@@ -326,6 +326,12 @@ export default function NewsAlertsPage() {
             <p className="text-xs text-muted mt-1">Manage news articles, breaking ticker, and emergency popups</p>
           </div>
           <div className="flex items-center gap-3">
+            {isSuperadmin && (
+              <button onClick={async () => { const r = await seedSection("news"); toast(r.error ? "error" : "success", r.error || `Seeded ${r.count} rows`); }}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-primary/30 text-primary hover:bg-primary/5">
+                Seed Defaults
+              </button>
+            )}
             <div className="flex gap-1 bg-white rounded-lg border border-border p-0.5">
               {LOCALES.map((l) => (
                 <button key={l.id} onClick={() => setLang(l.id)}

@@ -19,6 +19,8 @@
 
 # production
 /build
+buildlog.txt
+build_output.txt
 
 # misc
 .DS_Store

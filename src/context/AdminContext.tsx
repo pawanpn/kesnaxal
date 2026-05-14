@@ -29,6 +29,7 @@ export interface SiteContentRow {
 
 interface AdminContextValue {
   isAdmin: boolean;
+  isSuperadmin: boolean;
   authReady: boolean;
   isEditing: boolean;
   isPreviewMode: boolean;
@@ -58,6 +59,7 @@ interface AdminContextValue {
   getMedia: (section: string, key: string) => string;
   uploadMedia: (file: File, section: string, key: string) => Promise<string | null>;
   seedContent: () => Promise<{ count: number; error?: string }>;
+  seedSection: (section: string) => Promise<{ count: number; error?: string }>;
   hasDraft: (section: string, key: string, locale: string) => boolean;
   loadAllContent: () => Promise<void>;
   contentReady: boolean;
@@ -77,6 +79,7 @@ function rowKey(section: string, key: string, locale: string) {
 
 export default function AdminProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isSuperadmin, setIsSuperadmin] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
@@ -100,8 +103,17 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
       if (error) {
         supabase.auth.signOut().catch(() => {});
         setIsAdmin(false);
+        setIsSuperadmin(false);
       } else {
-        setIsAdmin(!!data.session);
+        const hasSession = !!data.session;
+        setIsAdmin(hasSession);
+        if (hasSession) {
+          supabase.from("admin_profiles").select("role").maybeSingle().then(({ data: profile }) => {
+            if (mounted) setIsSuperadmin(profile?.role === "superadmin");
+          });
+        } else {
+          setIsSuperadmin(false);
+        }
       }
       setAuthReady(true);
     });
@@ -111,7 +123,15 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
       if (event === "TOKEN_REFRESHED" && !session) {
         supabase.auth.signOut().catch(() => {});
       }
-      setIsAdmin(!!session);
+      const hasSession = !!session;
+      setIsAdmin(hasSession);
+      if (hasSession) {
+        supabase.from("admin_profiles").select("role").maybeSingle().then(({ data: profile }) => {
+          if (mounted) setIsSuperadmin(profile?.role === "superadmin");
+        });
+      } else {
+        setIsSuperadmin(false);
+      }
       setAuthReady(true);
       if (!session) {
         setIsEditing(false);
@@ -515,8 +535,15 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
 
   /* ── Seed content from siteConfig ── */
   const seedContent = useCallback(async (): Promise<{ count: number; error?: string }> => {
-    const { seedSupabaseContent } = await import("@/lib/seedContent");
-    const result = await seedSupabaseContent();
+    const { seedAllContent } = await import("@/lib/seedContent");
+    const result = await seedAllContent();
+    if (!result.error) await loadAllContent();
+    return result;
+  }, []);
+
+  const seedSection = useCallback(async (section: string): Promise<{ count: number; error?: string }> => {
+    const { seedSectionContent } = await import("@/lib/seedContent");
+    const result = await seedSectionContent(section);
     if (!result.error) await loadAllContent();
     return result;
   }, []);
@@ -539,6 +566,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
       /* best-effort: clear state regardless */
     }
     setIsAdmin(false);
+    setIsSuperadmin(false);
     setIsEditing(false);
     setRecentEdits([]);
     setPublishedContent(new Map());
@@ -594,6 +622,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     <AdminContext.Provider
       value={{
         isAdmin,
+        isSuperadmin,
         authReady,
         isEditing,
         isPreviewMode,
@@ -623,6 +652,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
         getMedia,
         uploadMedia,
         seedContent,
+        seedSection,
         hasDraft,
         loadAllContent,
         contentReady,

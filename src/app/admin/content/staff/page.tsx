@@ -7,7 +7,7 @@ import { useToast } from "@/context/ToastContext";
 import type { StaffMember } from "@/types";
 
 export default function StaffAdminPage() {
-  const { getJson, saveJson, uploadMedia, hasDraft, discardSectionDrafts, loadAllContent } = useAdmin();
+  const { getJson, saveJson, uploadMedia, hasDraft, discardSectionDrafts, loadAllContent, isSuperadmin, seedSection } = useAdmin();
   const { toast } = useToast();
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [saving, setSaving] = useState(false);
@@ -81,6 +81,12 @@ export default function StaffAdminPage() {
               className="px-4 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
               {saving ? "Saving..." : "Save All"}
             </button>
+            {isSuperadmin && (
+              <button onClick={async () => { const r = await seedSection("staff"); toast(r.error ? "error" : "success", r.error || `Seeded ${r.count} rows`); }}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-primary/30 text-primary hover:bg-primary/5">
+                Seed Defaults
+              </button>
+            )}
             <button onClick={async () => { setDiscarding(true); await discardSectionDrafts("staff"); toast("success", "Drafts discarded"); setDiscarding(false); window.location.reload(); }}
               disabled={discarding}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5 disabled:opacity-50">

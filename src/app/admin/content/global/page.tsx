@@ -71,7 +71,7 @@ const DEF_HOURS: HourEntry[] = [
 type FormDataType = Record<string, Record<Locale, string>>;
 
 export default function GlobalSettingsPage() {
-  const { getContent, saveContent, savePublishedContent, getJson, saveJson, discardSectionDrafts, hasDraft, loadAllContent, uploadMedia } = useAdmin();
+  const { getContent, saveContent, savePublishedContent, getJson, saveJson, discardSectionDrafts, hasDraft, loadAllContent, uploadMedia, isSuperadmin, seedSection } = useAdmin();
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState("schoolInfo");
@@ -230,10 +230,18 @@ export default function GlobalSettingsPage() {
             <h1 className="text-xl font-heading font-bold text-foreground">Global Settings</h1>
             <p className="text-xs text-muted mt-1">Manage school info, logo, contact, social links, and hours</p>
           </div>
-          <button onClick={handleDiscard} disabled={discarding}
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5 disabled:opacity-50">
-            {discarding ? "Discarding..." : "Discard Drafts"}
-          </button>
+          <div className="flex items-center gap-2">
+            {isSuperadmin && (
+              <button onClick={async () => { const r = await seedSection("global"); toast(r.error ? "error" : "success", r.error || `Seeded ${r.count} rows`); }}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-primary/30 text-primary hover:bg-primary/5">
+                Seed Defaults
+              </button>
+            )}
+            <button onClick={handleDiscard} disabled={discarding}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5 disabled:opacity-50">
+              {discarding ? "Discarding..." : "Discard Drafts"}
+            </button>
+          </div>
         </div>
 
         {/* Tabs + Lang */}
