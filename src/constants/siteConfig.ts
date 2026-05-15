@@ -213,6 +213,7 @@ export const siteConfig: SiteConfig = {
       image: "https://picsum.photos/seed/kesnews1/800/600",
       category: "Achievement",
       tags: ["science", "olympiad", "achievement", "national"],
+      status: "active",
     },
     {
       id: 2,
@@ -237,6 +238,7 @@ export const siteConfig: SiteConfig = {
       image: "https://picsum.photos/seed/kesnews2/800/600",
       category: "Infrastructure",
       tags: ["computer-lab", "technology", "inauguration", "infrastructure"],
+      status: "active",
     },
     {
       id: 3,
@@ -261,6 +263,7 @@ export const siteConfig: SiteConfig = {
       image: "https://picsum.photos/seed/kesnews3/800/600",
       category: "Announcement",
       tags: ["scholarship", "community", "announcement", "accessibility"],
+      status: "active",
     },
     {
       id: 4,
@@ -285,6 +288,7 @@ export const siteConfig: SiteConfig = {
       image: "https://picsum.photos/seed/kesnews4/800/600",
       category: "Achievement",
       tags: ["debate", "competition", "achievement", "trophy"],
+      status: "active",
     },
     {
       id: 5,
@@ -309,6 +313,7 @@ export const siteConfig: SiteConfig = {
       image: "https://picsum.photos/seed/kesnews5/800/600",
       category: "Event",
       tags: ["exchange", "international", "culture", "japan"],
+      status: "active",
     },
     {
       id: 6,
@@ -333,6 +338,7 @@ export const siteConfig: SiteConfig = {
       image: "https://picsum.photos/seed/kesnews6/800/600",
       category: "Announcement",
       tags: ["mental-health", "wellness", "counseling", "student-support"],
+      status: "active",
     },
   ],
 

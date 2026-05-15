@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/context/ToastContext";
@@ -22,6 +22,7 @@ function emptyArticle(id: number): NewsArticle {
   return {
     id, slug: "", title: emptyLC(), excerpt: emptyLC(), content: emptyLC(),
     author: "", date: new Date().toISOString().split("T")[0], image: "", category: "Event", tags: [],
+    status: "active",
   };
 }
 
@@ -99,10 +100,11 @@ function ToolbarBtn({ cmd, val, label, title, cls }: { cmd: string; val?: string
 }
 
 export default function NewsAdminPage() {
-  const { getJson, saveJson, getContent, uploadMedia, hasDraft, discardSectionDrafts, loadAllContent, publishedContent, draftContent } = useAdmin();
+  const { getJson, saveJson, getContent, uploadMedia, hasDraft, discardSectionDrafts, loadAllContent } = useAdmin();
   const { toast } = useToast();
 
   const [articles, setArticles] = useState<NewsArticle[]>([]);
+  const lastSaved = useRef<string>("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [lang, setLang] = useState<Locale>("en");
   const [syncing, setSyncing] = useState(false);
@@ -119,32 +121,22 @@ export default function NewsAdminPage() {
 
   useEffect(() => {
     const json = getJson("news", "news_articles", lang);
-    const arr = json?.articles as NewsArticle[] | undefined;
-    if (arr && arr.length > 0) { setArticles(arr); }
+    const arr = json?.articles ? (json.articles as NewsArticle[]).map((a: NewsArticle) => ({ ...a, status: a.status || "active" })) : undefined;
+    if (arr && arr.length > 0) { setArticles(arr); lastSaved.current = JSON.stringify(arr); }
     else {
       const raw = getContent("news", "news_articles", lang);
       if (raw) {
-        try { const p = JSON.parse(raw); if (p.articles?.length) setArticles(p.articles); else setArticles([]); }
+        try { const p = JSON.parse(raw); if (p.articles?.length) { const normalized = p.articles.map((a: NewsArticle) => ({ ...a, status: a.status || "active" })); setArticles(normalized); lastSaved.current = JSON.stringify(normalized); } else setArticles([]); }
         catch { setArticles([]); }
       } else { setArticles([]); }
     }
   }, [lang, getJson, getContent]);
 
-  // Check which articles have drafts
-  const articleStatus = useCallback((articleId: number): "published" | "draft" | "new" => {
-    if (!articles.length) return "new";
-    // Check if any locale has a draft for this article
-    for (const [, row] of draftContent) {
-      if (row.section === "news" && row.content_key === `article_${articleId}_title`) return "draft";
-    }
-    // Check if published
-    for (const [, row] of publishedContent) {
-      if (row.section === "news" && row.content_key === `article_${articleId}_title`) return "published";
-    }
-    return "published"; // fallback
-  }, [draftContent, publishedContent, articles]);
-
   const selected = articles.find((a) => a.id === selectedId) || null;
+
+  const isDirty = useMemo(() => {
+    return JSON.stringify(articles) !== lastSaved.current;
+  }, [articles]);
 
   const saveArticles = async (updated: NewsArticle[]) => {
     setSaving(true);
@@ -157,6 +149,7 @@ export default function NewsAdminPage() {
         await saveJson("news", "news_articles", l, { articles: sanitized });
       }
       setArticles(sanitized);
+      lastSaved.current = JSON.stringify(sanitized);
       toast("success", "Saved as draft - publish from Review page");
     } catch { toast("error", "Save failed"); }
     setSaving(false);
@@ -172,6 +165,13 @@ export default function NewsAdminPage() {
     const newArticle = emptyArticle(maxId + 1);
     setArticles((prev) => [...prev, newArticle]);
     setSelectedId(newArticle.id);
+  };
+
+  const handleDeactivate = () => {
+    if (!selected) return;
+    const newStatus: "active" | "deactivated" = selected.status === "deactivated" ? "active" : "deactivated";
+    setSelected({ ...selected, status: newStatus });
+    setArticles((prev) => prev.map((a) => a.id === selected.id ? { ...a, status: newStatus } : a));
   };
 
   const handleDelete = (id: number) => {
@@ -271,8 +271,8 @@ export default function NewsAdminPage() {
               <p className="px-3 py-4 text-xs text-muted text-center italic">No articles yet.</p>
             )}
             {articles.map((a) => {
-              const status = articleStatus(a.id);
-              const isDraft = status === "draft" || hasDraft("news", `article_${a.id}_title`, lang);
+              const isDbDraft = hasDraft("news", `article_${a.id}_title`, lang);
+              const articleStatus = a.status || "active";
               return (
                 <button key={a.id}
                   onClick={() => { setSelectedId(a.id); }}
@@ -281,11 +281,16 @@ export default function NewsAdminPage() {
                   }`}>
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <p className="text-xs font-semibold truncate flex-1 text-foreground">{a.title[lang] || a.title.en || "(Untitled)"}</p>
-                    <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${isDraft ? "bg-yellow-500" : "bg-green-500"}`} title={isDraft ? "Draft" : "Published"} />
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] text-muted">{a.date}</span>
                     <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{a.category}</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${isDbDraft ? "bg-yellow-500" : "bg-green-500"}`} />
+                    <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${articleStatus === "deactivated" ? "bg-red-100 text-red-700" : isDbDraft ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700"}`}>
+                      {articleStatus === "deactivated" ? "Deactivated" : isDbDraft ? "Draft" : "Published"}
+                    </span>
                   </div>
                   <p className="text-[10px] text-muted truncate mt-0.5">{a.excerpt[lang] || a.excerpt.en || ""}</p>
                 </button>
@@ -320,7 +325,7 @@ export default function NewsAdminPage() {
                 </button>
                 <span className="whitespace-nowrap">Sync</span>
               </label>
-              <button onClick={() => saveArticles(articles)} disabled={saving || articles.length === 0}
+              <button onClick={() => saveArticles(articles)} disabled={saving || articles.length === 0 || !isDirty}
                 className="px-4 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
                 {saving ? "Saving..." : "Save Draft"}
               </button>
@@ -404,6 +409,17 @@ export default function NewsAdminPage() {
                   </div>
                 </div>
 
+                <div className="flex items-center gap-3">
+                  <label className="text-xs font-semibold text-foreground">Status</label>
+                  <span className={`text-xs font-bold px-2 py-1 rounded ${
+                    selected.status === "deactivated"
+                      ? "bg-red-100 text-red-700"
+                      : hasPending ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700"
+                  }`}>
+                    {selected.status === "deactivated" ? "Deactivated" : hasPending ? "Draft" : "Published"}
+                  </span>
+                </div>
+
                 {/* Cover Image */}
                 <div>
                   <label className="block text-xs font-semibold text-foreground mb-1.5">Cover Image</label>
@@ -470,9 +486,17 @@ export default function NewsAdminPage() {
               </div>
 
               <div className="mt-6 pt-4 border-t border-border flex items-center gap-2">
-                <button onClick={() => saveArticles(articles)} disabled={saving}
+                <button onClick={() => saveArticles(articles)} disabled={saving || !isDirty}
                   className="px-4 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
                   {saving ? "Saving..." : "Save as Draft"}
+                </button>
+                <button onClick={handleDeactivate}
+                  className={`px-3 py-2 rounded-lg text-xs font-semibold border ${
+                    selected.status === "deactivated"
+                      ? "border-green-300 text-green-600 hover:bg-green-50"
+                      : "border-red-300 text-red-600 hover:bg-red-50"
+                  }`}>
+                  {selected.status === "deactivated" ? "Activate" : "Deactivate"}
                 </button>
                 <button onClick={() => handleDelete(selected.id)}
                   className="px-3 py-2 rounded-lg text-xs font-semibold border border-red-300 text-red-600 hover:bg-red-50">Delete Article</button>

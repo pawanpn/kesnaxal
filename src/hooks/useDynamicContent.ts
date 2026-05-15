@@ -29,7 +29,7 @@ import type {
  * School & contact have minimal hardcoded defaults for site identity.
  */
 export function useDynamicContent() {
-  const { getContent, getJson, contentReady } = useAdmin();
+  const { getContent, getJson, contentReady, isAdmin } = useAdmin();
   const { locale, t } = useLocale();
 
   const hasDb = useMemo(() => {
@@ -122,11 +122,14 @@ export function useDynamicContent() {
     if (jsonStr) {
       try {
         const p = JSON.parse(jsonStr);
-        if (p.articles?.length) return p.articles as NewsArticle[];
+        if (p.articles?.length) {
+          const articles = p.articles as NewsArticle[];
+          return isAdmin ? articles : articles.filter((a) => a.status !== "deactivated");
+        }
       } catch {}
     }
     return [];
-  }, [contentReady, getContent]);
+  }, [contentReady, getContent, isAdmin]);
 
   // ── Breaking News ──
   const breakingNews = useMemo(() => {
