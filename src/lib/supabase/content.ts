@@ -142,18 +142,7 @@ export async function getNewsArticles(locale: Locale): Promise<NewsArticle[]> {
 
   if (content.size === 0) return siteConfig.newsArticles;
 
-  return siteConfig.newsArticles.map((article) => {
-    const id = `article_${article.id}`;
-    const title = content.get(`news::${id}_title::${locale}`) || article.title[locale] || article.title.en || "";
-    const excerpt = content.get(`news::${id}_excerpt::${locale}`) || article.excerpt[locale] || article.excerpt.en || "";
-    const body = content.get(`news::${id}_content::${locale}`) || article.content[locale] || article.content.en || "";
-    return {
-      ...article,
-      title: { ...article.title, [locale]: title },
-      excerpt: { ...article.excerpt, [locale]: excerpt },
-      content: { ...article.content, [locale]: body },
-    };
-  });
+  return [];
 }
 
 export async function getTestimonials(locale: Locale): Promise<Testimonial[]> {

@@ -14,7 +14,7 @@ const LOCALES: { id: Locale; label: string }[] = [
 ];
 
 export default function AlertsPage() {
-  const { getContent, getJson, saveContent, saveJson } = useAdmin();
+  const { getContent, getJson, savePublishedContent, savePublishedJson } = useAdmin();
   const { toast } = useToast();
 
   const [lang, setLang] = useState<Locale>("en");
@@ -70,13 +70,13 @@ export default function AlertsPage() {
   };
 
   const handleToggleSave = async (key: string, active: boolean) => {
-    try { await saveJson("alerts", key, "en", { active }); toast("success", "Saved"); } catch { toast("error", "Failed"); }
+    try { await savePublishedJson("alerts", key, "en", { active }); toast("success", "Saved"); } catch { toast("error", "Failed"); }
   };
 
   const handleSaveBreaking = async () => {
     setAlertSaving("breaking");
     try {
-      for (const { id: l } of LOCALES) await saveContent("alerts", "breaking_news_text", l, syncing ? breakingNews[lang] : breakingNews[l]);
+      for (const { id: l } of LOCALES) await savePublishedContent("alerts", "breaking_news_text", l, syncing ? breakingNews[lang] : breakingNews[l]);
       toast("success", "Saved");
     } catch { toast("error", "Failed"); }
     setAlertSaving(null);
@@ -86,8 +86,8 @@ export default function AlertsPage() {
     setAlertSaving("emergency");
     try {
       for (const { id: l } of LOCALES) {
-        await saveContent("alerts", "emergency_title", l, syncing ? emergencyTitle[lang] : emergencyTitle[l]);
-        await saveContent("alerts", "emergency_message", l, sanitizeHtml(syncing ? emergencyMsg[lang] : emergencyMsg[l]));
+        await savePublishedContent("alerts", "emergency_title", l, syncing ? emergencyTitle[lang] : emergencyTitle[l]);
+        await savePublishedContent("alerts", "emergency_message", l, sanitizeHtml(syncing ? emergencyMsg[lang] : emergencyMsg[l]));
       }
       toast("success", "Saved");
     } catch { toast("error", "Failed"); }

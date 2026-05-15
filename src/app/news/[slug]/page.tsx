@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import NewsDetail from "@/components/sections/NewsDetail";
-import { siteConfig } from "@/constants/siteConfig";
 import { clearContentCache, getNewsArticles } from "@/lib/supabase/content";
 
 interface Props {
@@ -12,7 +11,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   clearContentCache();
   const dbArticles = await getNewsArticles("en");
-  const article = dbArticles.find((a) => a.slug === slug) || siteConfig.newsArticles.find((a) => a.slug === slug);
+  const article = dbArticles.find((a) => a.slug === slug) || null;
   if (!article || article.status === "deactivated" || article.status === "deleted") return { title: "Article Not Found" };
 
   return {
@@ -40,18 +39,12 @@ export default async function NewsDetailPage({ params }: Props) {
 
   clearContentCache();
 
-  let article = siteConfig.newsArticles.find((a) => a.slug === slug);
-
-  // Try JSON format from DB (full dynamic articles list)
   const dbArticles = await getNewsArticles("en");
-  const dbFound = dbArticles.find((a) => a.slug === slug);
-  if (dbFound) article = dbFound;
+  const article = dbArticles.find((a) => a.slug === slug) || null;
 
   if (!article || article.status === "deactivated" || article.status === "deleted") notFound();
 
-  // Use DB articles for recent posts if available
-  const allArticles = dbArticles.length > 0 ? dbArticles : siteConfig.newsArticles;
-  const recentPosts = allArticles
+  const recentPosts = dbArticles
     .filter((a) => a.slug !== slug)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 4);
