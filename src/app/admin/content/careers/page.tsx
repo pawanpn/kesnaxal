@@ -60,7 +60,7 @@ function newJob(): JobVacancy {
 }
 
 export default function CareerManagerPage() {
-  const { getJson, saveJson, hasDraft, loadAllContent } = useAdmin();
+  const { getJson, saveJson, savePublishedJson, hasDraft, loadAllContent, contentReady, isAdmin } = useAdmin();
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState<"jobs" | "applications">("jobs");
@@ -68,6 +68,7 @@ export default function CareerManagerPage() {
   const [jobs, setJobs] = useState<JobVacancy[]>([]);
   const [editingJob, setEditingJob] = useState<JobVacancy | null>(null);
   const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [newResp, setNewResp] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
@@ -78,6 +79,12 @@ export default function CareerManagerPage() {
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
   const [jobsLoaded, setJobsLoaded] = useState(false);
+  const [pageReady, setPageReady] = useState(false);
+
+  useEffect(() => {
+    if (!contentReady || !isAdmin) return;
+    setPageReady(true);
+  }, [contentReady, isAdmin]);
 
   useEffect(() => {
     loadAllContent();
@@ -85,12 +92,12 @@ export default function CareerManagerPage() {
   }, []);
 
   useEffect(() => {
-    if (jobsLoaded) return;
+    if (jobsLoaded || !pageReady) return;
     for (const { id: l } of LOCALES) {
       const json = getJson("careers", "job_vacancies", l) as { vacancies?: JobVacancy[] };
       if (json?.vacancies?.length) { setJobs(json.vacancies); setJobsLoaded(true); return; }
     }
-  }, [getJson, jobsLoaded]);
+  }, [getJson, jobsLoaded, pageReady]);
 
   const fetchApplications = async () => {
     const { data } = await supabase.from("career_applications").select("*").order("created_at", { ascending: false });
@@ -113,6 +120,23 @@ export default function CareerManagerPage() {
     }
     setSaving(false);
   };
+
+  const handlePublishJobs = async () => {
+    if (jobs.length === 0) return;
+    setPublishing(true);
+    try {
+      for (const { id: l } of LOCALES) {
+        await savePublishedJson("careers", "job_vacancies", l, { vacancies: jobs });
+      }
+      toast("success", `${jobs.length} job(s) published — visible on careers page`);
+    } catch (e) {
+      console.error("Publish failed:", e);
+      toast("error", "Failed to publish jobs");
+    }
+    setPublishing(false);
+  };
+
+  const hasDraftJobs = hasDraft("careers", "job_vacancies", "en") || hasDraft("careers", "job_vacancies", "ne") || hasDraft("careers", "job_vacancies", "ja");
 
   const handleSaveJob = async () => {
     if (!editingJob) return;
@@ -210,9 +234,19 @@ export default function CareerManagerPage() {
           )}
         </div>
 
-        {activeTab === "jobs" && hasDraft("careers", "job_vacancies", "en") && (
-          <div className="mb-4 p-2 rounded-lg bg-yellow-50 border border-yellow-200 text-xs text-yellow-700 max-w-5xl">
-            Draft pending — go to <strong>Review &amp; Publish</strong> to make changes visible on the site.
+        {activeTab === "jobs" && hasDraftJobs && (
+          <div className="mb-4 p-3 rounded-lg bg-yellow-50 border border-yellow-300 text-xs text-yellow-800 max-w-5xl flex items-center justify-between">
+            <span><strong>Draft pending</strong> — These vacancies are not visible to the public. Publish them when ready.</span>
+            <button onClick={handlePublishJobs} disabled={publishing || jobs.length === 0}
+              className="ml-3 px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 shrink-0">
+              {publishing ? "Publishing..." : "Publish Now"}
+            </button>
+          </div>
+        )}
+
+        {!pageReady && activeTab === "jobs" && (
+          <div className="mb-4 p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-700 max-w-5xl">
+            Loading content data...
           </div>
         )}
 
@@ -220,12 +254,27 @@ export default function CareerManagerPage() {
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
             {/* Job List */}
             <div className="lg:col-span-2 space-y-3">
-              <div className="flex items-center justify-between">
-                <h2 className="font-heading font-bold text-sm text-foreground">All Jobs ({jobs.length})</h2>
-                <button onClick={() => setEditingJob(newJob())}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700">
-                  + Add Job
-                </button>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <h2 className="font-heading font-bold text-sm text-foreground">All Jobs ({jobs.length})</h2>
+                  {jobs.length > 0 && (
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${hasDraftJobs ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700"}`}>
+                      {hasDraftJobs ? "Draft" : "Published"}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {jobs.length > 0 && (
+                    <button onClick={handlePublishJobs} disabled={publishing}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">
+                      {publishing ? "Publishing..." : "Publish"}
+                    </button>
+                  )}
+                  <button onClick={() => setEditingJob(newJob())}
+                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark">
+                    + Add Job
+                  </button>
+                </div>
               </div>
               {jobs.length === 0 ? (
                 <p className="text-xs text-muted italic py-8 text-center">No jobs yet. Click &quot;+ Add Job&quot; to create one.</p>
