@@ -67,7 +67,7 @@ export function useDynamicContent() {
       phone2: getContent("global", "phone2", locale) || def.phone2,
       email: getContent("global", "email", locale) || def.email,
       admissionsEmail: getContent("global", "admissionsEmail", locale) || def.admissionsEmail,
-      mapEmbedUrl: getContent("global", "mapEmbedUrl", "en") || def.mapEmbedUrl,
+      mapEmbedUrl: getContent("global", "mapEmbedUrl", "en") || "",
     };
   }, [getContent, locale]);
 
@@ -355,3 +355,5 @@ export function useDynamicContent() {
     notices,
   };
 }
+
+

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/context/ToastContext";
@@ -49,7 +49,7 @@ function getFallback(key: string): string {
     principalName: school.principal.name, principalMessage: school.principal.message,
     phone: contact.phone, phone2: contact.phone2,
     email: contact.email, admissionsEmail: contact.admissionsEmail,
-    address: contact.address, mapEmbedUrl: contact.mapEmbedUrl,
+    address: contact.address, mapEmbedUrl: "",
   };
   return map[key] || "";
 }
@@ -88,13 +88,35 @@ export default function GlobalSettingsPage() {
   const [logoUploading, setLogoUploading] = useState(false);
   const [discarding, setDiscarding] = useState(false);
 
+  // ── Map URL edit mode (isolated — not affected by loadAllContent) ──
+  const [mapEditMode, setMapEditMode] = useState(false);
+  const [mapEditValue, setMapEditValue] = useState("");
+  const [mapSavedUrl, setMapSavedUrl] = useState("");
+  const [mapSaving, setMapSaving] = useState(false);
+  const mapInitialized = useRef(false);
+
   useEffect(() => { loadAllContent(); }, []);
+
+  // Initialize mapSavedUrl only ONCE on first load
+  useEffect(() => {
+    if (!mapInitialized.current || !mapSavedUrl) {
+      const dbUrl = getContent("global", "mapEmbedUrl", "en");
+      if (dbUrl) {
+        setMapSavedUrl(dbUrl);
+        mapInitialized.current = true;
+      } else {
+        const fallback = getFallback("mapEmbedUrl");
+        setMapSavedUrl(fallback);
+      }
+    }
+  }, [getContent]);
 
   useEffect(() => {
     setLogoUrl(getContent("global", "logo_url", "en") || "/data/logo.jpg");
     if (activeTab === "schoolInfo" || activeTab === "contactInfo") {
       const data: FormDataType = {};
       (FIELDS[activeTab] || []).forEach((f) => {
+        if (f.key === "mapEmbedUrl") return; // skip — handled separately
         data[f.key] = { en: "", ne: "", ja: "" };
         LOCALES.forEach(({ id: l }) => {
           data[f.key][l] = getContent("global", f.key, l) || getFallback(f.key);
@@ -119,7 +141,7 @@ export default function GlobalSettingsPage() {
     setFormData((prev) => {
       const next = { ...prev };
       if (!next[key]) next[key] = { en: "", ne: "", ja: "" };
-      if (key === "mapEmbedUrl" || syncing) LOCALES.forEach(({ id: l }) => { next[key] = { ...next[key], [l]: value }; });
+      if (syncing) LOCALES.forEach(({ id: l }) => { next[key] = { ...next[key], [l]: value }; });
       else next[key] = { ...next[key], [locale]: value };
       return next;
     });
@@ -129,18 +151,50 @@ export default function GlobalSettingsPage() {
     setSaveStatus((p) => ({ ...p, [key]: "saving" }));
     try {
       const data = formData[key] || { en: "", ne: "", ja: "" };
-      if (key === "mapEmbedUrl") {
-        await savePublishedContent("global", key, "en", data["en"] || "");
-      } else {
-        for (const { id: l } of LOCALES) {
-          await saveContent("global", key, l, data[l] || "");
-        }
+      for (const { id: l } of LOCALES) {
+        await saveContent("global", key, l, data[l] || "");
       }
       await loadAllContent();
-      toast("success", key === "mapEmbedUrl" ? `Map URL published` : `"${key}" saved as draft — publish to make visible`);
+      toast("success", `"${key}" saved as draft — publish to make visible`);
     } catch { toast("error", "Failed to save"); }
     setSaveStatus((p) => ({ ...p, [key]: "saved" }));
     setTimeout(() => setSaveStatus((p) => ({ ...p, [key]: "idle" })), 1500);
+  };
+
+  // ── Map URL save — completely independent ──
+  const handleMapSave = async () => {
+    // iframe paste garda URL extract garne
+    if (mapEditValue.includes("<iframe")) {
+      const match = mapEditValue.match(/src="([^"]+)"/);
+      if (match) { setMapEditValue(match[1]); return; }
+    }
+    if (!mapEditValue.trim()) {
+      toast("error", "URL empty xa — halnuhos!");
+      return;
+    }
+    setMapSaving(true);
+    try {
+      await savePublishedContent("global", "mapEmbedUrl", "en", mapEditValue.trim());
+      await savePublishedContent("global", "mapEmbedUrl", "ne", mapEditValue.trim());
+      await savePublishedContent("global", "mapEmbedUrl", "ja", mapEditValue.trim());
+      setMapSavedUrl(mapEditValue.trim());
+      mapInitialized.current = true;
+      setMapEditMode(false);
+      toast("success", "Map URL saved & published!");
+    } catch {
+      toast("error", "Map URL save failed");
+    }
+    setMapSaving(false);
+  };
+
+  const handleMapEditStart = () => {
+    setMapEditValue(mapSavedUrl);
+    setMapEditMode(true);
+  };
+
+  const handleMapCancel = () => {
+    setMapEditMode(false);
+    setMapEditValue("");
   };
 
   const handleSaveSocial = async () => {
@@ -233,8 +287,6 @@ export default function GlobalSettingsPage() {
             <h1 className="text-xl font-heading font-bold text-foreground">Global Settings</h1>
             <p className="text-xs text-muted mt-1">Manage school info, logo, contact, social links, and hours</p>
           </div>
-          <div className="flex items-center gap-2">
-          </div>
         </div>
 
         {/* Tabs + Lang */}
@@ -304,48 +356,103 @@ export default function GlobalSettingsPage() {
               {FIELDS[activeTab]?.map((field) => (
                 <div key={field.key}>
                   <label className="block text-xs font-semibold text-foreground mb-1.5">{field.label}</label>
+
+                  {/* ── Map URL — isolated edit mode ── */}
                   {field.key === "mapEmbedUrl" ? (
-                    <input type={field.type} value={formData[field.key]?.["en"] || ""} onChange={(e) => updateField(field.key, "en", e.target.value)}
-                      className="w-full px-2 py-1.5 rounded border border-border text-[11px] focus:border-primary outline-none" placeholder={field.placeholder} />
-                  ) : (
-                    <div className="grid grid-cols-3 gap-2">
-                      {LOCALES.map(({ id: l }) => (
-                        <div key={l} className="relative">
-                          <span className="absolute -top-2 left-2 text-[9px] font-bold text-muted bg-white px-1">{l.toUpperCase()}</span>
-                          {field.type === "textarea" ? (
-                            <textarea value={formData[field.key]?.[l] || ""} onChange={(e) => updateField(field.key, l, e.target.value)}
-                              rows={field.rows || 2} className="w-full px-2 py-1.5 pt-3 rounded border border-border text-[11px] focus:border-primary outline-none resize-y" placeholder={field.placeholder} />
-                          ) : (
-                            <input type={field.type} value={formData[field.key]?.[l] || ""} onChange={(e) => updateField(field.key, l, e.target.value)}
-                              className="w-full px-2 py-1.5 pt-3 rounded border border-border text-[11px] focus:border-primary outline-none" placeholder={field.placeholder} />
-                          )}
+                    <div className="space-y-2">
+                      {mapEditMode ? (
+                        /* Edit mode — text box open */
+                        <div className="space-y-2">
+                          <input
+                            type="url"
+                            value={mapEditValue}
+                            onChange={(e) => setMapEditValue(e.target.value)}
+                            autoFocus
+                            className="w-full px-2 py-1.5 rounded border-2 border-primary text-[11px] outline-none"
+                            placeholder="Paste Google Maps iframe code or direct URL here..."
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleMapSave}
+                              disabled={mapSaving}
+                              className="px-4 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+                            >
+                              {mapSaving ? "Saving..." : "✓ Save & Publish"}
+                            </button>
+                            <button
+                              onClick={handleMapCancel}
+                              className="px-4 py-1.5 rounded-lg text-xs font-bold border border-border text-muted hover:bg-surface"
+                            >
+                              Cancel
+                            </button>
+                          </div>
                         </div>
-                      ))}
+                      ) : (
+                        /* View mode — locked, edit button */
+                        <div className="flex gap-2 items-center">
+                          <div className="flex-1 px-2 py-1.5 rounded border border-border text-[11px] text-muted bg-surface truncate">
+                            {mapSavedUrl || <span className="italic">No map URL set</span>}
+                          </div>
+                          <button
+                            onClick={handleMapEditStart}
+                            className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold border border-border hover:bg-surface flex items-center gap-1"
+                          >
+                            ✏️ Edit
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Map preview */}
+                      {mapSavedUrl && (
+                        <div className="mt-3">
+                          <label className="block text-[10px] font-semibold text-muted mb-1.5">Map Preview</label>
+                          <div className="rounded-lg overflow-hidden border border-border h-[200px]">
+                            <iframe
+                              src={mapSavedUrl}
+                              width="100%"
+                              height="100%"
+                              style={{ border: 0 }}
+                              allowFullScreen
+                              loading="lazy"
+                              referrerPolicy="no-referrer-when-downgrade"
+                              title="Map Preview"
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  <div className="flex items-center gap-2 mt-2">
-                    <button onClick={() => handleSaveField(field.key)} disabled={saveStatus[field.key] === "saving"}
-                      className="px-4 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
-                      {saveStatus[field.key] === "saving" ? "Saving..." : saveStatus[field.key] === "saved" ? "✓ Draft Saved" : "Save Draft"}
-                    </button>
-                    {field.key !== "mapEmbedUrl" && (
-                      <button type="button" onClick={() => handleTranslate(field.key)} disabled={translating || !formData[field.key]?.[lang]?.trim()}
-                        className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border border-border hover:bg-primary/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
-                        {translating ? (
-                          <><div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" /> ...</>
-                        ) : (
-                          <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg> Translate</>
-                        )}
-                      </button>
-                    )}
-                  </div>
-                  {field.key === "mapEmbedUrl" && formData["mapEmbedUrl"]?.["en"] && (
-                    <div className="mt-3">
-                      <label className="block text-[10px] font-semibold text-muted mb-1.5">Map Preview</label>
-                      <div className="rounded-lg overflow-hidden border border-border h-[200px]">
-                        <iframe src={formData["mapEmbedUrl"]["en"]} width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="Map Preview" />
+                  ) : (
+                    /* ── Normal fields ── */
+                    <>
+                      <div className="grid grid-cols-3 gap-2">
+                        {LOCALES.map(({ id: l }) => (
+                          <div key={l} className="relative">
+                            <span className="absolute -top-2 left-2 text-[9px] font-bold text-muted bg-white px-1">{l.toUpperCase()}</span>
+                            {field.type === "textarea" ? (
+                              <textarea value={formData[field.key]?.[l] || ""} onChange={(e) => updateField(field.key, l, e.target.value)}
+                                rows={field.rows || 2} className="w-full px-2 py-1.5 pt-3 rounded border border-border text-[11px] focus:border-primary outline-none resize-y" placeholder="Paste Google Maps iframe code or direct URL here..." />
+                            ) : (
+                              <input type={field.type} value={formData[field.key]?.[l] || ""} onChange={(e) => updateField(field.key, l, e.target.value)}
+                                className="w-full px-2 py-1.5 pt-3 rounded border border-border text-[11px] focus:border-primary outline-none" placeholder="Paste Google Maps iframe code or direct URL here..." />
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    </div>
+                      <div className="flex items-center gap-2 mt-2">
+                        <button onClick={() => handleSaveField(field.key)} disabled={saveStatus[field.key] === "saving"}
+                          className="px-4 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
+                          {saveStatus[field.key] === "saving" ? "Saving..." : saveStatus[field.key] === "saved" ? "✓ Draft Saved" : "Save Draft"}
+                        </button>
+                        <button type="button" onClick={() => handleTranslate(field.key)} disabled={translating || !formData[field.key]?.[lang]?.trim()}
+                          className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border border-border hover:bg-primary/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                          {translating ? (
+                            <><div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" /> ...</>
+                          ) : (
+                            <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg> Translate</>
+                          )}
+                        </button>
+                      </div>
+                    </>
                   )}
                 </div>
               ))}
@@ -455,3 +562,8 @@ export default function GlobalSettingsPage() {
     </AdminGuard>
   );
 }
+
+
+
+
+
