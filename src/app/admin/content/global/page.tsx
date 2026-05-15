@@ -119,7 +119,7 @@ export default function GlobalSettingsPage() {
     setFormData((prev) => {
       const next = { ...prev };
       if (!next[key]) next[key] = { en: "", ne: "", ja: "" };
-      if (syncing) LOCALES.forEach(({ id: l }) => { next[key] = { ...next[key], [l]: value }; });
+      if (key === "mapEmbedUrl" || syncing) LOCALES.forEach(({ id: l }) => { next[key] = { ...next[key], [l]: value }; });
       else next[key] = { ...next[key], [locale]: value };
       return next;
     });
@@ -129,8 +129,12 @@ export default function GlobalSettingsPage() {
     setSaveStatus((p) => ({ ...p, [key]: "saving" }));
     try {
       const data = formData[key] || { en: "", ne: "", ja: "" };
-      for (const { id: l } of LOCALES) {
-        await saveContent("global", key, l, data[l] || "");
+      if (key === "mapEmbedUrl") {
+        await saveContent("global", key, "en", data["en"] || "");
+      } else {
+        for (const { id: l } of LOCALES) {
+          await saveContent("global", key, l, data[l] || "");
+        }
       }
       await loadAllContent();
       toast("success", `"${key}" saved as draft — publish to make visible`);
@@ -300,33 +304,40 @@ export default function GlobalSettingsPage() {
               {FIELDS[activeTab]?.map((field) => (
                 <div key={field.key}>
                   <label className="block text-xs font-semibold text-foreground mb-1.5">{field.label}</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {LOCALES.map(({ id: l }) => (
-                      <div key={l} className="relative">
-                        <span className="absolute -top-2 left-2 text-[9px] font-bold text-muted bg-white px-1">{l.toUpperCase()}</span>
-                        {field.type === "textarea" ? (
-                          <textarea value={formData[field.key]?.[l] || ""} onChange={(e) => updateField(field.key, l, e.target.value)}
-                            rows={field.rows || 2} className="w-full px-2 py-1.5 pt-3 rounded border border-border text-[11px] focus:border-primary outline-none resize-y" placeholder={field.placeholder} />
-                        ) : (
-                          <input type={field.type} value={formData[field.key]?.[l] || ""} onChange={(e) => updateField(field.key, l, e.target.value)}
-                            className="w-full px-2 py-1.5 pt-3 rounded border border-border text-[11px] focus:border-primary outline-none" placeholder={field.placeholder} />
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                  {field.key === "mapEmbedUrl" ? (
+                    <input type={field.type} value={formData[field.key]?.["en"] || ""} onChange={(e) => updateField(field.key, "en", e.target.value)}
+                      className="w-full px-2 py-1.5 rounded border border-border text-[11px] focus:border-primary outline-none" placeholder={field.placeholder} />
+                  ) : (
+                    <div className="grid grid-cols-3 gap-2">
+                      {LOCALES.map(({ id: l }) => (
+                        <div key={l} className="relative">
+                          <span className="absolute -top-2 left-2 text-[9px] font-bold text-muted bg-white px-1">{l.toUpperCase()}</span>
+                          {field.type === "textarea" ? (
+                            <textarea value={formData[field.key]?.[l] || ""} onChange={(e) => updateField(field.key, l, e.target.value)}
+                              rows={field.rows || 2} className="w-full px-2 py-1.5 pt-3 rounded border border-border text-[11px] focus:border-primary outline-none resize-y" placeholder={field.placeholder} />
+                          ) : (
+                            <input type={field.type} value={formData[field.key]?.[l] || ""} onChange={(e) => updateField(field.key, l, e.target.value)}
+                              className="w-full px-2 py-1.5 pt-3 rounded border border-border text-[11px] focus:border-primary outline-none" placeholder={field.placeholder} />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 mt-2">
                     <button onClick={() => handleSaveField(field.key)} disabled={saveStatus[field.key] === "saving"}
                       className="px-4 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
                       {saveStatus[field.key] === "saving" ? "Saving..." : saveStatus[field.key] === "saved" ? "✓ Draft Saved" : "Save Draft"}
                     </button>
-                    <button type="button" onClick={() => handleTranslate(field.key)} disabled={translating || !formData[field.key]?.[lang]?.trim()}
-                      className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border border-border hover:bg-primary/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
-                      {translating ? (
-                        <><div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" /> ...</>
-                      ) : (
-                        <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg> Translate</>
-                      )}
-                    </button>
+                    {field.key !== "mapEmbedUrl" && (
+                      <button type="button" onClick={() => handleTranslate(field.key)} disabled={translating || !formData[field.key]?.[lang]?.trim()}
+                        className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border border-border hover:bg-primary/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                        {translating ? (
+                          <><div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" /> ...</>
+                        ) : (
+                          <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" /></svg> Translate</>
+                        )}
+                      </button>
+                    )}
                   </div>
                   {field.key === "mapEmbedUrl" && formData["mapEmbedUrl"]?.["en"] && (
                     <div className="mt-3">
