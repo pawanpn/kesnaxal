@@ -76,7 +76,7 @@ export interface NewsArticle {
   image: string;
   category: string;
   tags: string[];
-  status: "active" | "deactivated";
+  status: "active" | "deactivated" | "deleted";
 }
 
 // ── Testimonials ──

@@ -138,6 +138,24 @@ export default function NewsAdminPage() {
     return JSON.stringify(articles) !== lastSaved.current;
   }, [articles]);
 
+  const statusPriority: Record<string, number> = { active: 0, deactivated: 1, deleted: 2 };
+  const sortByStatusDate = (a: NewsArticle, b: NewsArticle) => {
+    const sa = statusPriority[a.status] ?? 0;
+    const sb = statusPriority[b.status] ?? 0;
+    if (sa !== sb) return sa - sb;
+    return new Date(b.date).getTime() - new Date(a.date).getTime();
+  };
+
+  const visibleArticles = useMemo(() => {
+    return [...articles].filter((a) => a.status !== "deleted").sort(sortByStatusDate);
+  }, [articles]);
+
+  const deletedArticles = useMemo(() => {
+    return [...articles].filter((a) => a.status === "deleted").sort(sortByStatusDate);
+  }, [articles]);
+
+  const articleCount = visibleArticles.length + deletedArticles.length;
+
   const saveArticles = async (updated: NewsArticle[]) => {
     setSaving(true);
     try {
@@ -167,18 +185,31 @@ export default function NewsAdminPage() {
     setSelectedId(newArticle.id);
   };
 
-  const handleDeactivate = () => {
-    if (!selected) return;
-    const newStatus: "active" | "deactivated" = selected.status === "deactivated" ? "active" : "deactivated";
-    setSelected({ ...selected, status: newStatus });
-    setArticles((prev) => prev.map((a) => a.id === selected.id ? { ...a, status: newStatus } : a));
+  const handleDeactivate = (articleId: number) => {
+    setArticles((prev) => prev.map((a) => {
+      if (a.id !== articleId) return a;
+      const newStatus: "active" | "deactivated" = a.status === "deactivated" ? "active" : "deactivated";
+      return { ...a, status: newStatus };
+    }));
   };
 
-  const handleDelete = (id: number) => {
-    if (!confirm("Delete this article?")) return;
-    const updated = articles.filter((a) => a.id !== id);
-    saveArticles(updated);
-    if (selectedId === id) setSelectedId(null);
+  const handleSoftDelete = (articleId: number) => {
+    if (!confirm("Move this article to trash?")) return;
+    setArticles((prev) => prev.map((a) => a.id === articleId ? { ...a, status: "deleted" } : a));
+    if (selectedId === articleId) setSelectedId(null);
+  };
+
+  const handleRestore = (articleId: number) => {
+    setArticles((prev) => prev.map((a) => a.id === articleId ? { ...a, status: "active" } : a));
+  };
+
+  const handlePermanentDelete = (articleId: number) => {
+    if (!confirm("Permanently delete this article? This cannot be undone.")) return;
+    setArticles((prev) => prev.filter((a) => a.id !== articleId));
+  };
+
+  const handleEdit = (articleId: number) => {
+    setSelectedId(articleId);
   };
 
   const handleField = (field: keyof NewsArticle, value: unknown) => {
@@ -267,35 +298,73 @@ export default function NewsAdminPage() {
             </div>
           </div>
           <div className="flex-1 overflow-y-auto py-1">
-            {articles.length === 0 && (
+            {visibleArticles.length === 0 && deletedArticles.length === 0 && (
               <p className="px-3 py-4 text-xs text-muted text-center italic">No articles yet.</p>
             )}
-            {articles.map((a) => {
+            {visibleArticles.map((a) => {
               const isDbDraft = hasDraft("news", `article_${a.id}_title`, lang);
-              const articleStatus = a.status || "active";
+              const artStatus = a.status || "active";
               return (
-                <button key={a.id}
-                  onClick={() => { setSelectedId(a.id); }}
+                <div key={a.id}
                   className={`w-full text-left px-3 py-2.5 border-b border-border/50 transition-colors ${
                     selectedId === a.id ? "bg-primary/10 border-l-2 border-l-primary" : "hover:bg-surface"
                   }`}>
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    <p className="text-xs font-semibold truncate flex-1 text-foreground">{a.title[lang] || a.title.en || "(Untitled)"}</p>
+                  <div className="flex items-start gap-1">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <p className="text-xs font-semibold truncate text-foreground">{a.title[lang] || a.title.en || "(Untitled)"}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-muted">{a.date}</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{a.category}</span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${isDbDraft ? "bg-yellow-500" : "bg-green-500"}`} />
+                        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${artStatus === "deactivated" ? "bg-red-100 text-red-700" : isDbDraft ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700"}`}>
+                          {artStatus === "deactivated" ? "Deactivated" : isDbDraft ? "Draft" : "Published"}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-muted truncate mt-0.5">{a.excerpt[lang] || a.excerpt.en || ""}</p>
+                    </div>
+                    <div className="flex flex-col gap-0.5 shrink-0 pt-0.5">
+                      <button onClick={(e) => { e.stopPropagation(); handleEdit(a.id); }} title="Edit" className="w-6 h-6 flex items-center justify-center rounded hover:bg-primary/10 text-muted hover:text-primary">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); handleDeactivate(a.id); }} title={artStatus === "deactivated" ? "Activate" : "Deactivate"} className={`w-6 h-6 flex items-center justify-center rounded ${artStatus === "deactivated" ? "hover:bg-green-50 text-green-500" : "hover:bg-red-50 text-red-400"}`}>
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          {artStatus === "deactivated" ? <><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></>
+                          : <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />}
+                        </svg>
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); handleSoftDelete(a.id); }} title="Delete" className="w-6 h-6 flex items-center justify-center rounded hover:bg-red-50 text-red-400">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-muted">{a.date}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{a.category}</span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${isDbDraft ? "bg-yellow-500" : "bg-green-500"}`} />
-                    <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${articleStatus === "deactivated" ? "bg-red-100 text-red-700" : isDbDraft ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700"}`}>
-                      {articleStatus === "deactivated" ? "Deactivated" : isDbDraft ? "Draft" : "Published"}
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-muted truncate mt-0.5">{a.excerpt[lang] || a.excerpt.en || ""}</p>
-                </button>
+                </div>
               );
             })}
+            {deletedArticles.length > 0 && (
+              <div className="mt-4 border-t border-border pt-2">
+                <div className="px-3 py-1.5 text-[10px] font-semibold text-muted uppercase tracking-wider flex items-center gap-2">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  Trash ({deletedArticles.length})
+                </div>
+                {deletedArticles.map((a) => (
+                  <div key={a.id} className="w-full text-left px-3 py-2 border-b border-border/50 opacity-60 hover:opacity-90 transition-opacity bg-red-50/30">
+                    <p className="text-[11px] font-medium truncate text-muted">{a.title[lang] || a.title.en || "(Untitled)"}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[9px] text-muted">{a.date}</span>
+                      <span className="text-[9px] px-1 py-0.5 rounded bg-red-100 text-red-700 font-semibold">Deleted</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      <button onClick={() => handleRestore(a.id)} className="px-2 py-0.5 rounded text-[9px] font-bold bg-green-100 text-green-700 hover:bg-green-200">Restore</button>
+                      <button onClick={() => handlePermanentDelete(a.id)} className="px-2 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-700 hover:bg-red-200">Delete Forever</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -313,7 +382,7 @@ export default function NewsAdminPage() {
               <div>
                 <h1 className="text-lg font-heading font-bold text-foreground">News Articles</h1>
                 <p className="text-[10px] text-muted">
-                  {articles.length} articles · {hasPending ? "Draft pending" : "All published"} · Save drafts → Publish from Review page
+                  {articleCount} articles · {hasPending ? "Draft pending" : "All published"} · Save drafts → Publish from Review page
                 </p>
               </div>
             </div>
@@ -412,11 +481,13 @@ export default function NewsAdminPage() {
                 <div className="flex items-center gap-3">
                   <label className="text-xs font-semibold text-foreground">Status</label>
                   <span className={`text-xs font-bold px-2 py-1 rounded ${
-                    selected.status === "deactivated"
+                    selected.status === "deleted"
                       ? "bg-red-100 text-red-700"
+                      : selected.status === "deactivated"
+                      ? "bg-orange-100 text-orange-700"
                       : hasPending ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700"
                   }`}>
-                    {selected.status === "deactivated" ? "Deactivated" : hasPending ? "Draft" : "Published"}
+                    {selected.status === "deleted" ? "Deleted" : selected.status === "deactivated" ? "Deactivated" : hasPending ? "Draft" : "Published"}
                   </span>
                 </div>
 
@@ -490,16 +561,16 @@ export default function NewsAdminPage() {
                   className="px-4 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
                   {saving ? "Saving..." : "Save as Draft"}
                 </button>
-                <button onClick={handleDeactivate}
+                <button onClick={() => handleDeactivate(selected.id)}
                   className={`px-3 py-2 rounded-lg text-xs font-semibold border ${
                     selected.status === "deactivated"
                       ? "border-green-300 text-green-600 hover:bg-green-50"
-                      : "border-red-300 text-red-600 hover:bg-red-50"
+                      : "border-orange-300 text-orange-600 hover:bg-orange-50"
                   }`}>
                   {selected.status === "deactivated" ? "Activate" : "Deactivate"}
                 </button>
-                <button onClick={() => handleDelete(selected.id)}
-                  className="px-3 py-2 rounded-lg text-xs font-semibold border border-red-300 text-red-600 hover:bg-red-50">Delete Article</button>
+                <button onClick={() => handleSoftDelete(selected.id)}
+                  className="px-3 py-2 rounded-lg text-xs font-semibold border border-red-300 text-red-600 hover:bg-red-50">Delete</button>
                 {hasPending && <span className="text-xs text-yellow-600">Draft pending — review & publish from Review page</span>}
               </div>
             </div>

@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   clearContentCache();
   const dbArticles = await getNewsArticles("en");
   const article = dbArticles.find((a) => a.slug === slug) || siteConfig.newsArticles.find((a) => a.slug === slug);
-  if (!article) return { title: "Article Not Found" };
+  if (!article || article.status === "deactivated" || article.status === "deleted") return { title: "Article Not Found" };
 
   return {
     title: article.title.en,
@@ -47,7 +47,7 @@ export default async function NewsDetailPage({ params }: Props) {
   const dbFound = dbArticles.find((a) => a.slug === slug);
   if (dbFound) article = dbFound;
 
-  if (!article) notFound();
+  if (!article || article.status === "deactivated" || article.status === "deleted") notFound();
 
   // Use DB articles for recent posts if available
   const allArticles = dbArticles.length > 0 ? dbArticles : siteConfig.newsArticles;

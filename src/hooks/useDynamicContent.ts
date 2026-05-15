@@ -124,7 +124,7 @@ export function useDynamicContent() {
         const p = JSON.parse(jsonStr);
         if (p.articles?.length) {
           const articles = p.articles as NewsArticle[];
-          return isAdmin ? articles : articles.filter((a) => a.status !== "deactivated");
+          return isAdmin ? articles : articles.filter((a) => a.status === "active");
         }
       } catch {}
     }
