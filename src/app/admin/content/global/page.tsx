@@ -99,14 +99,11 @@ export default function GlobalSettingsPage() {
 
   // Initialize mapSavedUrl only ONCE on first load
   useEffect(() => {
-    if (!mapInitialized.current || !mapSavedUrl) {
+    if (!mapInitialized.current) {
       const dbUrl = getContent("global", "mapEmbedUrl", "en");
-      if (dbUrl) {
+      if (dbUrl && dbUrl.includes("google.com/maps")) {
         setMapSavedUrl(dbUrl);
         mapInitialized.current = true;
-      } else {
-        const fallback = getFallback("mapEmbedUrl");
-        setMapSavedUrl(fallback);
       }
     }
   }, [getContent]);
@@ -562,6 +559,8 @@ export default function GlobalSettingsPage() {
     </AdminGuard>
   );
 }
+
+
 
 
 
