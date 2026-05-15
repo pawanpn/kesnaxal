@@ -166,7 +166,8 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
   });
 
   const loadAllContent = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: ["site_content"] });
+    await queryClient.invalidateQueries({ queryKey: ["site_content"], exact: false });
+    await queryClient.refetchQueries({ queryKey: ["site_content"], exact: false });
   }, [queryClient]);
 
   /* ── Sync React Query data into content Maps ── */
@@ -387,8 +388,11 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
           status: "published",
         });
       }
+
+      await queryClient.invalidateQueries({ queryKey: ["site_content"], exact: false });
+      await queryClient.refetchQueries({ queryKey: ["site_content"], exact: false });
     },
-    []
+    [queryClient]
   );
 
   const savePublishedJson = useCallback(
@@ -416,8 +420,11 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
           status: "published",
         });
       }
+
+      await queryClient.invalidateQueries({ queryKey: ["site_content"], exact: false });
+      await queryClient.refetchQueries({ queryKey: ["site_content"], exact: false });
     },
-    []
+    [queryClient]
   );
 
   /* ── Add to recent edits list ── */
@@ -451,9 +458,10 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.rpc("publish_all_drafts");
     if (error) return { count: 0 };
     setRecentEdits([]);
-    queryClient.invalidateQueries({ queryKey: ["site_content"] });
+    await queryClient.invalidateQueries({ queryKey: ["site_content"], exact: false });
+    await queryClient.refetchQueries({ queryKey: ["site_content"], exact: false });
     return { count: (data as number) || 0 };
-  }, []);
+  }, [queryClient]);
 
   /* ── Publish selected drafts by ID ── */
   const publishSelectedDrafts = useCallback(async (ids: string[]): Promise<{ count: number }> => {
@@ -464,27 +472,30 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
       .in("id", ids);
     if (error) return { count: 0 };
     setRecentEdits([]);
-    queryClient.invalidateQueries({ queryKey: ["site_content"] });
+    await queryClient.invalidateQueries({ queryKey: ["site_content"], exact: false });
+    await queryClient.refetchQueries({ queryKey: ["site_content"], exact: false });
     return { count: ids.length };
-  }, []);
+  }, [queryClient]);
 
   /* ── Discard all drafts ── */
   const discardAllDrafts = useCallback(async (): Promise<{ count: number }> => {
     const { data, error } = await supabase.rpc("discard_all_drafts");
     if (error) return { count: 0 };
     setRecentEdits([]);
-    queryClient.invalidateQueries({ queryKey: ["site_content"] });
+    await queryClient.invalidateQueries({ queryKey: ["site_content"], exact: false });
+    await queryClient.refetchQueries({ queryKey: ["site_content"], exact: false });
     return { count: (data as number) || 0 };
-  }, []);
+  }, [queryClient]);
 
   /* ── Discard section drafts ── */
   const discardSectionDrafts = useCallback(async (section: string): Promise<{ count: number }> => {
     const { data, error } = await supabase.rpc("discard_section_drafts", { p_section: section });
     if (error) return { count: 0 };
     setRecentEdits((prev) => prev.filter((e) => e.section !== section));
-    queryClient.invalidateQueries({ queryKey: ["site_content"] });
+    await queryClient.invalidateQueries({ queryKey: ["site_content"], exact: false });
+    await queryClient.refetchQueries({ queryKey: ["site_content"], exact: false });
     return { count: (data as number) || 0 };
-  }, []);
+  }, [queryClient]);
 
   /* ── Upload media to Supabase Storage ── */
   const uploadMedia = useCallback(

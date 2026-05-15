@@ -94,10 +94,19 @@ export default function CareerManagerPage() {
 
   useEffect(() => {
     if (jobsLoaded || !pageReady) return;
+
+    let loaded = false;
     for (const { id: l } of LOCALES) {
       const json = getJson("careers", "job_vacancies", l) as { vacancies?: JobVacancy[] };
-      if (json?.vacancies?.length) { setJobs(json.vacancies); setJobsLoaded(true); return; }
+      if (json?.vacancies?.length) {
+        setJobs(json.vacancies);
+        setJobsLoaded(true);
+        loaded = true;
+        break;
+      }
     }
+
+    if (loaded) return;
     if (loadAttempts < 5) {
       const t = setTimeout(() => setLoadAttempts((p) => p + 1), 500);
       return () => clearTimeout(t);
