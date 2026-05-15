@@ -114,14 +114,21 @@ function describeChange(key: string, oldText: string | null, newText: string | n
 const LOCALE_LABELS: Record<string, string> = { en: "English", ne: "नेपाली", ja: "日本語" };
 
 export default function PublishReviewPage() {
-  const { draftContent, publishedContent, publishAll, publishSelectedDrafts, discardAllDrafts, discardSectionDrafts, loadAllContent, draftCount } = useAdmin();
+  const { draftContent, publishedContent, publishAll, publishSelectedDrafts, discardAllDrafts, discardSectionDrafts, loadAllContent, draftCount, contentReady, isAdmin } = useAdmin();
   const { toast } = useToast();
   const [publishing, setPublishing] = useState(false);
   const [discarding, setDiscarding] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [result, setResult] = useState<{ type: "publish" | "discard"; count: number } | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => { loadAllContent(); }, []);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadAllContent();
+    setRefreshing(false);
+  };
 
   const drafts: SiteContentRow[] = useMemo(() => {
     const arr: SiteContentRow[] = [];
@@ -252,7 +259,17 @@ export default function PublishReviewPage() {
           </details>
         )}
 
-        {draftCount === 0 ? (
+        {!contentReady || !isAdmin ? (
+          <div className="bg-white rounded-xl border border-border p-12 text-center">
+            <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-3">
+              <svg className="w-6 h-6 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </div>
+            <h2 className="font-heading font-bold text-foreground">Loading Content...</h2>
+            <p className="text-xs text-muted mt-1">Fetching draft changes from the database.</p>
+          </div>
+        ) : draftCount === 0 ? (
           <div className="bg-white rounded-xl border border-border p-12 text-center">
             <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
               <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -261,6 +278,10 @@ export default function PublishReviewPage() {
             </div>
             <h2 className="font-heading font-bold text-foreground">No Draft Changes</h2>
             <p className="text-xs text-muted mt-1">All content is published and live. Edit any section to create new drafts for review.</p>
+            <button onClick={handleRefresh} disabled={refreshing}
+              className="mt-3 px-4 py-1.5 rounded-lg text-xs font-semibold border border-border text-muted hover:bg-surface disabled:opacity-50">
+              {refreshing ? "Refreshing..." : "Refresh"}
+            </button>
           </div>
         ) : (
           <div className="space-y-6">

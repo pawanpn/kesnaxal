@@ -60,7 +60,7 @@ function newJob(): JobVacancy {
 }
 
 export default function CareerManagerPage() {
-  const { getJson, saveJson, savePublishedJson, hasDraft, loadAllContent, contentReady, isAdmin } = useAdmin();
+  const { getJson, saveJson, hasDraft, loadAllContent, contentReady, isAdmin } = useAdmin();
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState<"jobs" | "applications">("jobs");
@@ -68,7 +68,6 @@ export default function CareerManagerPage() {
   const [jobs, setJobs] = useState<JobVacancy[]>([]);
   const [editingJob, setEditingJob] = useState<JobVacancy | null>(null);
   const [saving, setSaving] = useState(false);
-  const [publishing, setPublishing] = useState(false);
   const [newResp, setNewResp] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
@@ -119,21 +118,6 @@ export default function CareerManagerPage() {
       toast("error", "Failed to save jobs");
     }
     setSaving(false);
-  };
-
-  const handlePublishJobs = async () => {
-    if (jobs.length === 0) return;
-    setPublishing(true);
-    try {
-      for (const { id: l } of LOCALES) {
-        await savePublishedJson("careers", "job_vacancies", l, { vacancies: jobs });
-      }
-      toast("success", `${jobs.length} job(s) published — visible on careers page`);
-    } catch (e) {
-      console.error("Publish failed:", e);
-      toast("error", "Failed to publish jobs");
-    }
-    setPublishing(false);
   };
 
   const hasDraftJobs = hasDraft("careers", "job_vacancies", "en") || hasDraft("careers", "job_vacancies", "ne") || hasDraft("careers", "job_vacancies", "ja");
@@ -236,11 +220,7 @@ export default function CareerManagerPage() {
 
         {activeTab === "jobs" && hasDraftJobs && (
           <div className="mb-4 p-3 rounded-lg bg-yellow-50 border border-yellow-300 text-xs text-yellow-800 max-w-5xl flex items-center justify-between">
-            <span><strong>Draft pending</strong> — These vacancies are not visible to the public. Publish them when ready.</span>
-            <button onClick={handlePublishJobs} disabled={publishing || jobs.length === 0}
-              className="ml-3 px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 shrink-0">
-              {publishing ? "Publishing..." : "Publish Now"}
-            </button>
+            <span><strong>Draft pending</strong> — go to <a href="/admin/publish" className="underline font-semibold hover:text-yellow-900">Review &amp; Publish</a> to make these vacancies visible on the site.</span>
           </div>
         )}
 
@@ -264,14 +244,8 @@ export default function CareerManagerPage() {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  {jobs.length > 0 && (
-                    <button onClick={handlePublishJobs} disabled={publishing}
-                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">
-                      {publishing ? "Publishing..." : "Publish"}
-                    </button>
-                  )}
                   <button onClick={() => setEditingJob(newJob())}
-                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark">
+                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700">
                     + Add Job
                   </button>
                 </div>
