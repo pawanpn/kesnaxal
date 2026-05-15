@@ -100,7 +100,7 @@ function ToolbarBtn({ cmd, val, label, title, cls }: { cmd: string; val?: string
 }
 
 export default function NewsAdminPage() {
-  const { getJson, savePublishedJson, getContent, uploadMedia, discardSectionDrafts, loadAllContent } = useAdmin();
+  const { getJson, saveJson, savePublishedJson, getContent, uploadMedia, discardSectionDrafts, loadAllContent } = useAdmin();
   const { toast } = useToast();
 
   const [articles, setArticles] = useState<NewsArticle[]>([]);
@@ -156,19 +156,22 @@ export default function NewsAdminPage() {
 
   const articleCount = visibleArticles.length + deletedArticles.length;
 
-  const saveArticles = async (updated: NewsArticle[], silent = false) => {
+  const saveArticles = async (updated: NewsArticle[], opts?: { silent?: boolean; publish?: boolean }) => {
+    const silent = opts?.silent ?? false;
+    const publish = opts?.publish ?? false;
     setSaving(true);
     try {
       const sanitized = updated.map((a) => ({
         ...a,
         content: { en: sanitizeHtml(a.content.en), ne: sanitizeHtml(a.content.ne), ja: sanitizeHtml(a.content.ja) },
       }));
+      const saveFn = publish ? savePublishedJson : saveJson;
       for (const { id: l } of LOCALES) {
-        await savePublishedJson("news", "news_articles", l, { articles: sanitized });
+        await saveFn("news", "news_articles", l, { articles: sanitized });
       }
       setArticles(sanitized);
       lastSaved.current = JSON.stringify(sanitized);
-      if (!silent) toast("success", "Articles published");
+      if (!silent) toast("success", publish ? "Published to live site" : "Draft saved — publish to make visible");
     } catch { if (!silent) toast("error", "Save failed"); }
     setSaving(false);
   };
@@ -192,7 +195,7 @@ export default function NewsAdminPage() {
         const ns = a.status === "deactivated" ? "active" as const : "deactivated" as const;
         return { ...a, status: ns };
       });
-      saveArticles(updated as NewsArticle[], true);
+      saveArticles(updated as NewsArticle[], { silent: true, publish: true });
       return updated as NewsArticle[];
     });
   };
@@ -201,7 +204,7 @@ export default function NewsAdminPage() {
     if (!confirm("Move this article to trash?")) return;
     setArticles((prev) => {
       const updated = prev.map((a) => a.id === articleId ? { ...a, status: "deleted" as const } : a);
-      saveArticles(updated as NewsArticle[], true);
+      saveArticles(updated as NewsArticle[], { silent: true, publish: true });
       return updated as NewsArticle[];
     });
     if (selectedId === articleId) setSelectedId(null);
@@ -210,7 +213,7 @@ export default function NewsAdminPage() {
   const handleRestore = (articleId: number) => {
     setArticles((prev) => {
       const updated = prev.map((a) => a.id === articleId ? { ...a, status: "active" as const } : a);
-      saveArticles(updated as NewsArticle[], true);
+      saveArticles(updated as NewsArticle[], { silent: true, publish: true });
       return updated as NewsArticle[];
     });
   };
@@ -219,7 +222,7 @@ export default function NewsAdminPage() {
     if (!confirm("Permanently delete this article? This cannot be undone.")) return;
     setArticles((prev) => {
       const updated = prev.filter((a) => a.id !== articleId);
-      saveArticles(updated as NewsArticle[], true);
+      saveArticles(updated as NewsArticle[], { silent: true, publish: true });
       return updated as NewsArticle[];
     });
   };
@@ -396,7 +399,7 @@ export default function NewsAdminPage() {
               <div>
                 <h1 className="text-lg font-heading font-bold text-foreground">News Articles</h1>
                 <p className="text-[10px] text-muted">
-                  {articleCount} articles · All published
+                  {articleCount} articles · Save Draft then Publish to make live
                 </p>
               </div>
             </div>
@@ -409,8 +412,12 @@ export default function NewsAdminPage() {
                 <span className="whitespace-nowrap">Sync</span>
               </label>
               <button onClick={() => saveArticles(articles)} disabled={saving || articles.length === 0 || !isDirty}
-                className="px-4 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
-                {saving ? "Saving..." : "Save"}
+                className="px-4 py-2 rounded-lg text-xs font-bold bg-white text-primary border border-primary hover:bg-primary/5 disabled:opacity-50">
+                {saving ? "Saving..." : "Save Draft"}
+              </button>
+              <button onClick={() => saveArticles(articles, { publish: true })} disabled={saving || articles.length === 0}
+                className="px-4 py-2 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">
+                {saving ? "Publishing..." : "Publish"}
               </button>
               <button onClick={async () => { setDiscarding(true); await discardSectionDrafts("news"); setDiscarding(false); window.location.reload(); }}
                 disabled={discarding}
@@ -572,8 +579,12 @@ export default function NewsAdminPage() {
 
               <div className="mt-6 pt-4 border-t border-border flex items-center gap-2">
                 <button onClick={() => saveArticles(articles)} disabled={saving || !isDirty}
-                  className="px-4 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
-                  {saving ? "Saving..." : "Save"}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-white text-primary border border-primary hover:bg-primary/5 disabled:opacity-50">
+                  {saving ? "Saving..." : "Save Draft"}
+                </button>
+                <button onClick={() => saveArticles(articles, { publish: true })} disabled={saving}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">
+                  {saving ? "Publishing..." : "Publish"}
                 </button>
                 <button onClick={() => handleDeactivate(selected.id)}
                   className={`px-3 py-2 rounded-lg text-xs font-semibold border ${

@@ -33,11 +33,14 @@ export default function OptimizedImage({
       : undefined);
 
   const isExternal = src.startsWith("http") && !src.includes("supabase.co");
+  const validSrc = src || null;
+
+  if (!validSrc) return null;
 
   if (fill) {
     return (
       <Image
-        src={src}
+        src={validSrc}
         alt={alt}
         fill
         priority={priority}
@@ -52,7 +55,7 @@ export default function OptimizedImage({
 
   return (
     <Image
-      src={src}
+      src={validSrc}
       alt={alt}
       width={width ?? 400}
       height={height ?? 300}
