@@ -100,7 +100,7 @@ function ToolbarBtn({ cmd, val, label, title, cls }: { cmd: string; val?: string
 }
 
 export default function NewsAdminPage() {
-  const { getJson, saveJson, getContent, uploadMedia, hasDraft, discardSectionDrafts, loadAllContent } = useAdmin();
+  const { getJson, savePublishedJson, getContent, uploadMedia, discardSectionDrafts, loadAllContent } = useAdmin();
   const { toast } = useToast();
 
   const [articles, setArticles] = useState<NewsArticle[]>([]);
@@ -156,7 +156,7 @@ export default function NewsAdminPage() {
 
   const articleCount = visibleArticles.length + deletedArticles.length;
 
-  const saveArticles = async (updated: NewsArticle[]) => {
+  const saveArticles = async (updated: NewsArticle[], silent = false) => {
     setSaving(true);
     try {
       const sanitized = updated.map((a) => ({
@@ -164,12 +164,12 @@ export default function NewsAdminPage() {
         content: { en: sanitizeHtml(a.content.en), ne: sanitizeHtml(a.content.ne), ja: sanitizeHtml(a.content.ja) },
       }));
       for (const { id: l } of LOCALES) {
-        await saveJson("news", "news_articles", l, { articles: sanitized });
+        await savePublishedJson("news", "news_articles", l, { articles: sanitized });
       }
       setArticles(sanitized);
       lastSaved.current = JSON.stringify(sanitized);
-      toast("success", "Saved as draft - publish from Review page");
-    } catch { toast("error", "Save failed"); }
+      if (!silent) toast("success", "Articles published");
+    } catch { if (!silent) toast("error", "Save failed"); }
     setSaving(false);
   };
 
@@ -186,26 +186,42 @@ export default function NewsAdminPage() {
   };
 
   const handleDeactivate = (articleId: number) => {
-    setArticles((prev) => prev.map((a) => {
-      if (a.id !== articleId) return a;
-      const newStatus: "active" | "deactivated" = a.status === "deactivated" ? "active" : "deactivated";
-      return { ...a, status: newStatus };
-    }));
+    setArticles((prev) => {
+      const updated = prev.map((a) => {
+        if (a.id !== articleId) return a;
+        const ns = a.status === "deactivated" ? "active" as const : "deactivated" as const;
+        return { ...a, status: ns };
+      });
+      saveArticles(updated as NewsArticle[], true);
+      return updated as NewsArticle[];
+    });
   };
 
   const handleSoftDelete = (articleId: number) => {
     if (!confirm("Move this article to trash?")) return;
-    setArticles((prev) => prev.map((a) => a.id === articleId ? { ...a, status: "deleted" } : a));
+    setArticles((prev) => {
+      const updated = prev.map((a) => a.id === articleId ? { ...a, status: "deleted" as const } : a);
+      saveArticles(updated as NewsArticle[], true);
+      return updated as NewsArticle[];
+    });
     if (selectedId === articleId) setSelectedId(null);
   };
 
   const handleRestore = (articleId: number) => {
-    setArticles((prev) => prev.map((a) => a.id === articleId ? { ...a, status: "active" } : a));
+    setArticles((prev) => {
+      const updated = prev.map((a) => a.id === articleId ? { ...a, status: "active" as const } : a);
+      saveArticles(updated as NewsArticle[], true);
+      return updated as NewsArticle[];
+    });
   };
 
   const handlePermanentDelete = (articleId: number) => {
     if (!confirm("Permanently delete this article? This cannot be undone.")) return;
-    setArticles((prev) => prev.filter((a) => a.id !== articleId));
+    setArticles((prev) => {
+      const updated = prev.filter((a) => a.id !== articleId);
+      saveArticles(updated as NewsArticle[], true);
+      return updated as NewsArticle[];
+    });
   };
 
   const handleEdit = (articleId: number) => {
@@ -273,7 +289,6 @@ export default function NewsAdminPage() {
     handleField("tags", selected.tags.filter((t) => t !== tag));
   };
 
-  const hasPending = hasDraft("news", "news_articles", "en") || hasDraft("news", "news_articles", "ne") || hasDraft("news", "news_articles", "ja");
 
   return (
     <AdminGuard>
@@ -302,7 +317,6 @@ export default function NewsAdminPage() {
               <p className="px-3 py-4 text-xs text-muted text-center italic">No articles yet.</p>
             )}
             {visibleArticles.map((a) => {
-              const isDbDraft = hasDraft("news", `article_${a.id}_title`, lang);
               const artStatus = a.status || "active";
               return (
                 <div key={a.id}
@@ -319,9 +333,9 @@ export default function NewsAdminPage() {
                         <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{a.category}</span>
                       </div>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${isDbDraft ? "bg-yellow-500" : "bg-green-500"}`} />
-                        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${artStatus === "deactivated" ? "bg-red-100 text-red-700" : isDbDraft ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700"}`}>
-                          {artStatus === "deactivated" ? "Deactivated" : isDbDraft ? "Draft" : "Published"}
+                        <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${artStatus === "active" ? "bg-green-500" : artStatus === "deactivated" ? "bg-orange-500" : "bg-red-500"}`} />
+                        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${artStatus === "deactivated" ? "bg-orange-100 text-orange-700" : artStatus === "deleted" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                          {artStatus === "deactivated" ? "Deactivated" : artStatus === "deleted" ? "Deleted" : "Published"}
                         </span>
                       </div>
                       <p className="text-[10px] text-muted truncate mt-0.5">{a.excerpt[lang] || a.excerpt.en || ""}</p>
@@ -382,7 +396,7 @@ export default function NewsAdminPage() {
               <div>
                 <h1 className="text-lg font-heading font-bold text-foreground">News Articles</h1>
                 <p className="text-[10px] text-muted">
-                  {articleCount} articles · {hasPending ? "Draft pending" : "All published"} · Save drafts → Publish from Review page
+                  {articleCount} articles · All published
                 </p>
               </div>
             </div>
@@ -396,7 +410,7 @@ export default function NewsAdminPage() {
               </label>
               <button onClick={() => saveArticles(articles)} disabled={saving || articles.length === 0 || !isDirty}
                 className="px-4 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
-                {saving ? "Saving..." : "Save Draft"}
+                {saving ? "Saving..." : "Save"}
               </button>
               <button onClick={async () => { setDiscarding(true); await discardSectionDrafts("news"); setDiscarding(false); window.location.reload(); }}
                 disabled={discarding}
@@ -485,9 +499,9 @@ export default function NewsAdminPage() {
                       ? "bg-red-100 text-red-700"
                       : selected.status === "deactivated"
                       ? "bg-orange-100 text-orange-700"
-                      : hasPending ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700"
+                      : "bg-green-100 text-green-700"
                   }`}>
-                    {selected.status === "deleted" ? "Deleted" : selected.status === "deactivated" ? "Deactivated" : hasPending ? "Draft" : "Published"}
+                    {selected.status === "deleted" ? "Deleted" : selected.status === "deactivated" ? "Deactivated" : "Published"}
                   </span>
                 </div>
 
@@ -559,7 +573,7 @@ export default function NewsAdminPage() {
               <div className="mt-6 pt-4 border-t border-border flex items-center gap-2">
                 <button onClick={() => saveArticles(articles)} disabled={saving || !isDirty}
                   className="px-4 py-2 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
-                  {saving ? "Saving..." : "Save as Draft"}
+                  {saving ? "Saving..." : "Save"}
                 </button>
                 <button onClick={() => handleDeactivate(selected.id)}
                   className={`px-3 py-2 rounded-lg text-xs font-semibold border ${
@@ -571,7 +585,6 @@ export default function NewsAdminPage() {
                 </button>
                 <button onClick={() => handleSoftDelete(selected.id)}
                   className="px-3 py-2 rounded-lg text-xs font-semibold border border-red-300 text-red-600 hover:bg-red-50">Delete</button>
-                {hasPending && <span className="text-xs text-yellow-600">Draft pending — review & publish from Review page</span>}
               </div>
             </div>
           ) : (
