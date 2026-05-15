@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/context/ToastContext";
@@ -60,7 +60,7 @@ function newJob(): JobVacancy {
 }
 
 export default function CareerManagerPage() {
-  const { getJson, saveJson, hasDraft, loadAllContent, contentReady, isAdmin } = useAdmin();
+  const { getJson, saveJson, hasDraft, loadAllContent, contentReady, isAdmin, savePublishedJson } = useAdmin();
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState<"jobs" | "applications">("jobs");
@@ -68,6 +68,7 @@ export default function CareerManagerPage() {
   const [jobs, setJobs] = useState<JobVacancy[]>([]);
   const [editingJob, setEditingJob] = useState<JobVacancy | null>(null);
   const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [newResp, setNewResp] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
@@ -79,6 +80,7 @@ export default function CareerManagerPage() {
 
   const [jobsLoaded, setJobsLoaded] = useState(false);
   const [pageReady, setPageReady] = useState(false);
+  const [loadAttempts, setLoadAttempts] = useState(0);
 
   useEffect(() => {
     if (!contentReady || !isAdmin) return;
@@ -96,7 +98,11 @@ export default function CareerManagerPage() {
       const json = getJson("careers", "job_vacancies", l) as { vacancies?: JobVacancy[] };
       if (json?.vacancies?.length) { setJobs(json.vacancies); setJobsLoaded(true); return; }
     }
-  }, [getJson, jobsLoaded, pageReady]);
+    if (loadAttempts < 5) {
+      const t = setTimeout(() => setLoadAttempts((p) => p + 1), 500);
+      return () => clearTimeout(t);
+    }
+  }, [getJson, jobsLoaded, pageReady, loadAttempts]);
 
   const fetchApplications = async () => {
     const { data } = await supabase.from("career_applications").select("*").order("created_at", { ascending: false });
@@ -104,20 +110,43 @@ export default function CareerManagerPage() {
     setAppLoading(false);
   };
 
-  const saveJobs = async (updatedJobs: JobVacancy[]) => {
+  const reloadJobsFromDb = useCallback(() => {
+    for (const { id: l } of LOCALES) {
+      const json = getJson("careers", "job_vacancies", l) as { vacancies?: JobVacancy[] };
+      if (json?.vacancies?.length) { setJobs(json.vacancies); setJobsLoaded(true); return; }
+    }
+  }, [getJson]);
+
+  const saveJobs = async (updatedJobs: JobVacancy[], publishDirect = false) => {
     setSaving(true);
     try {
-      for (const { id: l } of LOCALES) {
-        await saveJson("careers", "job_vacancies", l, { vacancies: updatedJobs });
+      if (publishDirect) {
+        for (const { id: l } of LOCALES) {
+          await savePublishedJson("careers", "job_vacancies", l, { vacancies: updatedJobs });
+        }
+      } else {
+        for (const { id: l } of LOCALES) {
+          await saveJson("careers", "job_vacancies", l, { vacancies: updatedJobs });
+        }
       }
-      setJobsLoaded(true);
       setJobs(updatedJobs);
-      toast("success", "Jobs saved as draft — publish to make live");
+      setJobsLoaded(true);
+      await loadAllContent();
+      toast("success", publishDirect ? "Jobs published and live on site" : "Jobs saved as draft — publish to make live");
     } catch (e) {
       console.error("Career save failed:", e);
       toast("error", "Failed to save jobs");
     }
     setSaving(false);
+  };
+
+  const handlePublishNow = async () => {
+    setPublishing(true);
+    try {
+      await saveJobs(jobs, true);
+    } finally {
+      setPublishing(false);
+    }
   };
 
   const hasDraftJobs = hasDraft("careers", "job_vacancies", "en") || hasDraft("careers", "job_vacancies", "ne") || hasDraft("careers", "job_vacancies", "ja");
@@ -220,7 +249,16 @@ export default function CareerManagerPage() {
 
         {activeTab === "jobs" && hasDraftJobs && (
           <div className="mb-4 p-3 rounded-lg bg-yellow-50 border border-yellow-300 text-xs text-yellow-800 max-w-5xl flex items-center justify-between">
-            <span><strong>Draft pending</strong> — go to <a href="/admin/publish" className="underline font-semibold hover:text-yellow-900">Review &amp; Publish</a> to make these vacancies visible on the site.</span>
+            <span><strong>Draft pending</strong> — changes not yet visible on public site.</span>
+            <div className="flex gap-2 shrink-0">
+              <button onClick={handlePublishNow} disabled={publishing}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">
+                {publishing ? "Publishing..." : "Publish Now"}
+              </button>
+              <a href="/admin/publish" className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-yellow-400 text-yellow-800 hover:bg-yellow-100">
+                Review &amp; Publish
+              </a>
+            </div>
           </div>
         )}
 
@@ -413,6 +451,10 @@ export default function CareerManagerPage() {
                     <button onClick={handleSaveJob} disabled={saving || !(editingJob.title as LocaleContent).en?.trim()}
                       className="flex-1 py-2.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
                       {saving ? "Saving..." : jobs.find((j) => j.id === editingJob.id) ? "Update & Save Draft" : "Add & Save Draft"}
+                    </button>
+                    <button onClick={async () => { if (!editingJob) return; const exists = jobs.find((j) => j.id === editingJob.id); const updated = exists ? jobs.map((j) => j.id === editingJob.id ? editingJob : j) : [...jobs, editingJob]; await saveJobs(updated, true); setEditingJob(null); }} disabled={saving || publishing || !(editingJob.title as LocaleContent).en?.trim()}
+                      className="py-2.5 px-4 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">
+                      {saving || publishing ? "Saving..." : "Save & Publish"}
                     </button>
                     <button onClick={() => setEditingJob(null)}
                       className="py-2.5 px-4 rounded-lg text-xs font-semibold border border-border text-muted hover:bg-surface">

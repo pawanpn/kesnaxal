@@ -235,15 +235,27 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
   );
 
   /* ── Get JSON content ── */
+  function parseContentJson(row: SiteContentRow | undefined): Record<string, unknown> {
+    if (!row) return {};
+    const cj = row.content_json;
+    if (cj && typeof cj === "object" && !Array.isArray(cj) && Object.keys(cj).length > 0) return cj;
+    if (typeof cj === "string") { try { const p = JSON.parse(cj); if (p && typeof p === "object" && !Array.isArray(p) && Object.keys(p).length > 0) return p; } catch {} }
+    const ct = row.content_text;
+    if (ct) { try { const p = JSON.parse(ct); if (p && typeof p === "object" && !Array.isArray(p) && Object.keys(p).length > 0) return p; } catch {} }
+    return {};
+  }
+
   const getJson = useCallback(
     (section: string, key: string, locale: string): Record<string, unknown> => {
       const rk = rowKey(section, key, locale);
       if (isAdmin) {
         const d = draftContent.get(rk);
-        if (d?.content_json && Object.keys(d.content_json).length > 0) return d.content_json;
+        const parsed = parseContentJson(d);
+        if (Object.keys(parsed).length > 0) return parsed;
       }
       const p = publishedContent.get(rk);
-      if (p?.content_json && Object.keys(p.content_json).length > 0) return p.content_json;
+      const parsed = parseContentJson(p);
+      if (Object.keys(parsed).length > 0) return parsed;
       return {};
     },
     [draftContent, publishedContent, isAdmin]
