@@ -134,7 +134,7 @@ export async function getNewsArticles(locale: Locale): Promise<NewsArticle[]> {
     try {
       const parsed = JSON.parse(jsonStr);
       if (parsed.articles && Array.isArray(parsed.articles) && parsed.articles.length > 0) {
-        const articles = parsed.articles as NewsArticle[];
+        const articles = (parsed.articles as NewsArticle[]).map((a) => ({ ...a, status: a.status || "active" }));
         return articles.filter((a) => a.status !== "deactivated" && a.status !== "deleted");
       }
     } catch { /* fall through to individual keys */ }

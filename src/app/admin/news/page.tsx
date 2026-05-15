@@ -100,7 +100,7 @@ function ToolbarBtn({ cmd, val, label, title, cls }: { cmd: string; val?: string
 }
 
 export default function NewsAdminPage() {
-  const { getJson, saveJson, savePublishedJson, getContent, uploadMedia, discardSectionDrafts, loadAllContent } = useAdmin();
+  const { getJson, saveJson, savePublishedJson, getContent, hasDraft, uploadMedia, discardSectionDrafts, loadAllContent } = useAdmin();
   const { toast } = useToast();
 
   const [articles, setArticles] = useState<NewsArticle[]>([]);
@@ -137,6 +137,13 @@ export default function NewsAdminPage() {
   const isDirty = useMemo(() => {
     return JSON.stringify(articles) !== lastSaved.current;
   }, [articles]);
+
+  const hasUnpublished = useMemo(() => {
+    if (isDirty) return true;
+    return hasDraft("news", "news_articles", "en")
+      || hasDraft("news", "news_articles", "ne")
+      || hasDraft("news", "news_articles", "ja");
+  }, [isDirty, hasDraft]);
 
   const statusPriority: Record<string, number> = { active: 0, deactivated: 1, deleted: 2 };
   const sortByStatusDate = (a: NewsArticle, b: NewsArticle) => {
@@ -382,8 +389,25 @@ export default function NewsAdminPage() {
                 ))}
               </div>
             )}
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-1.5 text-[11px] text-muted cursor-pointer select-none">
+                <button type="button" onClick={() => setSyncing(!syncing)}
+                  className={`w-7 h-4 rounded-full transition-colors relative shrink-0 ${syncing ? "bg-green-500" : "bg-gray-300"}`}>
+                  <span className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${syncing ? "translate-x-3" : "translate-x-0"}`} />
+                </button>
+                <span className="whitespace-nowrap">Sync</span>
+              </label>
+              <button onClick={() => saveArticles(articles)} disabled={saving || articles.length === 0 || !isDirty}
+                className="px-4 py-2 rounded-lg text-xs font-bold bg-white text-primary border border-primary hover:bg-primary/5 disabled:opacity-50">
+                {saving ? "Saving..." : "Save Draft"}
+              </button>
+              <button onClick={() => saveArticles(articles, { publish: true })} disabled={saving || articles.length === 0 || !hasUnpublished}
+                className="px-4 py-2 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">
+                {saving ? "Publishing..." : "Publish"}
+              </button>
+            </div>
           </div>
-        </div>
 
         {/* RIGHT: Editor */}
         <div className="flex-1 flex flex-col min-w-0">
@@ -402,26 +426,6 @@ export default function NewsAdminPage() {
                   {articleCount} articles · Save Draft then Publish to make live
                 </p>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="flex items-center gap-1.5 text-[11px] text-muted cursor-pointer select-none">
-                <button type="button" onClick={() => setSyncing(!syncing)}
-                  className={`w-7 h-4 rounded-full transition-colors relative shrink-0 ${syncing ? "bg-green-500" : "bg-gray-300"}`}>
-                  <span className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${syncing ? "translate-x-3" : "translate-x-0"}`} />
-                </button>
-                <span className="whitespace-nowrap">Sync</span>
-              </label>
-              <button onClick={() => saveArticles(articles)} disabled={saving || articles.length === 0 || !isDirty}
-                className="px-4 py-2 rounded-lg text-xs font-bold bg-white text-primary border border-primary hover:bg-primary/5 disabled:opacity-50">
-                {saving ? "Saving..." : "Save Draft"}
-              </button>
-              <button onClick={() => saveArticles(articles, { publish: true })} disabled={saving || articles.length === 0}
-                className="px-4 py-2 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">
-                {saving ? "Publishing..." : "Publish"}
-              </button>
-              <button onClick={async () => { setDiscarding(true); await discardSectionDrafts("news"); setDiscarding(false); window.location.reload(); }}
-                disabled={discarding}
-                className="px-3 py-2 rounded-lg text-xs font-semibold border border-accent/30 text-accent hover:bg-accent/5 disabled:opacity-50">Discard</button>
             </div>
           </div>
 
@@ -582,7 +586,7 @@ export default function NewsAdminPage() {
                   className="px-4 py-2 rounded-lg text-xs font-bold bg-white text-primary border border-primary hover:bg-primary/5 disabled:opacity-50">
                   {saving ? "Saving..." : "Save Draft"}
                 </button>
-                <button onClick={() => saveArticles(articles, { publish: true })} disabled={saving}
+                <button onClick={() => saveArticles(articles, { publish: true })} disabled={saving || !hasUnpublished}
                   className="px-4 py-2 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">
                   {saving ? "Publishing..." : "Publish"}
                 </button>
