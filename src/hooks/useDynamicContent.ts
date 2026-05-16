@@ -257,6 +257,8 @@ export function useDynamicContent() {
   const jobVacancies: JobVacancy[] = useMemo(() => {
     if (!contentReady && !publishedContent.size) return [];
     console.log("CAREERS_DEBUG:", contentReady, publishedContent.size);
+    const _testJson = getJson("careers", "job_vacancies", "en");
+    console.log("CAREERS_JSON:", JSON.stringify(_testJson));
     // Try JSON from careers admin (saveJson stores in content_json)
     const json = getJson("careers", "job_vacancies", locale) as { vacancies?: JobVacancy[] };
     if (json?.vacancies?.length) return json.vacancies;
@@ -359,6 +361,7 @@ export function useDynamicContent() {
     notices,
   };
 }
+
 
 
 
