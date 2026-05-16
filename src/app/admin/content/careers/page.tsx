@@ -92,6 +92,7 @@ export default function CareerManagerPage() {
     fetchApplications();
   }, []);
 
+  // FIX: jobsLoaded reset huda matra reload garne
   useEffect(() => {
     if (jobsLoaded || !pageReady) return;
 
@@ -119,32 +120,34 @@ export default function CareerManagerPage() {
     setAppLoading(false);
   };
 
-  const reloadJobsFromDb = useCallback(() => {
-    for (const { id: l } of LOCALES) {
-      const json = getJson("careers", "job_vacancies", l) as { vacancies?: JobVacancy[] };
-      if (json?.vacancies?.length) { setJobs(json.vacancies); setJobsLoaded(true); return; }
-    }
-  }, [getJson]);
-
+  // FIX: saveJobs - publish garda jobsLoaded reset garera fresh data load garne
   const saveJobs = async (updatedJobs: JobVacancy[], publishDirect = false) => {
     setSaving(true);
     try {
       if (publishDirect) {
+        // Sabai locales ma published status ma save garne
         for (const { id: l } of LOCALES) {
           await savePublishedJson("careers", "job_vacancies", l, { vacancies: updatedJobs });
         }
+        // Purano job_listings conflict hatauna empty publish garne
+        await savePublishedJson("careers", "job_listings", "en", { jobs: [] });
+        await savePublishedJson("careers", "job_listings", "ne", { jobs: [] });
+        await savePublishedJson("careers", "job_listings", "ja", { jobs: [] });
       } else {
         for (const { id: l } of LOCALES) {
           await saveJson("careers", "job_vacancies", l, { vacancies: updatedJobs });
         }
       }
+
       setJobs(updatedJobs);
-      setJobsLoaded(true);
+      // FIX: reload allow garna jobsLoaded false garnu parxa
+      setJobsLoaded(false);
       await loadAllContent();
-      toast("success", publishDirect ? "Jobs published and live on site" : "Jobs saved as draft — publish to make live");
+      // Content load bhayepachi feri true garxa (useEffect le handle garxa)
+      toast("success", publishDirect ? "Jobs published and live on site!" : "Jobs saved as draft — click 'Publish Now' to go live");
     } catch (e) {
       console.error("Career save failed:", e);
-      toast("error", "Failed to save jobs");
+      toast("error", "Failed to save jobs. Please try again.");
     }
     setSaving(false);
   };
@@ -168,15 +171,23 @@ export default function CareerManagerPage() {
     setEditingJob(null);
   };
 
+  const handleSaveAndPublishJob = async () => {
+    if (!editingJob) return;
+    const exists = jobs.find((j) => j.id === editingJob.id);
+    const updated = exists ? jobs.map((j) => j.id === editingJob.id ? editingJob : j) : [...jobs, editingJob];
+    await saveJobs(updated, true); // FIX: publishDirect = true
+    setEditingJob(null);
+  };
+
   const handleDeleteJob = async (id: number) => {
     const updated = jobs.filter((j) => j.id !== id);
-    await saveJobs(updated);
+    await saveJobs(updated, true); // FIX: delete pani directly publish garne
     setDeleteConfirmId(null);
   };
 
   const handleToggleActive = async (id: number) => {
     const updated = jobs.map((j) => j.id === id ? { ...j, isActive: !j.isActive } : j);
-    await saveJobs(updated);
+    await saveJobs(updated, true); // FIX: toggle pani directly publish garne
   };
 
   const updateField = (field: keyof JobVacancy, value: string) => {
@@ -461,7 +472,9 @@ export default function CareerManagerPage() {
                       className="flex-1 py-2.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
                       {saving ? "Saving..." : jobs.find((j) => j.id === editingJob.id) ? "Update & Save Draft" : "Add & Save Draft"}
                     </button>
-                    <button onClick={async () => { if (!editingJob) return; const exists = jobs.find((j) => j.id === editingJob.id); const updated = exists ? jobs.map((j) => j.id === editingJob.id ? editingJob : j) : [...jobs, editingJob]; await saveJobs(updated, true); setEditingJob(null); }} disabled={saving || publishing || !(editingJob.title as LocaleContent).en?.trim()}
+                    <button
+                      onClick={handleSaveAndPublishJob}
+                      disabled={saving || publishing || !(editingJob.title as LocaleContent).en?.trim()}
                       className="py-2.5 px-4 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">
                       {saving || publishing ? "Saving..." : "Save & Publish"}
                     </button>

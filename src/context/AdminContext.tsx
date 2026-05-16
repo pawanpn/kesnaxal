@@ -251,8 +251,10 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
       const rk = rowKey(section, key, locale);
       if (isAdmin) {
         const d = draftContent.get(rk);
-        const parsed = parseContentJson(d);
-        if (Object.keys(parsed).length > 0) return parsed;
+        if (d) {
+          const parsed = parseContentJson(d);
+          if (Object.keys(parsed).length > 0) return parsed;
+        }
       }
       const p = publishedContent.get(rk);
       const parsed = parseContentJson(p);
@@ -688,3 +690,4 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     </AdminContext.Provider>
   );
 }
+
