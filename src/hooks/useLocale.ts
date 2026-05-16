@@ -13,3 +13,8 @@ export function useT() {
   const { t } = useLocale();
   return t;
 }
+
+export function useTranslate() {
+  const { translateText, translateToAll, handleTranslate } = useLocale();
+  return { translateText, translateToAll, handleTranslate };
+}
