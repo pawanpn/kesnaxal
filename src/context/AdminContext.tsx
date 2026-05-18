@@ -172,7 +172,6 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
 
   /* ── Sync React Query data into content Maps ── */
   useEffect(() => {
-    console.log("CONTENT_LOADING:", contentLoading, "DATA_COUNT:", contentData?.length);
     if (contentLoading) return;
     setContentReady(true);
     if (!contentData) return;
@@ -184,7 +183,6 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
       if (row.status === "published") pub.set(key, row);
       else { draft.set(key, row); dCount++; }
     });
-    console.log("PUB_MAP_SIZE:", pub.size, "HAS_CAREERS:", pub.has("careers::job_vacancies::en"));
     setPublishedContent(pub);
     setDraftContent(draft);
     setDraftCount(dCount);
@@ -231,7 +229,6 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
         if (d) return d.content_text || "";
       }
       const p = publishedContent.get(rk);
-      console.log("GETJSON_DEBUG:", rk, !!p, p?.status);
       if (p) return p.content_text || "";
       return "";
     },
@@ -260,7 +257,6 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
         }
       }
       const p = publishedContent.get(rk);
-      console.log("GETJSON_DEBUG:", rk, !!p, p?.status);
       const parsed = parseContentJson(p);
       if (Object.keys(parsed).length > 0) return parsed;
       return {};
@@ -275,7 +271,6 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
       const d = draftContent.get(rk);
       if (d?.content_meta && Object.keys(d.content_meta).length > 0) return d.content_meta;
       const p = publishedContent.get(rk);
-      console.log("GETJSON_DEBUG:", rk, !!p, p?.status);
       if (p?.content_meta && Object.keys(p.content_meta).length > 0) return p.content_meta;
       return {};
     },
@@ -404,7 +399,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
 
   const savePublishedJson = useCallback(
     async (section: string, key: string, locale: string, json: Record<string, unknown>) => {
-      const { data: existing } = await supabase
+      const { data: existing, error: findError } = await supabase
         .from("site_content")
         .select("id")
         .eq("section", section)
@@ -412,13 +407,16 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
         .eq("locale", locale)
         .maybeSingle();
 
+      if (findError) throw findError;
+
       if (existing) {
-        await supabase
+        const { error: updateError } = await supabase
           .from("site_content")
           .update({ content_json: json, content_text: JSON.stringify(json), status: "published", updated_at: new Date().toISOString() })
           .eq("id", existing.id);
+        if (updateError) throw updateError;
       } else {
-        await supabase.from("site_content").insert({
+        const { error: insertError } = await supabase.from("site_content").insert({
           section,
           content_key: key,
           locale,
@@ -426,6 +424,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
           content_text: JSON.stringify(json),
           status: "published",
         });
+        if (insertError) throw insertError;
       }
 
       await queryClient.invalidateQueries({ queryKey: ["site_content"], exact: false });
@@ -559,7 +558,6 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
         const d = draftContent.get(rk);
         if (d?.content_text) return d.content_text;
         const p = publishedContent.get(rk);
-      console.log("GETJSON_DEBUG:", rk, !!p, p?.status);
         if (p?.content_text) return p.content_text;
       }
       return "";
@@ -696,10 +694,3 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     </AdminContext.Provider>
   );
 }
-
-
-
-
-
-
-

@@ -7,6 +7,7 @@ import ApplicationForm from "@/components/sections/ApplicationForm";
 import type { JobVacancy } from "@/types";
 import { useLocale } from "@/hooks/useLocale";
 import { useDynamicContent } from "@/hooks/useDynamicContent";
+import { useAdmin } from "@/hooks/useAdmin";
 import { resolveJob } from "@/lib/translate";
 
 function formatDateLocale(
@@ -27,7 +28,18 @@ export default function CareersPage() {
   const [applyingJob, setApplyingJob] = useState<JobVacancy | null>(null);
   const { locale, t } = useLocale();
   const { jobVacancies: jobs, school } = useDynamicContent();
+  const { contentReady } = useAdmin();
   const activeJobs = jobs.filter(Boolean).filter((j) => j.isActive);
+  if (!contentReady) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-10 h-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+    </div>
+  );
+  if (!contentReady) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-10 h-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+    </div>
+  );
 
   const toggleDetails = (job: JobVacancy) => {
     setSelectedJob((prev) => (prev?.id === job.id ? null : job));
@@ -192,3 +204,7 @@ export default function CareersPage() {
     </div>
   );
 }
+
+
+
+
