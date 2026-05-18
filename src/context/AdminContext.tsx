@@ -172,6 +172,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
 
   /* ── Sync React Query data into content Maps ── */
   useEffect(() => {
+    console.log("CONTENT_LOADING:", contentLoading, "DATA_COUNT:", contentData?.length);
     if (contentLoading) return;
     setContentReady(true);
     if (!contentData) return;
@@ -694,6 +695,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     </AdminContext.Provider>
   );
 }
+
 
 
 

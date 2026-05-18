@@ -291,7 +291,7 @@ export function useDynamicContent() {
       });
     }
     return results;
-  }, [contentReady, getJson, getContent, locale]);
+  }, [contentReady, getJson, getContent, locale, publishedContent]);
 
   // ── Notices — Supabase only ──
   const notices: Notice[] = useMemo(() => {
@@ -361,6 +361,7 @@ export function useDynamicContent() {
     notices,
   };
 }
+
 
 
 
