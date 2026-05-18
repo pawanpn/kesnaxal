@@ -229,6 +229,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
         if (d) return d.content_text || "";
       }
       const p = publishedContent.get(rk);
+      console.log("GETJSON_DEBUG:", rk, !!p, p?.status);
       if (p) return p.content_text || "";
       return "";
     },
@@ -257,6 +258,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
         }
       }
       const p = publishedContent.get(rk);
+      console.log("GETJSON_DEBUG:", rk, !!p, p?.status);
       const parsed = parseContentJson(p);
       if (Object.keys(parsed).length > 0) return parsed;
       return {};
@@ -271,6 +273,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
       const d = draftContent.get(rk);
       if (d?.content_meta && Object.keys(d.content_meta).length > 0) return d.content_meta;
       const p = publishedContent.get(rk);
+      console.log("GETJSON_DEBUG:", rk, !!p, p?.status);
       if (p?.content_meta && Object.keys(p.content_meta).length > 0) return p.content_meta;
       return {};
     },
@@ -554,6 +557,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
         const d = draftContent.get(rk);
         if (d?.content_text) return d.content_text;
         const p = publishedContent.get(rk);
+      console.log("GETJSON_DEBUG:", rk, !!p, p?.status);
         if (p?.content_text) return p.content_text;
       }
       return "";
@@ -690,6 +694,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     </AdminContext.Provider>
   );
 }
+
 
 
 
