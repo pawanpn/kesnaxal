@@ -32,8 +32,11 @@ export default function OptimizedImage({
       ? "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
       : undefined);
 
-  const isExternal = src.startsWith("http") && !src.includes("supabase.co");
-  const validSrc = src || null;
+  const isAbsoluteUrl = src.startsWith("http://") || src.startsWith("https://");
+  const isRelativePath = src.startsWith("/");
+  const isDataUri = src.startsWith("data:");
+  const validSrc = (isAbsoluteUrl || isRelativePath || isDataUri) ? src : null;
+  const isExternal = isAbsoluteUrl && !src.includes("supabase.co");
 
   if (!validSrc) return null;
 
