@@ -158,7 +158,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
   } = useQuery({
     queryKey: ["site_content", isAdmin],
     queryFn: async () => {
-      const { data } = await supabase.from("site_content").select("*");
+      const { data } = await supabase.from("site_content").select("*").limit(5000);
       return (data as SiteContentRow[]) || [];
     },
     staleTime: isAdmin ? 30 * 1000 : 5 * 60 * 1000,
@@ -184,6 +184,7 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
       if (row.status === "published") pub.set(key, row);
       else { draft.set(key, row); dCount++; }
     });
+    console.log("PUB_MAP_SIZE:", pub.size, "HAS_CAREERS:", pub.has("careers::job_vacancies::en"));
     setPublishedContent(pub);
     setDraftContent(draft);
     setDraftCount(dCount);
@@ -695,6 +696,8 @@ export default function AdminProvider({ children }: { children: ReactNode }) {
     </AdminContext.Provider>
   );
 }
+
+
 
 
 
