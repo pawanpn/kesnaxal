@@ -133,6 +133,8 @@ CREATE TABLE IF NOT EXISTS career_applications (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+ALTER TABLE career_applications ADD COLUMN IF NOT EXISTS dependents TEXT;
+
 DROP INDEX IF EXISTS idx_career_applications_status;
 CREATE INDEX idx_career_applications_status ON career_applications(status);
 
