@@ -14,7 +14,7 @@ export function usePrefetch() {
       queryKey: ["site_content", false],
       queryFn: async () => {
         const { supabase } = await import("@/lib/supabase/client");
-        const { data } = await supabase.from("site_content").select("*");
+        const { data } = await supabase.from("site_content").select("*").limit(5000);
         return (data || []) as import("@/context/AdminContext").SiteContentRow[];
       },
       staleTime: 5 * 60 * 1000,
@@ -23,3 +23,4 @@ export function usePrefetch() {
 
   return prefetch;
 }
+

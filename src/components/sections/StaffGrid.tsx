@@ -1,6 +1,5 @@
 "use client";
 import EditableImage from "@/components/admin/EditableImage";
-import EditableElement from "@/components/admin/EditableElement";
 import SectionHeading from "@/components/ui/SectionHeading";
 import BorderGlow from "@/components/ui/BorderGlow";
 import type { StaffMember } from "@/types";
@@ -19,7 +18,13 @@ export default function StaffGrid({ staff, title, loading = false }: StaffGridPr
     return (
       <section className="py-12 lg:py-16">
         <div className="container-custom">
-          {title && <SectionHeading title={title} subtitle="Meet the dedicated professionals behind KES" align="center" />}
+          {title && (
+            <SectionHeading
+              title={title}
+              subtitle="Meet the dedicated professionals behind KES"
+              align="center"
+            />
+          )}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="rounded-2xl bg-surface animate-pulse">
@@ -40,7 +45,13 @@ export default function StaffGrid({ staff, title, loading = false }: StaffGridPr
     return (
       <section className="py-12 lg:py-16">
         <div className="container-custom">
-          {title && <SectionHeading title={title} subtitle="Meet the dedicated professionals behind KES" align="center" />}
+          {title && (
+            <SectionHeading
+              title={title}
+              subtitle="Meet the dedicated professionals behind KES"
+              align="center"
+            />
+          )}
           <p className="text-center text-muted py-16">No team members found.</p>
         </div>
       </section>
@@ -59,7 +70,6 @@ export default function StaffGrid({ staff, title, loading = false }: StaffGridPr
         )}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
           {staff.filter(Boolean).map((member) => {
-            // Safe photo: fallback to placeholder if empty/invalid
             const photoSrc =
               member.photo &&
               (member.photo.startsWith("http") || member.photo.startsWith("/"))
@@ -92,42 +102,13 @@ export default function StaffGrid({ staff, title, loading = false }: StaffGridPr
                 </div>
                 <div className="p-4 text-center">
                   <h3 className="font-heading font-bold text-sm text-foreground mb-1">
-                    <EditableElement
-                      section="staff"
-                      contentKey={`staff_${member.id}_name`}
-                      value={{
-                        en: member.name,
-                        ne: member.name,
-                        ja: member.name,
-                      }}
-                      as="span"
-                    />
+                    {member.name}
                   </h3>
                   <p className="text-xs text-primary font-semibold mb-1">
-                    <EditableElement
-                      section="staff"
-                      contentKey={`staff_${member.id}_designation`}
-                      value={{
-                        en: member.designation,
-                        ne: member.designation,
-                        ja: member.designation,
-                      }}
-                      as="span"
-                    />
+                    {member.designation}
                   </p>
                   {member.department && (
-                    <p className="text-xs text-muted">
-                      <EditableElement
-                        section="staff"
-                        contentKey={`staff_${member.id}_department`}
-                        value={{
-                          en: member.department,
-                          ne: member.department,
-                          ja: member.department,
-                        }}
-                        as="span"
-                      />
-                    </p>
+                    <p className="text-xs text-muted">{member.department}</p>
                   )}
                 </div>
               </BorderGlow>
