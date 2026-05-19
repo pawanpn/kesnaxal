@@ -146,7 +146,7 @@ export default function CareerManagerPage() {
       // Content load bhayepachi feri true garxa (useEffect le handle garxa)
       toast("success", publishDirect ? "Jobs published and live on site!" : "Jobs saved as draft — click 'Publish Now' to go live");
     } catch (e) {
-      console.error("Career save failed:", e);
+      // save error handled
       toast("error", "Failed to save jobs. Please try again.");
     }
     setSaving(false);
@@ -641,3 +641,5 @@ export default function CareerManagerPage() {
     </AdminGuard>
   );
 }
+
+
