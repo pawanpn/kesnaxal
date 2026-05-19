@@ -7,7 +7,7 @@ import { useToast } from "@/context/ToastContext";
 import type { StaffMember } from "@/types";
 
 export default function StaffAdminPage() {
-  const { getJson, saveJson, uploadMedia, hasDraft, loadAllContent } = useAdmin();
+  const { getJson, savePublishedJson, uploadMedia, loadAllContent } = useAdmin();
   const { toast } = useToast();
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [savingId, setSavingId] = useState<number | null>(null);
@@ -26,9 +26,11 @@ export default function StaffAdminPage() {
 
   const saveToDb = async (updated: StaffMember[]) => {
     try {
-      await saveJson("staff", "staff_members", "en", { members: updated });
-      await saveJson("staff", "staff_members", "ne", { members: updated });
-      await saveJson("staff", "staff_members", "ja", { members: updated });
+      // Save as published directly so public site sees it immediately
+      await savePublishedJson("staff", "staff_members", "en", { members: updated });
+      await savePublishedJson("staff", "staff_members", "ne", { members: updated });
+      await savePublishedJson("staff", "staff_members", "ja", { members: updated });
+      await loadAllContent();
       return true;
     } catch (e) {
       console.error("Staff save failed:", e);
@@ -42,7 +44,7 @@ export default function StaffAdminPage() {
     const ok = await saveToDb(updated);
     if (ok) {
       setStaff(updated);
-      toast("success", "Saved as draft — publish to make visible on site");
+      toast("success", "Team member saved and published!");
     } else {
       toast("error", "Save failed");
     }
@@ -60,7 +62,7 @@ export default function StaffAdminPage() {
     const ok = await saveToDb(updated);
     if (ok) {
       setStaff(updated);
-      toast("success", "New staff added as draft — publish to make visible on site");
+      toast("success", "New staff member added!");
     } else {
       toast("error", "Failed to add staff");
     }
@@ -72,7 +74,7 @@ export default function StaffAdminPage() {
     const ok = await saveToDb(updated);
     if (ok) {
       setStaff(updated);
-      toast("success", "Removed — publish to update site");
+      toast("success", "Staff member removed!");
     } else {
       toast("error", "Delete failed");
     }
@@ -84,14 +86,12 @@ export default function StaffAdminPage() {
     const url = await uploadMedia(file, "staff", `staff_${member.id}`);
     if (url) {
       setStaff((prev) => prev.map((s, i) => (i === index ? { ...s, photo: url } : s)));
-      toast("success", "Photo uploaded — save to persist");
+      toast("success", "Photo uploaded — click Save to publish");
     } else {
       toast("error", "Photo upload failed");
     }
     setUploading(null);
   };
-
-  const hasD = hasDraft("staff", "staff_members", "en");
 
   return (
     <AdminGuard>
@@ -99,19 +99,13 @@ export default function StaffAdminPage() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-xl font-heading font-bold text-foreground">Team Management</h1>
-            <p className="text-xs text-muted mt-1">Add, edit, and manage team members — changes save as draft</p>
+            <p className="text-xs text-muted mt-1">Add, edit, and manage team members — changes publish immediately</p>
           </div>
           <button onClick={handleAdd}
             className="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 transition-colors">
             + Add Staff
           </button>
         </div>
-
-        {hasD && (
-          <div className="mb-4 p-2 rounded-lg bg-yellow-50 border border-yellow-200 text-xs text-yellow-700 max-w-4xl">
-            Draft pending — go to <strong>Review &amp; Publish</strong> to make changes visible on the site.
-          </div>
-        )}
 
         {staff.length === 0 ? (
           <div className="bg-white rounded-xl border border-border p-8 text-center max-w-4xl">
@@ -124,7 +118,7 @@ export default function StaffAdminPage() {
                 <div className="flex items-start gap-4">
                   <div className="shrink-0">
                     <div className="w-16 h-16 rounded-full border border-border bg-surface flex items-center justify-center overflow-hidden">
-                      {member.photo ? (
+                      {member.photo && (member.photo.startsWith("http") || member.photo.startsWith("/")) ? (
                         <img src={member.photo} alt={member.name} className="w-full h-full object-cover" />
                       ) : (
                         <svg className="w-6 h-6 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

@@ -1,3 +1,4 @@
+"use client";
 import Image from "next/image";
 import type { CSSProperties } from "react";
 
@@ -12,6 +13,15 @@ interface OptimizedImageProps {
   sizes?: string;
   style?: CSSProperties;
   onClick?: () => void;
+  fallback?: string;
+}
+
+function isValidSrc(src: string): boolean {
+  if (!src || typeof src !== "string" || src.trim() === "") return false;
+  if (src.startsWith("http://") || src.startsWith("https://")) return true;
+  if (src.startsWith("/")) return true;
+  if (src.startsWith("data:")) return true;
+  return false;
 }
 
 export default function OptimizedImage({
@@ -25,6 +35,7 @@ export default function OptimizedImage({
   sizes,
   style,
   onClick,
+  fallback = "/data/placeholder.jpg",
 }: OptimizedImageProps) {
   const computedSizes =
     sizes ??
@@ -32,13 +43,12 @@ export default function OptimizedImage({
       ? "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
       : undefined);
 
-  const isAbsoluteUrl = src.startsWith("http://") || src.startsWith("https://");
-  const isRelativePath = src.startsWith("/");
-  const isDataUri = src.startsWith("data:");
-  const validSrc = (isAbsoluteUrl || isRelativePath || isDataUri) ? src : null;
-  const isExternal = isAbsoluteUrl && !src.includes("supabase.co");
-
+  const validSrc = isValidSrc(src) ? src : isValidSrc(fallback) ? fallback : null;
   if (!validSrc) return null;
+
+  const isExternal = validSrc.startsWith("http://") || validSrc.startsWith("https://");
+  const isSupabase = validSrc.includes("supabase.co");
+  const unoptimized = isExternal && !isSupabase;
 
   if (fill) {
     return (
@@ -49,7 +59,13 @@ export default function OptimizedImage({
         priority={priority}
         className={className}
         sizes={computedSizes}
-        unoptimized={isExternal}
+        unoptimized={unoptimized}
+        onError={(e) => {
+          const target = e.currentTarget;
+          if (isValidSrc(fallback) && target.src !== fallback) {
+            target.src = fallback;
+          }
+        }}
         {...(onClick ? { onClick } : {})}
         {...(style ? { style } : {})}
       />
@@ -65,7 +81,13 @@ export default function OptimizedImage({
       priority={priority}
       className={className}
       sizes={computedSizes}
-      unoptimized={isExternal}
+      unoptimized={unoptimized}
+      onError={(e) => {
+        const target = e.currentTarget;
+        if (isValidSrc(fallback) && target.src !== fallback) {
+          target.src = fallback;
+        }
+      }}
       {...(onClick ? { onClick } : {})}
       {...(style ? { style } : {})}
     />
