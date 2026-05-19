@@ -222,7 +222,7 @@ export function useDynamicContent() {
       }
     });
     return results;
-  }, [hasDb, getJson, getContent, locale]);
+  }, [hasDb, getJson, getContent, locale, publishedContent]);
 
   // ── Faculty — Supabase only ──
   const faculty: FacultyMember[] = useMemo(() => {
@@ -237,7 +237,7 @@ export function useDynamicContent() {
       } catch {}
     }
     return [];
-  }, [hasDb, getJson, getContent, locale]);
+  }, [hasDb, getJson, getContent, locale, publishedContent]);
 
   // ── Staff — Supabase only ──
   const staff: StaffMember[] = useMemo(() => {
@@ -251,7 +251,7 @@ export function useDynamicContent() {
       } catch {}
     }
     return [];
-  }, [getJson, getContent, locale]);
+  }, [getJson, getContent, locale, publishedContent]);
 
   // ── Jobs — Supabase only ──
   const jobVacancies: JobVacancy[] = useMemo(() => {
@@ -335,7 +335,7 @@ export function useDynamicContent() {
       });
     }
     return results;
-  }, [hasDb, getJson, getContent, locale]);
+  }, [hasDb, getJson, getContent, locale, publishedContent]);
 
   return {
     school,
@@ -358,4 +358,6 @@ export function useDynamicContent() {
     notices,
   };
 }
+
+
 
