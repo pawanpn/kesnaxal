@@ -105,14 +105,14 @@ async function saveJobsToDb(jobs: JobVacancy[], status: "published" | "draft"): 
           })
           .eq("id", existing.id);
       } else {
-        await supabase.from("site_content").upsert({
+        await supabase.from("site_content").insert({
           section: "careers",
           content_key: "job_vacancies",
           locale,
           content_json: payload,
           content_text: JSON.stringify(payload),
           status,
-        }, { onConflict: "section,content_key,locale,status" });
+        });
       }
     }
     return true;
@@ -800,5 +800,3 @@ export default function CareerManagerPage() {
     </AdminGuard>
   );
 }
-
-
