@@ -1,11 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import dynamic from "next/dynamic";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/context/ToastContext";
 import { supabase } from "@/lib/supabase/client";
 import type { JobVacancy } from "@/types";
+
+// Dynamically import markdown editor to avoid SSR issues
+const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false });
 
 type Locale = "en" | "ne" | "ja";
 type LocaleContent = Record<Locale, string>;
@@ -61,7 +65,6 @@ function newJob(): JobVacancy {
   };
 }
 
-// Direct Supabase fetch - fast
 async function fetchJobsFromDb(status: "published" | "draft"): Promise<JobVacancy[]> {
   const { data } = await supabase
     .from("site_content")
@@ -79,7 +82,6 @@ async function fetchJobsFromDb(status: "published" | "draft"): Promise<JobVacanc
   return [];
 }
 
-// Direct Supabase save - fast, no full reload
 async function saveJobsToDb(jobs: JobVacancy[], status: "published" | "draft"): Promise<boolean> {
   try {
     const payload = { vacancies: jobs };
@@ -127,7 +129,6 @@ export default function CareerManagerPage() {
   const [activeTab, setActiveTab] = useState<"jobs" | "applications">("jobs");
   const [lang, setLang] = useState<Locale>("en");
 
-  // Separate published and draft jobs
   const [publishedJobs, setPublishedJobs] = useState<JobVacancy[]>([]);
   const [draftJobs, setDraftJobs] = useState<JobVacancy[]>([]);
   const [viewMode, setViewMode] = useState<"published" | "draft">("published");
@@ -144,7 +145,6 @@ export default function CareerManagerPage() {
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
-  // Load both published and draft jobs
   const loadJobs = useCallback(async () => {
     setLoading(true);
     const [pub, draft] = await Promise.all([
@@ -170,14 +170,11 @@ export default function CareerManagerPage() {
     setAppLoading(false);
   };
 
-  // Currently displayed jobs based on view mode
   const displayJobs = viewMode === "published" ? publishedJobs : draftJobs;
 
-  // Save job as DRAFT only (does NOT affect published jobs)
   const handleSaveJobAsDraft = async () => {
     if (!editingJob) return;
     setSaving(true);
-
     const existingIndex = draftJobs.findIndex((j) => j.id === editingJob.id);
     const updatedDrafts = existingIndex >= 0
       ? draftJobs.map((j) => j.id === editingJob.id ? editingJob : j)
@@ -187,28 +184,26 @@ export default function CareerManagerPage() {
     if (ok) {
       setDraftJobs(updatedDrafts);
       setEditingJob(null);
-      toast("success", "Saved as draft — go to Review & Publish to make it live");
+      setViewMode("draft");
+      toast("success", "Saved as draft — use 'Publish All Drafts' to go live");
     } else {
       toast("error", "Failed to save draft");
     }
     setSaving(false);
   };
 
-  // Save job and PUBLISH immediately (merges with published jobs)
   const handleSaveAndPublish = async () => {
     if (!editingJob) return;
     setSaving(true);
 
-    // Add/update in published jobs
     const existingPubIndex = publishedJobs.findIndex((j) => j.id === editingJob.id);
     const updatedPublished = existingPubIndex >= 0
       ? publishedJobs.map((j) => j.id === editingJob.id ? editingJob : j)
       : [...publishedJobs, editingJob];
 
-    // Remove from drafts if it was there
     const updatedDrafts = draftJobs.filter((j) => j.id !== editingJob.id);
 
-    const [okPub, okDraft] = await Promise.all([
+    const [okPub] = await Promise.all([
       saveJobsToDb(updatedPublished, "published"),
       draftJobs.length !== updatedDrafts.length
         ? saveJobsToDb(updatedDrafts, "draft")
@@ -227,12 +222,10 @@ export default function CareerManagerPage() {
     setSaving(false);
   };
 
-  // Publish all drafts at once
   const handlePublishAllDrafts = async () => {
     if (draftJobs.length === 0) return;
     setSaving(true);
 
-    // Merge drafts into published (draft overrides if same id)
     const draftIds = new Set(draftJobs.map((j) => j.id));
     const mergedPublished = [
       ...publishedJobs.filter((j) => !draftIds.has(j.id)),
@@ -244,7 +237,7 @@ export default function CareerManagerPage() {
       saveJobsToDb([], "draft"),
     ]);
 
-    if (okPub) {
+    if (okPub && okDraft) {
       setPublishedJobs(mergedPublished);
       setDraftJobs([]);
       setViewMode("published");
@@ -255,7 +248,6 @@ export default function CareerManagerPage() {
     setSaving(false);
   };
 
-  // Delete job
   const handleDeleteJob = async (id: number) => {
     const isPublished = publishedJobs.some((j) => j.id === id);
     const isDraft = draftJobs.some((j) => j.id === id);
@@ -274,7 +266,6 @@ export default function CareerManagerPage() {
     toast("success", "Job deleted");
   };
 
-  // Toggle active (only for published jobs)
   const handleToggleActive = async (id: number) => {
     const updated = publishedJobs.map((j) =>
       j.id === id ? { ...j, isActive: !j.isActive } : j
@@ -372,31 +363,28 @@ export default function CareerManagerPage() {
             {draftJobs.length > 0 && (
               <div className="mb-4 p-3 rounded-lg bg-yellow-50 border border-yellow-300 text-xs text-yellow-800 max-w-5xl flex items-center justify-between">
                 <span><strong>{draftJobs.length} draft job(s)</strong> — not yet visible on public site.</span>
-                <div className="flex gap-2 shrink-0">
-                  <button
-                    onClick={handlePublishAllDrafts}
-                    disabled={saving}
-                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">
-                    {saving ? "Publishing..." : "Publish All Drafts"}
-                  </button>
-                </div>
+                <button
+                  onClick={handlePublishAllDrafts}
+                  disabled={saving}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 shrink-0">
+                  {saving ? "Publishing..." : "Publish All Drafts"}
+                </button>
               </div>
             )}
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
               {/* Job List */}
               <div className="lg:col-span-2 space-y-3">
-                {/* View toggle */}
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2">
                   <div className="flex gap-1 bg-white rounded-lg border border-border p-0.5">
                     <button
                       onClick={() => setViewMode("published")}
-                      className={`px-3 py-1 rounded-md text-[11px] font-bold transition-all ${viewMode === "published" ? "bg-green-600 text-white" : "text-muted hover:text-foreground"}`}>
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${viewMode === "published" ? "bg-green-600 text-white" : "text-muted hover:text-foreground"}`}>
                       Published ({publishedJobs.length})
                     </button>
                     <button
                       onClick={() => setViewMode("draft")}
-                      className={`px-3 py-1 rounded-md text-[11px] font-bold transition-all ${viewMode === "draft" ? "bg-yellow-500 text-white" : "text-muted hover:text-foreground"}`}>
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${viewMode === "draft" ? "bg-yellow-500 text-white" : "text-muted hover:text-foreground"}`}>
                       Drafts ({draftJobs.length})
                     </button>
                   </div>
@@ -414,7 +402,7 @@ export default function CareerManagerPage() {
                   </div>
                 ) : displayJobs.length === 0 ? (
                   <p className="text-xs text-muted italic py-8 text-center">
-                    No {viewMode} jobs. {viewMode === "published" ? 'Click "+ Add Job" to create one.' : "Save a job as draft first."}
+                    No {viewMode} jobs.
                   </p>
                 ) : (
                   <div className="space-y-2 max-h-[600px] overflow-y-auto">
@@ -441,9 +429,7 @@ export default function CareerManagerPage() {
                           </div>
                           <div className="flex gap-1 shrink-0">
                             {viewMode === "published" && (
-                              <button
-                                onClick={() => handleToggleActive(job.id)}
-                                title={job.isActive ? "Deactivate" : "Activate"}
+                              <button onClick={() => handleToggleActive(job.id)}
                                 className={`w-6 h-6 flex items-center justify-center rounded ${job.isActive ? "bg-green-50 text-green-600 hover:bg-green-100" : "bg-gray-100 text-gray-400 hover:bg-gray-200"}`}>
                                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                   {job.isActive
@@ -452,17 +438,13 @@ export default function CareerManagerPage() {
                                 </svg>
                               </button>
                             )}
-                            <button
-                              onClick={() => setEditingJob({ ...job })}
-                              title="Edit"
+                            <button onClick={() => setEditingJob({ ...job })}
                               className="w-6 h-6 flex items-center justify-center rounded bg-blue-50 text-blue-600 hover:bg-blue-100">
                               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                               </svg>
                             </button>
-                            <button
-                              onClick={() => setDeleteConfirmId(job.id)}
-                              title="Delete"
+                            <button onClick={() => setDeleteConfirmId(job.id)}
                               className="w-6 h-6 flex items-center justify-center rounded bg-red-50 text-red-600 hover:bg-red-100">
                               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -489,7 +471,7 @@ export default function CareerManagerPage() {
                       <button onClick={() => setEditingJob(null)} className="text-muted hover:text-foreground text-xs">Cancel</button>
                     </div>
 
-                    <div className="space-y-4 max-h-[550px] overflow-y-auto pr-1">
+                    <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
                       <div>
                         <label className="block text-[11px] font-semibold text-foreground mb-1">Job Title *</label>
                         <input
@@ -499,6 +481,7 @@ export default function CareerManagerPage() {
                           placeholder="e.g. Mathematics Teacher"
                         />
                       </div>
+
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="block text-[11px] font-semibold text-foreground mb-1">Category *</label>
@@ -528,52 +511,49 @@ export default function CareerManagerPage() {
                           />
                         </div>
                       </div>
-                      <div>
-                        <label className="block text-[11px] font-semibold text-foreground mb-1">Level</label>
-                        <input
-                          value={(editingJob.level as LocaleContent)[lang] || ""}
-                          onChange={(e) => updateField("level", e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none"
-                          placeholder="e.g. Secondary (Grade 6-10)"
-                        />
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-foreground mb-1">Level</label>
+                          <input
+                            value={(editingJob.level as LocaleContent)[lang] || ""}
+                            onChange={(e) => updateField("level", e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none"
+                            placeholder="e.g. Secondary (Grade 6-10)"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-foreground mb-1">Experience</label>
+                          <input
+                            value={(editingJob.experience as LocaleContent)[lang] || ""}
+                            onChange={(e) => updateField("experience", e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none"
+                            placeholder="e.g. Minimum 3 years"
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-[11px] font-semibold text-foreground mb-1">Experience Required</label>
-                        <input
-                          value={(editingJob.experience as LocaleContent)[lang] || ""}
-                          onChange={(e) => updateField("experience", e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none"
-                          placeholder="e.g. Minimum 3 years"
-                        />
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-foreground mb-1">Salary</label>
+                          <input
+                            value={(editingJob.salary as LocaleContent)[lang] || ""}
+                            onChange={(e) => updateField("salary", e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none"
+                            placeholder="e.g. Negotiable"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-foreground mb-1">Workstation</label>
+                          <input
+                            value={(editingJob.workstation as LocaleContent)[lang] || ""}
+                            onChange={(e) => updateField("workstation", e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none"
+                            placeholder="e.g. Naxal, Kathmandu"
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-[11px] font-semibold text-foreground mb-1">Salary</label>
-                        <input
-                          value={(editingJob.salary as LocaleContent)[lang] || ""}
-                          onChange={(e) => updateField("salary", e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none"
-                          placeholder="e.g. Negotiable"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-semibold text-foreground mb-1">Workstation</label>
-                        <input
-                          value={(editingJob.workstation as LocaleContent)[lang] || ""}
-                          onChange={(e) => updateField("workstation", e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none"
-                          placeholder="e.g. Naxal, Kathmandu"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-semibold text-foreground mb-1">Job Description ({lang.toUpperCase()})</label>
-                        <textarea
-                          value={(editingJob.description as LocaleContent)?.[lang] || ""}
-                          onChange={(e) => updateField("description", e.target.value)}
-                          rows={4}
-                          className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:border-primary outline-none resize-y"
-                          placeholder="Full job description..."
-                        />
-                      </div>
+
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="block text-[11px] font-semibold text-foreground mb-1">Posted Date</label>
@@ -594,6 +574,7 @@ export default function CareerManagerPage() {
                           />
                         </div>
                       </div>
+
                       <div className="flex items-center gap-2">
                         <label className="text-[11px] font-semibold text-foreground">Active:</label>
                         <button
@@ -602,12 +583,30 @@ export default function CareerManagerPage() {
                           className={`w-8 h-5 rounded-full transition-colors relative shrink-0 ${editingJob.isActive ? "bg-green-500" : "bg-gray-300"}`}>
                           <span className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-white rounded-full shadow transition-transform ${editingJob.isActive ? "translate-x-3" : "translate-x-0"}`} />
                         </button>
-                        <span className="text-[10px] text-muted">{editingJob.isActive ? "Visible to public" : "Hidden from public"}</span>
+                        <span className="text-[10px] text-muted">{editingJob.isActive ? "Visible to public" : "Hidden"}</span>
+                      </div>
+
+                      {/* Rich Text Description */}
+                      <div data-color-mode="light">
+                        <label className="block text-[11px] font-semibold text-foreground mb-1">
+                          Job Description ({lang.toUpperCase()})
+                        </label>
+                        <MDEditor
+                          value={(editingJob.description as LocaleContent)?.[lang] || ""}
+                          onChange={(val) => updateField("description", val || "")}
+                          height={200}
+                          preview="edit"
+                        />
+                        <p className="text-[10px] text-muted mt-1">
+                          Supports **bold**, *italic*, - lists, ## headings
+                        </p>
                       </div>
 
                       {/* Responsibilities */}
                       <div>
-                        <label className="block text-[11px] font-semibold text-foreground mb-1">Responsibilities ({lang.toUpperCase()})</label>
+                        <label className="block text-[11px] font-semibold text-foreground mb-1">
+                          Responsibilities ({lang.toUpperCase()})
+                        </label>
                         <div className="space-y-1.5 mb-2">
                           {editingJob.responsibilities.map((r, i) => (
                             <div key={i} className="flex gap-1.5 items-start">
@@ -645,23 +644,23 @@ export default function CareerManagerPage() {
                       </div>
                     </div>
 
-                    {/* Action Buttons */}
+                    {/* Action Buttons - Fixed size */}
                     <div className="flex gap-2 mt-4 pt-4 border-t border-border">
                       <button
                         onClick={handleSaveJobAsDraft}
                         disabled={saving || !(editingJob.title as LocaleContent).en?.trim()}
-                        className="flex-1 py-2.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary-dark disabled:opacity-50">
-                        {saving ? "Saving..." : "Save as Draft"}
+                        className="px-4 py-2 rounded-lg text-xs font-bold bg-gray-600 text-white hover:bg-gray-700 disabled:opacity-50 whitespace-nowrap">
+                        {saving ? "Saving..." : "Save Draft"}
                       </button>
                       <button
                         onClick={handleSaveAndPublish}
                         disabled={saving || !(editingJob.title as LocaleContent).en?.trim()}
-                        className="py-2.5 px-4 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">
+                        className="px-4 py-2 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 whitespace-nowrap">
                         {saving ? "Publishing..." : "Save & Publish"}
                       </button>
                       <button
                         onClick={() => setEditingJob(null)}
-                        className="py-2.5 px-4 rounded-lg text-xs font-semibold border border-border text-muted hover:bg-surface">
+                        className="px-4 py-2 rounded-lg text-xs font-semibold border border-border text-muted hover:bg-surface whitespace-nowrap">
                         Cancel
                       </button>
                     </div>
@@ -679,6 +678,7 @@ export default function CareerManagerPage() {
           </>
         )}
 
+        {/* Applications Tab */}
         {activeTab === "applications" && (
           <div>
             <div className="flex items-center gap-1 bg-white rounded-xl border border-border p-1 mb-4 max-w-lg">
@@ -714,7 +714,7 @@ export default function CareerManagerPage() {
           </div>
         )}
 
-        {/* Delete Confirm Modal */}
+        {/* Delete Confirm */}
         {deleteConfirmId !== null && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setDeleteConfirmId(null)}>
             <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 p-6" onClick={(e) => e.stopPropagation()}>
@@ -741,7 +741,7 @@ export default function CareerManagerPage() {
           </div>
         )}
 
-        {/* Application Detail Modal */}
+        {/* Application Detail */}
         {selectedApp && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setSelectedApp(null)}>
             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
@@ -757,6 +757,9 @@ export default function CareerManagerPage() {
                 <p><strong className="text-xs text-muted uppercase tracking-wider">Job:</strong> {selectedApp.job_title}</p>
                 <p><strong className="text-xs text-muted uppercase tracking-wider">Email:</strong> {selectedApp.email}</p>
                 {selectedApp.phone && <p><strong className="text-xs text-muted uppercase tracking-wider">Phone:</strong> {selectedApp.phone}</p>}
+                {selectedApp.address && <p><strong className="text-xs text-muted uppercase tracking-wider">Address:</strong> {selectedApp.address}</p>}
+                {selectedApp.degree && <p><strong className="text-xs text-muted uppercase tracking-wider">Degree:</strong> {selectedApp.degree}</p>}
+                <p><strong className="text-xs text-muted uppercase tracking-wider">Experience:</strong> {selectedApp.experience_years} years</p>
                 {selectedApp.cover_letter && (
                   <div>
                     <strong className="text-xs text-muted uppercase tracking-wider">Cover Letter:</strong>
@@ -765,7 +768,6 @@ export default function CareerManagerPage() {
                 )}
               </div>
               <div className="mt-4 pt-4 border-t border-border">
-                <p className="text-xs text-muted uppercase tracking-wider mb-2">Files</p>
                 <div className="flex flex-wrap gap-2">
                   {selectedApp.cv_url && (
                     <a href={selectedApp.cv_url} target="_blank" className="text-xs text-primary font-semibold hover:underline bg-primary/5 px-2 py-1 rounded">
