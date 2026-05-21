@@ -220,6 +220,8 @@ export default function PublishReviewPage() {
     const groups: Record<string, MergedItem[]> = {};
 
     drafts.forEach((row) => {
+      // Skip careers job_vacancies - handled separately
+      if (row.section === "careers" && row.content_key === "job_vacancies") return;
       if (!groups[row.section]) groups[row.section] = [];
 
       if (MERGE_LOCALES_KEYS.includes(row.content_key)) {
@@ -513,3 +515,4 @@ function getPublishedTextFn(publishedContent: Map<string, any>, sec: string, key
   }
   return null;
 }
+
