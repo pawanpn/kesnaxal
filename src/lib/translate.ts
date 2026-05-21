@@ -107,7 +107,8 @@ export function resolveJob(
     experience: resolveContent(job.experience, locale),
     salary: resolveContent(job.salary, locale),
     workstation: resolveContent(job.workstation, locale),
-    responsibilities: job.responsibilities.map((r) => resolveContent(r, locale)),
+    description: job.description ? resolveContent(job.description, locale) : "",
+      responsibilities: job.responsibilities.map((r) => resolveContent(r, locale)),
   };
 }
 
@@ -125,3 +126,6 @@ export function resolveCalendarEvent(
       : "",
   };
 }
+
+
+

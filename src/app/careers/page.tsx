@@ -190,6 +190,20 @@ export default function CareersPage() {
                         </div>
                       ))}
                     </div>
+                    {resolvedSelected.description && (
+                      <div className="mb-4">
+                        <h4 className="font-heading font-bold text-sm text-primary mb-2">Job Description</h4>
+                        <p className="text-xs text-muted leading-relaxed whitespace-pre-wrap">{resolvedSelected.description}</p>
+                      </div>
+                    )}
+
+
+                    {resolvedSelected.description && (
+                      <div className="mb-5">
+                        <h4 className="font-heading font-bold text-sm text-primary mb-2">Job Description</h4>
+                        <p className="text-xs text-muted leading-relaxed whitespace-pre-wrap">{resolvedSelected.description}</p>
+                      </div>
+                    )}
 
                     {resolvedSelected.responsibilities.length > 0 && (
                       <div>
@@ -245,3 +259,7 @@ export default function CareersPage() {
     </div>
   );
 }
+
+
+
+
