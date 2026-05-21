@@ -438,6 +438,27 @@ export default function CareerManagerPage() {
                                 </svg>
                               </button>
                             )}
+                            {viewMode === "draft" && (
+                              <button
+                                onClick={async () => {
+                                  const updatedPublished = [...publishedJobs.filter(j => j.id !== job.id), job];
+                                  const updatedDrafts = draftJobs.filter(j => j.id !== job.id);
+                                  const ok = await saveJobsToDb(updatedPublished, "published");
+                                  if (ok) {
+                                    await saveJobsToDb(updatedDrafts, "draft");
+                                    setPublishedJobs(updatedPublished);
+                                    setDraftJobs(updatedDrafts);
+                                    if (updatedDrafts.length === 0) setViewMode("published");
+                                    toast("success", "Job published!");
+                                  }
+                                }}
+                                title="Publish this job"
+                                className="w-6 h-6 flex items-center justify-center rounded bg-green-50 text-green-600 hover:bg-green-100">
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                              </button>
+                            )}
                             <button onClick={() => setEditingJob({ ...job })}
                               className="w-6 h-6 flex items-center justify-center rounded bg-blue-50 text-blue-600 hover:bg-blue-100">
                               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
