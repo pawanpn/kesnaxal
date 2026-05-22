@@ -12,60 +12,81 @@ npm run build     # Production build
 npm run lint      # ESLint (next/core-web-vitals)
 ```
 
-There is no `typecheck` script, no test framework, and no CI.
+No `typecheck` script, no test framework, no CI.
+
+## Env vars
+
+Required in `.env.local`:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SITE_URL` (optional, defaults to `https://kes.edu.np`)
 
 ## Supabase & Database
 
-- Single Supabase client in `src/lib/supabase/client.ts`. Import `{ supabase }` from there — never create a new client.
-- Schema lives in `src/lib/supabase/schema.sql` using `CREATE TABLE IF NOT EXISTS`. **There is no migration system.**
-- **When adding a new column to an existing table**, you MUST append an `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` in the same file below the CREATE TABLE. Otherwise the column only exists in SQL and never hits the actual DB.
-- Supabase is used for both content storage (`site_content` table) and admin auth (`supabase.auth`).
-- Row-level security is enabled on all tables. INSERT policies for content are admin-only except `career_applications` (public insert) and `admissions` (public insert).
+- Single Supabase client: `src/lib/supabase/client.ts`. Import `{ supabase }` from there only.
+- Schema: `src/lib/supabase/schema.sql`. **There is no migration system.** Schema uses `CREATE TABLE IF NOT EXISTS` — safe to re-run.
+- **When adding a column**, append `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` in the same file below the CREATE TABLE. Otherwise it never reaches the DB.
+- Supabase serves both content storage (`site_content` table) and admin auth.
+
+### Table policies (public insert)
+
+These 3 tables allow public anonymous INSERT:
+- `career_applications`
+- `contact_messages`
+- `admission_inquiries`
+
+All other tables are admin-only for INSERT/UPDATE/DELETE. All tables allow admin read via `is_admin()` function.
+
+### is_admin() check
+
+The `is_admin()` Postgres function checks `EXISTS (SELECT 1 FROM admin_profiles WHERE id = auth.uid())`. Any user in `admin_profiles` is an admin — regardless of role. Role only matters for `is_superadmin()`.
 
 ## Architecture
 
-### Content system (`site_content` table)
+### Content system (`site_content`)
 
-All dynamic content is stored in `site_content` keyed by `(section, content_key, locale)`. Fields:
+Keyed by `(section, content_key, locale)` UNIQUE. Three value columns:
 - `content_text` — plain text or JSON string
-- `content_json` — structured JSON (takes priority over `content_text` for JSON lookups)
+- `content_json` — structured JSONB (takes priority over `content_text` for JSON queries)
+- `content_meta` — JSONB metadata (publishedAt, isActive, mediaUrl, fileName, mimeType, etc.)
 - `status` — `"draft"` or `"published"`
 
-Admin reads both draft + published; public reads published only. The `AdminContext` (`src/context/AdminContext.tsx`) holds two Maps for draft/published content queried via React Query.
+Public reads `"published"` only. Admins read all. `AdminContext` holds separate Maps for draft/published rows via React Query.
 
-### Seed & fallback data
+### Seed & fallback
 
-- `src/constants/siteConfig.ts` is the hardcoded fallback used when Supabase is empty. **All types of content** (hero, events, jobs, gallery, staff, etc.) have defaults there.
-- `src/lib/seedContent.ts` generates `SeedRow[]` from `siteConfig`. The admin "Seed from siteConfig" button calls `seedAllContent()` → upserts into `site_content`.
-- The `src/lib/supabase/content.ts` server utilities also fall back to `siteConfig` when Supabase returns empty results.
+- `src/constants/siteConfig.ts` — hardcoded defaults for **all content types** (hero, events, jobs, gallery, staff, etc.).
+- `src/lib/seedContent.ts` — generates `SeedRow[]` from `siteConfig`. Admin "Seed from siteConfig" button calls `seedAllContent()` → upserts into `site_content`.
+- `src/lib/supabase/content.ts` — server utilities fall back to `siteConfig` when Supabase returns empty.
 
 ### Locale / i18n
 
-- 3 locales: `"en"`, `"ne"`, `"ja"` (type `Locale` in `src/types/index.ts`).
-- UI strings: `src/translations/index.ts` → `translations` map, consumed via `useLocale()` hook → `t` object.
-- Multi-locale data objects use `LocaleContent` type (`{ en: string; ne: string; ja: string }`). Resolve with `resolveLocale()` or domain helpers (`resolveJob`, `resolveArticle`, etc.) from `src/lib/translate.ts`.
-- Auto-translation calls MyMemory API (`src/lib/autoTranslate.ts`) with in-memory cache. Available in admin editing UI via `handleTranslate`.
+- Locale type: `"en" | "ne" | "ja"` (`Locale` in `src/types/index.ts`).
+- UI strings: `src/translations/index.ts` → `translations` map, consumed via `useLocale()` hook.
+- Multi-locale data: `LocaleContent` = `{ en: string; ne: string; ja: string }`. Resolve with `resolveLocale()` or domain helpers (`resolveJob`, `resolveArticle`, etc.) from `src/lib/translate.ts`.
+- Auto-translation (MyMemory API) via `src/lib/autoTranslate.ts`. In-memory cache. Used in admin editing UI via `handleTranslate`.
 
 ### Admin / CMS
 
-- Login at `/admin/login` via Supabase auth (email/password).
-- Roles: `admin` and `superadmin` (stored in `admin_profiles.role`).
-- Draft/publish workflow: edits save as `"draft"`, reviewed in Preview Mode (cookie `kes_preview=1`), then published via Admin sidebar or `/admin/publish`.
-- Real-time subscription on `site_content` table refreshes React Query cache for logged-in admins.
-- Content managers: each admin section in `src/app/admin/content/<section>/page.tsx`. Admin layout: `src/app/admin/layout.tsx`.
+- Login: `/admin/login` via `supabase.auth.signInWithPassword`.
+- Roles: `'editor'` (default for new users) and `'superadmin'`. Both can edit content (they pass `is_admin()`). Only `'superadmin'` can manage `admin_profiles`.
+- `AdminProvider` in `src/context/AdminContext.tsx` exposes: `isAdmin` (has session) and `isSuperadmin` (role check).
+- Draft/publish workflow: edits save as `"draft"`, preview with cookie `kes_preview=1`, publish via admin sidebar or `/admin/publish`.
+- Real-time subscription on `site_content` refreshes React Query cache for admins.
+- Content managers: each admin section lives in `src/app/admin/content/<section>/page.tsx`.
 
 ### Public pages
 
-Nearly all pages are client components (`"use client"`). Pages fetch content via `useDynamicContent()` hook which merges published CMS data with `siteConfig` fallbacks.
+Nearly all pages are `"use client"`. Pages fetch via `useDynamicContent()` hook which merges published CMS data with `siteConfig` fallbacks.
 
 ### Middleware
 
-`src/middleware.ts` sets CSP, HSTS, and security headers. CSP includes `'unsafe-eval'` for `script-src` (needed by Supabase SDK). If modifying CSP, keep this in mind.
+`src/middleware.ts` sets CSP (with `'unsafe-eval'` for Supabase SDK), HSTS, and security headers. Modifying CSP requires `'unsafe-eval'` in `script-src` to remain.
 
 ## Key conventions
 
-- **HTML sanitization**: Use `stripHtml()` from `src/lib/sanitize.ts` on all user input before storing (imported as part of `isomorphic-dompurify`).
-- **Path alias**: `@/` maps to `src/`.
-- **No `<img>` eslint rule**: Disabled (`@next/next/no-img-element: "off"`) — `next/image` is not required.
-- **Components**: `src/components/ui/` for shared UI primitives, `src/components/sections/` for page sections, `src/components/layout/` for layout components (Navbar, Footer).
-- **Config**: Tailwind v4 uses `@tailwindcss/postcss` plugin, not the v3 config file. All styling via Tailwind classes.
+- **Sanitization**: `stripHtml()` removes all tags; `sanitizeHtml()` allows a safe subset. Both in `src/lib/sanitize.ts` (uses `dompurify` directly, NOT `isomorphic-dompurify`).
+- **Path alias**: `@/` → `src/`.
+- **No `<img>` eslint rule**: disabled — `next/image` is not required.
+- **Components**: `src/components/ui/` (primitives), `src/components/sections/` (page sections), `src/components/layout/` (Navbar, Footer).
+- **Tailwind v4**: uses `@tailwindcss/postcss` plugin in `postcss.config.mjs`. No `tailwind.config.*`.

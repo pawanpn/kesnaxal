@@ -88,6 +88,7 @@ export function resolveJob(
     experience: LocaleContent;
     salary: LocaleContent;
     workstation: LocaleContent;
+    description?: LocaleContent;
     responsibilities: LocaleContent[];
   },
   locale: Locale
@@ -98,6 +99,7 @@ export function resolveJob(
   experience: string;
   salary: string;
   workstation: string;
+  description: string;
   responsibilities: string[];
 } {
   return {
