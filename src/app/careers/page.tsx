@@ -10,17 +10,16 @@ import { useDynamicContent } from "@/hooks/useDynamicContent";
 import { resolveJob } from "@/lib/translate";
 import { supabase } from "@/lib/supabase/client";
 
-function formatDateLocale(
-  date: Date,
-  locale: string,
-  options: Intl.DateTimeFormatOptions
-): string {
-  const localeMap: Record<string, string> = {
-    en: "en-US",
-    ne: "ne-NP",
-    ja: "ja-JP",
-  };
+function formatDateLocale(date: Date, locale: string, options: Intl.DateTimeFormatOptions): string {
+  const localeMap: Record<string, string> = { en: "en-US", ne: "ne-NP", ja: "ja-JP" };
   return date.toLocaleDateString(localeMap[locale] || "en-US", options);
+}
+
+function safeDate(dateStr: string): string {
+  if (!dateStr || dateStr.trim() === "") return "";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "";
+  return dateStr;
 }
 
 export default function CareersPage() {
@@ -31,7 +30,6 @@ export default function CareersPage() {
   const { locale, t } = useLocale();
   const { school } = useDynamicContent();
 
-  // Fetch ONLY published jobs directly from Supabase
   useEffect(() => {
     async function fetchPublishedJobs() {
       setJobsLoading(true);
@@ -156,6 +154,8 @@ export default function CareersPage() {
             <div className="lg:col-span-1">
               {selectedJob ? (() => {
                 const resolvedSelected = resolveJob(selectedJob, locale);
+                const addedOnSafe = safeDate(selectedJob.addedOn);
+                const expiresOnSafe = safeDate(selectedJob.expiresOn);
                 return (
                   <div className="bg-white rounded-2xl shadow-lg border border-primary/20 p-6 lg:sticky lg:top-24 animate-fadein">
                     <div className="flex items-center justify-between mb-5">
@@ -172,7 +172,8 @@ export default function CareersPage() {
                       </button>
                     </div>
 
-                    <div className="space-y-3 mb-6">
+                    {/* Job Info Table */}
+                    <div className="space-y-2 mb-5">
                       {[
                         { label: t.careers.jobTitle, value: resolvedSelected.title },
                         { label: t.careers.category, value: resolvedSelected.category },
@@ -181,8 +182,8 @@ export default function CareersPage() {
                         { label: t.careers.salary, value: resolvedSelected.salary },
                         { label: t.careers.noOfVacancies, value: selectedJob.vacancies.toString() },
                         { label: t.careers.workStation, value: resolvedSelected.workstation },
-                        { label: t.careers.addedOn, value: selectedJob.addedOn ? formatDateLocale(new Date(selectedJob.addedOn), locale, { day: "numeric", month: "long", year: "numeric" }) : "" },
-                        { label: t.careers.applyBefore, value: selectedJob.expiresOn ? formatDateLocale(new Date(selectedJob.expiresOn), locale, { day: "numeric", month: "long", year: "numeric" }) : "" },
+                        { label: t.careers.addedOn, value: addedOnSafe ? formatDateLocale(new Date(addedOnSafe), locale, { day: "numeric", month: "long", year: "numeric" }) : "" },
+                        { label: t.careers.applyBefore, value: expiresOnSafe ? formatDateLocale(new Date(expiresOnSafe), locale, { day: "numeric", month: "long", year: "numeric" }) : "" },
                       ].filter(row => row.value).map((row) => (
                         <div key={row.label} className="flex justify-between items-start gap-4 py-2 border-b border-border last:border-0">
                           <span className="text-xs text-muted shrink-0">{row.label}</span>
@@ -190,23 +191,22 @@ export default function CareersPage() {
                         </div>
                       ))}
                     </div>
-                    {resolvedSelected.description && (
-                      <div className="mb-4">
-                        <h4 className="font-heading font-bold text-sm text-primary mb-2">Job Description</h4>
-                        <p className="text-xs text-muted leading-relaxed whitespace-pre-wrap">{resolvedSelected.description}</p>
-                      </div>
-                    )}
 
-
+                    {/* Job Description */}
                     {resolvedSelected.description && (
                       <div className="mb-5">
-                        <h4 className="font-heading font-bold text-sm text-primary mb-2">Job Description</h4>
-                        <p className="text-xs text-muted leading-relaxed whitespace-pre-wrap">{resolvedSelected.description}</p>
+                        <h4 className="font-heading font-bold text-sm text-primary mb-2">
+                          {t.careers.responsibilities ? "Job Description" : "Description"}
+                        </h4>
+                        <p className="text-xs text-muted leading-relaxed whitespace-pre-wrap">
+                          {resolvedSelected.description}
+                        </p>
                       </div>
                     )}
 
+                    {/* Responsibilities */}
                     {resolvedSelected.responsibilities.length > 0 && (
-                      <div>
+                      <div className="mb-5">
                         <h4 className="font-heading font-bold text-sm text-primary mb-3">
                           {t.careers.responsibilities}
                         </h4>
@@ -227,7 +227,7 @@ export default function CareersPage() {
 
                     <button
                       onClick={() => handleApply(selectedJob)}
-                      className="w-full mt-6 px-6 py-3 bg-accent text-white rounded-lg text-sm font-bold hover:bg-accent-dark transition-colors shadow-sm"
+                      className="w-full mt-2 px-6 py-3 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary-dark transition-colors shadow-sm"
                     >
                       {t.careers.applyForPosition}
                     </button>
@@ -246,7 +246,6 @@ export default function CareersPage() {
         </div>
       </section>
 
-      {/* Application Form Modal */}
       {applyingJob && (
         <ApplicationForm
           job={applyingJob}
@@ -259,7 +258,4 @@ export default function CareersPage() {
     </div>
   );
 }
-
-
-
 

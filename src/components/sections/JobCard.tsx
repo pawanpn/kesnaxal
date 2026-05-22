@@ -17,6 +17,13 @@ function formatDateLocale(
   return date.toLocaleDateString(localeMap[locale] || "en-US", options);
 }
 
+function safeFormatDate(dateStr: string, locale: string, options: Intl.DateTimeFormatOptions): string {
+  if (!dateStr || dateStr.trim() === "") return "";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "";
+  return formatDateLocale(d, locale, options);
+}
+
 interface JobCardProps {
   job: JobVacancy;
   isSelected: boolean;
@@ -29,7 +36,12 @@ interface JobCardProps {
 export default function JobCard({ job, isSelected, locale, t, onToggleDetails, onApply }: JobCardProps) {
   const resolved = resolveJob(job, locale);
   const catEn = job.category.en;
-  const isExpired = new Date(job.expiresOn) < new Date();
+
+  const addedOnStr = safeFormatDate(job.addedOn, locale, { day: "numeric", month: "short", year: "numeric" });
+  const expiresOnStr = safeFormatDate(job.expiresOn, locale, { day: "numeric", month: "short", year: "numeric" });
+  const isExpired = job.expiresOn && job.expiresOn.trim() !== "" && !isNaN(new Date(job.expiresOn).getTime())
+    ? new Date(job.expiresOn) < new Date()
+    : false;
 
   return (
     <div
@@ -55,18 +67,22 @@ export default function JobCard({ job, isSelected, locale, t, onToggleDetails, o
           </div>
           <p className="text-xs text-muted mb-3">{resolved.level}</p>
           <div className="flex flex-wrap items-center gap-4 text-xs text-muted">
-            <span className="flex items-center gap-1.5">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {t.careers.addedOn} {formatDateLocale(new Date(job.addedOn), locale, { day: "numeric", month: "short", year: "numeric" })}
-            </span>
-            <span className={`flex items-center gap-1.5 font-semibold ${isExpired ? "text-accent" : "text-orange-600"}`}>
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {t.careers.expiresOn} {formatDateLocale(new Date(job.expiresOn), locale, { day: "numeric", month: "short", year: "numeric" })}
-            </span>
+            {addedOnStr && (
+              <span className="flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {t.careers.addedOn} {addedOnStr}
+              </span>
+            )}
+            {expiresOnStr && (
+              <span className={`flex items-center gap-1.5 font-semibold ${isExpired ? "text-accent" : "text-orange-600"}`}>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {t.careers.expiresOn} {expiresOnStr}
+              </span>
+            )}
             <span className="flex items-center gap-1.5">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
