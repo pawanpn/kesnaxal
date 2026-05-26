@@ -388,7 +388,7 @@ export default function AlertsPage() {
                           </div>
                         ))}
                       </div>
-                      <button onClick={() => handleTranslate(`ticker_${msg.id}`, msg.text.en, (v) => updateTickerMessage(msg.id, "ne", v.ne) || updateTickerMessage(msg.id, "ja", v.ja), msg.text)}
+                      <button onClick={() => handleTranslate(`ticker_${msg.id}`, msg.text.en, (v) => { setTickerMessages(prev => prev.map(m => m.id === msg.id ? { ...m, text: { ...m.text, ne: v.ne || m.text.ne, ja: v.ja || m.text.ja } } : m)); }, msg.text)}
                         disabled={!msg.text.en.trim() || !!translating}
                         className="flex items-center gap-1 px-2 py-1 rounded text-[10px] border border-border hover:bg-primary/5 disabled:opacity-30">
                         {translating === `ticker_${msg.id}` ? "Translating..." : "Auto-translate EN→NE,JA"}
@@ -654,3 +654,4 @@ export default function AlertsPage() {
     </AdminGuard>
   );
 }
+
