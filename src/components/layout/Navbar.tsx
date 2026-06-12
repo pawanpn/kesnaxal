@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { siteConfig } from "@/constants/siteConfig";
 import { useLocale } from "@/hooks/useLocale";
 import { usePrefetch } from "@/hooks/usePrefetch";
+import { useSiteContent } from "@/hooks/useSiteContent";
 import SiteLogo from "@/components/SiteLogo";
 import type { NavLink } from "@/types";
 
@@ -18,6 +19,7 @@ export default function Navbar() {
   const [academicsOpen, setAcademicsOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const { locale, setLocale, t, locales } = useLocale();
+  const { getText } = useSiteContent("global", locale);
   const langRef = useRef<HTMLDivElement>(null);
 
   const isActive = (href: string) => pathname === href;
@@ -51,7 +53,7 @@ export default function Navbar() {
                 {siteConfig.school.name}
               </p>
               <p className="text-[10px] lg:text-[11px] text-muted italic whitespace-nowrap">
-                {t.hero.motto}
+                {getText("motto") || t.hero.motto}
               </p>
             </div>
           </Link>
@@ -221,3 +223,7 @@ export default function Navbar() {
     </header>
   );
 }
+
+
+
+
