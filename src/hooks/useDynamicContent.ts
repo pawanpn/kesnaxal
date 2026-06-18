@@ -48,7 +48,7 @@ export function useDynamicContent() {
       ...def,
       name: getContent("global", "schoolName", locale) || def.name,
       shortName: getContent("global", "shortName", locale) || def.shortName,
-      motto: getContent("global", "motto", locale) || def.motto,
+      motto: getContent("global", "motto", locale) || (contentReady ? def.motto : ""),
       established: Number(getContent("global", "established", locale)) || def.established,
       history: getContent("global", "history", locale) || def.history,
       principal: {
@@ -358,6 +358,7 @@ export function useDynamicContent() {
     notices,
   };
 }
+
 
 
 
