@@ -39,7 +39,7 @@ export function useDynamicContent() {
       getContent("hero", "slide_0_title", locale) ||
       getContent("events", "event_1_title", locale)
     );
-  }, [getContent, locale]);
+  }, [getContent, locale, contentReady]);
 
   // ── School (minimal fallback for site identity) ──
   const school: SchoolInfo = useMemo(() => {
