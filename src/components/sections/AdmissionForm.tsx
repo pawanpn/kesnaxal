@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,11 +23,67 @@ const admissionSchema = z.object({
 
 type AdmissionFormData = z.infer<typeof admissionSchema>;
 
+interface ClassOption {
+  id: string;
+  value: string;
+  label: string;
+  active: boolean;
+}
+
+// Fallback classes if DB has none configured yet
+const FALLBACK_CLASSES: ClassOption[] = [
+  { id: "1", value: "Nursery", label: "Nursery", active: true },
+  { id: "2", value: "LKG", label: "LKG", active: true },
+  { id: "3", value: "UKG", label: "UKG", active: true },
+  { id: "4", value: "Grade 1", label: "Grade 1", active: true },
+  { id: "5", value: "Grade 2", label: "Grade 2", active: true },
+  { id: "6", value: "Grade 3", label: "Grade 3", active: true },
+  { id: "7", value: "Grade 4", label: "Grade 4", active: true },
+  { id: "8", value: "Grade 5", label: "Grade 5", active: true },
+  { id: "9", value: "Grade 6", label: "Grade 6", active: true },
+  { id: "10", value: "Grade 7", label: "Grade 7", active: true },
+  { id: "11", value: "Grade 8", label: "Grade 8", active: true },
+  { id: "12", value: "Grade 9", label: "Grade 9", active: true },
+  { id: "13", value: "Grade 10", label: "Grade 10", active: true },
+  { id: "14", value: "Grade 11 Science", label: "Grade 11 (Science)", active: true },
+  { id: "15", value: "Grade 11 Management", label: "Grade 11 (Management)", active: true },
+  { id: "16", value: "Grade 12 Science", label: "Grade 12 (Science)", active: true },
+  { id: "17", value: "Grade 12 Management", label: "Grade 12 (Management)", active: true },
+];
+
+async function fetchClassOptions(): Promise<ClassOption[]> {
+  try {
+    const { data } = await supabase
+      .from("site_content")
+      .select("content_json")
+      .eq("section", "admissions")
+      .eq("content_key", "class_list")
+      .eq("locale", "en")
+      .eq("status", "published")
+      .maybeSingle();
+
+    if (data?.content_json) {
+      const json = data.content_json as { classes?: ClassOption[] };
+      if (json?.classes?.length) {
+        return json.classes.filter((c) => c.active !== false);
+      }
+    }
+  } catch {
+    // fall through to fallback
+  }
+  return FALLBACK_CLASSES;
+}
+
 export default function AdmissionForm() {
   const t = useT();
   const [step, setStep] = useState(1);
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [classOptions, setClassOptions] = useState<ClassOption[]>(FALLBACK_CLASSES);
+
+  useEffect(() => {
+    fetchClassOptions().then(setClassOptions);
+  }, []);
 
   const { register, handleSubmit, trigger, reset, formState: { errors } } = useForm<AdmissionFormData>({
     resolver: zodResolver(admissionSchema),
@@ -37,26 +93,6 @@ export default function AdmissionForm() {
     { id: 1, label: t.admission.studentInformation, icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" },
     { id: 2, label: t.admission.parentGuardian, icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" },
     { id: 3, label: t.admission.contactDetails, icon: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" },
-  ];
-
-  const classOptions = [
-    { value: "Nursery", label: t.admission.nursery },
-    { value: "LKG", label: t.admission.lkg },
-    { value: "UKG", label: t.admission.ukg },
-    { value: "Grade 1", label: t.admission.grade1 },
-    { value: "Grade 2", label: t.admission.grade2 },
-    { value: "Grade 3", label: t.admission.grade3 },
-    { value: "Grade 4", label: t.admission.grade4 },
-    { value: "Grade 5", label: t.admission.grade5 },
-    { value: "Grade 6", label: t.admission.grade6 },
-    { value: "Grade 7", label: t.admission.grade7 },
-    { value: "Grade 8", label: t.admission.grade8 },
-    { value: "Grade 9", label: t.admission.grade9 },
-    { value: "Grade 10", label: t.admission.grade10 },
-    { value: "Grade 11 Science", label: t.admission.grade11 },
-    { value: "Grade 11 Management", label: t.admission.grade12 },
-    { value: "Grade 12 Science", label: t.admission.grade11b },
-    { value: "Grade 12 Management", label: t.admission.grade12b },
   ];
 
   const validateStep = async (): Promise<boolean> => {
@@ -133,7 +169,7 @@ export default function AdmissionForm() {
                   <label className="block text-sm font-semibold text-foreground mb-1.5">{t.admission.applyingForClass}</label>
                   <select {...register("studentClass")} className="w-full px-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm bg-white">
                     <option value="">{t.admission.selectClass}</option>
-                    {classOptions.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+                    {classOptions.map((c) => <option key={c.id} value={c.value}>{c.label}</option>)}
                   </select>
                   {errors.studentClass && <p className="text-accent text-xs mt-1">{errors.studentClass.message}</p>}
                 </div>
