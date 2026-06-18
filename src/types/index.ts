@@ -196,6 +196,12 @@ export interface StaffMember {
   designation: string;
   photo: string;
   department?: string;
+  category?: "teaching" | "administration" | "support";
+  qualification?: string;
+  bio?: string;
+  email?: string;
+  order?: number;
+  active?: boolean;
 }
 
 // ── Jobs / Careers ──
@@ -272,3 +278,5 @@ export interface SiteConfig {
   calendarEvents: CalendarEvent[];
   notices?: Notice[];
 }
+
+

@@ -53,7 +53,7 @@ export default function Navbar() {
                 {siteConfig.school.name}
               </p>
               <p className="text-[10px] lg:text-[11px] text-muted italic whitespace-nowrap">
-                {getText("motto") || t.hero.motto}
+                {getText("motto") || ""}
               </p>
             </div>
           </Link>
@@ -223,6 +223,7 @@ export default function Navbar() {
     </header>
   );
 }
+
 
 
 
