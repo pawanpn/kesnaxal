@@ -267,8 +267,8 @@ export default function CalendarSection({ events, eventTypes = [] }: CalendarSec
                         {dayEvents.slice(0, 3).map((e, i) => (
                           <span
                             key={i}
-                            className={`w-1 h-1 rounded-full ${i > 0 ? "bg-muted" : ""}`}
-                            style={i === 0 ? { backgroundColor: getTypeColor(e.type) } : undefined}
+                            className="w-1 h-1 rounded-full"
+                            style={{ backgroundColor: getTypeColor(e.type) }}
                           />
                         ))}
                       </div>
@@ -303,53 +303,53 @@ export default function CalendarSection({ events, eventTypes = [] }: CalendarSec
               ))}
             </div>
 
-            {/* Event List */}
+            {/* Event Markers */}
             {monthEvents.length > 0 ? (
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {monthEvents
-                  .filter(Boolean)
-                  .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                  .map((event) => {
-                    const resolved = resolveCalendarEvent(event, locale);
-                    const d = getEventDates(event);
-                    const isAD = mode === "AD";
-                    return (
-                      <div
-                        key={event.id}
-                        className="bg-white rounded-lg p-3 shadow-sm border border-border hover:shadow-md transition-shadow flex gap-3"
-                      >
-                        <div
-                          className="shrink-0 w-12 h-12 rounded-lg flex flex-col items-center justify-center"
-                          style={{ backgroundColor: getTypeColor(event.type), color: "white" }}
-                        >
-                          <span className="text-base font-bold leading-none">
-                            {isAD ? d.adDay : d.bsDay || d.adDay}
-                          </span>
-                          <span className="text-[9px] uppercase font-medium leading-tight">
-                            {isAD ? d.adMonth : d.bsMonth || d.adMonth}
-                          </span>
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[11px] font-semibold text-foreground leading-snug">
-                            {resolved.title}
-                          </p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[11px] text-foreground font-medium">
-                              {isAD ? d.adFull : d.bsFull || d.adFull}
-                            </span>
-                            <span className="text-[10px] text-muted">
-                              {isAD ? d.bsFull : d.adFull}
+              <div className="mt-6">
+                <p className="text-[10px] font-bold text-muted uppercase tracking-wider mb-3">
+                  {currentMonths[month]} {currentYear}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {monthEvents
+                    .filter(Boolean)
+                    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                    .map((event) => {
+                      const resolved = resolveCalendarEvent(event, locale);
+                      const d = getEventDates(event);
+                      const isAD = mode === "AD";
+                      const endDate = event.endDate && event.endDate !== event.date ? new Date(event.endDate) : null;
+                      const endValid = endDate && !isNaN(endDate.getTime());
+                      return (
+                        <div key={event.id} className="relative group">
+                          <div
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-medium cursor-default transition-all hover:scale-105"
+                            style={{
+                              backgroundColor: `${getTypeColor(event.type)}15`,
+                              color: getTypeColor(event.type),
+                              border: `1px solid ${getTypeColor(event.type)}30`,
+                            }}
+                          >
+                            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: getTypeColor(event.type) }} />
+                            <span className="whitespace-nowrap">
+                              {isAD ? `${d.adDay} ${d.adMonth}` : `${d.bsDay || d.adDay} ${d.bsMonth || d.adMonth}`}
                             </span>
                           </div>
-                          {resolved.description && (
-                            <p className="text-[10px] text-muted mt-0.5 line-clamp-1">
-                              {resolved.description}
-                            </p>
-                          )}
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 z-20 bg-foreground text-white text-[10px] rounded-lg px-2.5 py-2 shadow-xl pointer-events-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                            <div className="font-semibold text-white leading-snug">{resolved.title}</div>
+                            {endValid && (
+                              <div className="text-white/60 text-[9px] mt-0.5">
+                                {formatDateLocale(new Date(event.date), locale, { month: "short", day: "numeric" })} → {formatDateLocale(endDate, locale, { month: "short", day: "numeric" })}
+                              </div>
+                            )}
+                            {resolved.description && (
+                              <div className="text-white/60 text-[9px] mt-0.5 max-w-[180px] leading-snug">{resolved.description}</div>
+                            )}
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-foreground" />
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                </div>
               </div>
             ) : (
               <div className="text-center py-12 mt-8">

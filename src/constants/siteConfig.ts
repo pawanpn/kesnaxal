@@ -999,40 +999,11 @@ export const siteConfig: SiteConfig = {
       },
       type: "vacation",
       date: "2026-01-02",
+      endDate: "2026-01-08",
       description: {
-        en: "Winter vacation continues.",
-        ne: "हिउँदे बिदा जारी छ।",
-        ja: "冬休み継続中。",
-      },
-    },
-    {
-      id: 3,
-      title: {
-        en: "Winter Vacation",
-        ne: "हिउँदे बिदा",
-        ja: "冬休み",
-      },
-      type: "vacation",
-      date: "2026-01-05",
-      description: {
-        en: "Winter vacation continues.",
-        ne: "हिउँदे बिदा जारी छ।",
-        ja: "冬休み継続中。",
-      },
-    },
-    {
-      id: 4,
-      title: {
-        en: "Winter Vacation",
-        ne: "हिउँदे बिदा",
-        ja: "冬休み",
-      },
-      type: "vacation",
-      date: "2026-01-08",
-      description: {
-        en: "Winter vacation continues.",
-        ne: "हिउँदे बिदा जारी छ।",
-        ja: "冬休み継続中。",
+        en: "Winter vacation. School closed.",
+        ne: "हिउँदे बिदा। विद्यालय बन्द।",
+        ja: "冬休み。学校休校。",
       },
     },
     {
@@ -1308,31 +1279,17 @@ export const siteConfig: SiteConfig = {
     {
       id: 23,
       title: {
-        en: "Summer Vacation Begins",
-        ne: "ग्रीष्म बिदा सुरु",
-        ja: "夏休み開始",
-      },
-      type: "vacation",
-      date: "2026-06-20",
-      description: {
-        en: "Summer break for all students and staff.",
-        ne: "सबै विद्यार्थी र कर्मचारीहरूको लागि ग्रीष्म बिदा।",
-        ja: "全生徒・職員の夏休み。",
-      },
-    },
-    {
-      id: 24,
-      title: {
         en: "Summer Vacation",
         ne: "ग्रीष्म बिदा",
         ja: "夏休み",
       },
       type: "vacation",
-      date: "2026-06-30",
+      date: "2026-06-20",
+      endDate: "2026-06-30",
       description: {
-        en: "Summer vacation continues.",
-        ne: "ग्रीष्म बिदा जारी छ।",
-        ja: "夏休み継続中。",
+        en: "Summer break for all students and staff.",
+        ne: "सबै विद्यार्थी र कर्मचारीहरूको लागि ग्रीष्म बिदा।",
+        ja: "全生徒・職員の夏休み。",
       },
     },
     {
@@ -1413,12 +1370,13 @@ export const siteConfig: SiteConfig = {
     {
       id: 30,
       title: {
-        en: "Dashain Vacation Begins",
-        ne: "दशैं बिदा सुरु",
-        ja: "ダサイン休暇開始",
+        en: "Dashain Vacation",
+        ne: "दशैं बिदा",
+        ja: "ダサイン休暇",
       },
       type: "vacation",
       date: "2026-10-05",
+      endDate: "2026-10-19",
       description: {
         en: "Dashain holidays. School closed for 15 days.",
         ne: "दशैं बिदा। विद्यालय १५ दिन बन्द।",
@@ -1449,6 +1407,7 @@ export const siteConfig: SiteConfig = {
       },
       type: "vacation",
       date: "2026-10-28",
+      endDate: "2026-11-01",
       description: {
         en: "Tihar holidays. School closed for 5 days.",
         ne: "तिहार बिदा। विद्यालय ५ दिन बन्द।",
@@ -1563,12 +1522,13 @@ export const siteConfig: SiteConfig = {
     {
       id: 40,
       title: {
-        en: "Winter Vacation Begins",
-        ne: "हिउँदे बिदा सुरु",
-        ja: "冬休み開始",
+        en: "Winter Vacation",
+        ne: "हिउँदे बिदा",
+        ja: "冬休み",
       },
       type: "vacation",
       date: "2026-12-26",
+      endDate: "2026-12-31",
       description: {
         en: "Winter holidays. School closed.",
         ne: "हिउँदे बिदा। विद्यालय बन्द।",
