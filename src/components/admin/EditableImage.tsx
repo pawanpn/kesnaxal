@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAdmin } from "@/hooks/useAdmin";
 import OptimizedImage from "@/components/ui/OptimizedImage";
 
@@ -31,6 +31,7 @@ export default function EditableImage({
 }: EditableImageProps) {
   const { isAdmin, isEditing, uploadMedia, addEdit } = useAdmin();
   const [currentSrc, setCurrentSrc] = useState(src);
+  useEffect(() => { setCurrentSrc(src); }, [src]);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -95,3 +96,5 @@ export default function EditableImage({
     </div>
   );
 }
+
+

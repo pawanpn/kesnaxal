@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useToast } from "@/context/ToastContext";
@@ -82,6 +83,7 @@ async function saveStaffToDb(staff: StaffMember[]): Promise<boolean> {
 export default function StaffAdminPage() {
   const { uploadMedia } = useAdmin();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -145,6 +147,7 @@ export default function StaffAdminPage() {
     if (ok) {
       setStaff(updated);
       setEditingStaff(null);
+      queryClient.invalidateQueries({ queryKey: ["site_content"] });
       toast("success", "Saved and published!");
     } else {
       toast("error", "Save failed");

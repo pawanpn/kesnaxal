@@ -228,7 +228,7 @@ export function useDynamicContent() {
   const faculty: FacultyMember[] = useMemo(() => {
     if (!hasDb) return [];
     const json = getJson("academics", "faculty_list", locale) as { members?: FacultyMember[] };
-    if (json?.members?.length) return json.members;
+    if (json?.members?.length) return json.members.filter((m) => m.active !== false);
     const fallback = getContent("academics", "faculty_list", "en");
     if (fallback) {
       try {
@@ -242,12 +242,12 @@ export function useDynamicContent() {
   // ── Staff — Supabase only ──
   const staff: StaffMember[] = useMemo(() => {
     const json = getJson("staff", "staff_members", locale) as { members?: StaffMember[] };
-    if (json?.members?.length) return json.members;
+    if (json?.members?.length) return json.members.filter((m) => m.active !== false);
     const fallback = getContent("staff", "staff_members", "en");
     if (fallback) {
       try {
         const p = JSON.parse(fallback);
-        if (p.members?.length) return p.members as StaffMember[];
+        if (p.members?.length) return (p.members as StaffMember[]).filter((m) => m.active !== false);
       } catch {}
     }
     return [];
@@ -358,6 +358,8 @@ export function useDynamicContent() {
     notices,
   };
 }
+
+
 
 
 

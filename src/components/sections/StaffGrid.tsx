@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import EditableImage from "@/components/admin/EditableImage";
 import SectionHeading from "@/components/ui/SectionHeading";
 import BorderGlow from "@/components/ui/BorderGlow";
@@ -94,7 +94,7 @@ export default function StaffGrid({ staff, title, loading = false }: StaffGridPr
                     section="staff"
                     contentKey={`staff_${member.id}_photo`}
                     src={photoSrc}
-                    alt={member.name || "Team member"}
+                    alt=""
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -119,3 +119,4 @@ export default function StaffGrid({ staff, title, loading = false }: StaffGridPr
     </section>
   );
 }
+
