@@ -136,6 +136,7 @@ export interface FacultyMember {
   name: string;
   role: string;
   dept: string;
+  active?: boolean;
 }
 
 // ── Results ──
