@@ -236,6 +236,7 @@ export interface CalendarEvent {
   title: LocaleContent;
   type: string;
   date: string;
+  endDate?: string;
   description?: LocaleContent;
 }
 
@@ -279,5 +280,6 @@ export interface SiteConfig {
   calendarEvents: CalendarEvent[];
   notices?: Notice[];
 }
+
 
 

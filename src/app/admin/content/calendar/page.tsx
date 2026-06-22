@@ -343,7 +343,7 @@ export default function CalendarAdminPage() {
                             )}
                           </div>
                           <div>
-                            <span className="text-[10px] text-muted">{event.date || "—"}</span>
+                            <span className="text-[10px] text-muted">{event.date || "—"}{event.endDate && event.endDate !== event.date ? ` → ${event.endDate}` : ""}</span>
                           </div>
                           <div className="text-right">
                             <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold text-white" style={{ backgroundColor: typeColor }}>
@@ -382,9 +382,16 @@ export default function CalendarAdminPage() {
                               placeholder={`Event title in ${lang}`} />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-semibold text-muted mb-0.5">Date</label>
+                            <label className="block text-[10px] font-semibold text-muted mb-0.5">Start Date</label>
                             <input type="date" value={event.date}
                               onChange={(e) => updateEvent(event.id, { date: e.target.value })}
+                              className="w-full px-2 py-1.5 rounded border border-border text-xs focus:border-primary outline-none" />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-semibold text-muted mb-0.5">End Date <span className="text-muted font-normal">(optional)</span></label>
+                            <input type="date" value={event.endDate || ""}
+                              onChange={(e) => updateEvent(event.id, { endDate: e.target.value })}
+                              min={event.date}
                               className="w-full px-2 py-1.5 rounded border border-border text-xs focus:border-primary outline-none" />
                           </div>
                           <div>
